@@ -3,13 +3,22 @@
 #include<iostream>
 
 // Basic Vertex Shader string
-const char *basicVertexShaderSource = "#version 330 core\n"
+const char *basicVertexShaderSource = "#version 450 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
 
+// Basic Fragment Shader string
+const char *fragmentShaderSource = "#version 450 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\n\0";
+
+// For debugging
 int  success;							// success flag for debugging
 char infoLog[512];						// log msg for debugging
 
@@ -74,13 +83,13 @@ int main(void)
 	/*						SHADERS: SET && COMPILE							*/
 	/************************************************************************/
 
-	// Vertex Shader set and compile
+	// Vertex Shader: set and compile
 	unsigned int basicVertexShader;
 	basicVertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(basicVertexShader, 1, &basicVertexShaderSource, NULL);
 	glCompileShader(basicVertexShader);
 
-	// Vertex Shader check if compilation was successful
+	// check if compilation of Vertex Shaderwas successful
 	glGetShaderiv(basicVertexShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
@@ -88,34 +97,89 @@ int main(void)
 		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
+	// Fragment Shader: set and compile
+	unsigned int basicFragmentShader;
+	basicFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(basicFragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(basicFragmentShader);
+
+	// check if compilation of Fragment Shader was successful
+	glGetShaderiv(basicFragmentShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(basicFragmentShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+	// Creating Shader program
+	unsigned int shaderProgram;
+	shaderProgram = glCreateProgram();
+
+	// Adding shaders to program
+	glAttachShader(shaderProgram, basicVertexShader);
+	glAttachShader(shaderProgram, basicFragmentShader);
+
+	// Linking shaders
+	glLinkProgram(shaderProgram);
+
+	// check if compilation of the shader program was successful
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cout<< "ERROR::PROGRAM::LINK::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+	// set shader program to be used
+	glUseProgram(shaderProgram);
+
+	// delete shaders to free space;
+	glDeleteShader(basicVertexShader);
+	glDeleteShader(basicFragmentShader);
 
 
 	/************************************************************************/
 	/*							CREATING TRIANGLES							*/
 	/************************************************************************/
 
-	// First triangle:
+	// Define vertices:
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
+		0.5f,  0.5f, 0.0f,   // [0] = top right 
+		0.5f, -0.5f, 0.0f,   // [1] = bottom right
+		-0.5f, -0.5f, 0.0f,  // [2] = bottom left
+		-0.5f,  0.5f, 0.0f   // [3] = top left 
+	};
+	unsigned int indices[] = { 
+		0, 1, 3,  // first Triangle
+		1, 2, 3   // second Triangle
 	};
 
 	/************************************************************************/
-	/*							VERTEX BUFFER OBJECT						*/
+	/*							BINDING VERTEX OBJECTS						*/
 	/************************************************************************/
 
-	// Generate vertex buffer object VBO
-	unsigned int VBO;
+	unsigned int VAO, VBO, EBO;
+	// Generate Vertex Array Object (VAO)
+	glGenVertexArrays(1, &VAO);
+	// Generate Vertex Buffer Object (VBO)
 	glGenBuffers(1, &VBO);
+	// Generate Element_Array Buffer Object (EBO)
+	//glGenBuffers(1, &EBO);
 
-	// Bind VBO to ARRAY_BUFFER => as VBO is a vertex we use ARRAY_BUFFER
+	// Fitst Bind VAO ! 
+	glBindVertexArray(VAO);
+
+	// Bind VBO then copy data to buffer memory 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	// Copy data to buffer memory (buffer_used, size of array, array, type of draw (static/dynamic)
-	// Static = modified once and used as source many times, Dynamic = modified repeatedly and used many times
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	// Bind EBO then copy data to buffer memory
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// Link Vertex Attributes pointers
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr); //*// check for GL_TRUE
+	glEnableVertexAttribArray(0);
 
 
 	/************************************************************************/
@@ -130,7 +194,10 @@ int main(void)
 		// rendering commands:
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
+		// Draw a triangle
+		glUseProgram(shaderProgram);
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 		// check and call events and swap the buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
