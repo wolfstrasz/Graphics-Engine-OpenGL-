@@ -1,6 +1,17 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
-#include<iostream> 
+#include<iostream>
+
+// Basic Vertex Shader string
+const char *basicVertexShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+int  success;							// success flag for debugging
+char infoLog[512];						// log msg for debugging
 
 // resize window and viewport
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -59,6 +70,25 @@ int main(void)
 	// Set up FrameBuffer Size Callback for given window
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+	/************************************************************************/
+	/*						SHADERS: SET && COMPILE							*/
+	/************************************************************************/
+
+	// Vertex Shader set and compile
+	unsigned int basicVertexShader;
+	basicVertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(basicVertexShader, 1, &basicVertexShaderSource, NULL);
+	glCompileShader(basicVertexShader);
+
+	// Vertex Shader check if compilation was successful
+	glGetShaderiv(basicVertexShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		glGetShaderInfoLog(basicVertexShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+
 
 	/************************************************************************/
 	/*							CREATING TRIANGLES							*/
@@ -87,6 +117,7 @@ int main(void)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 
+
 	/************************************************************************/
 	/*							RENDER LOOP									*/
 	/************************************************************************/
@@ -108,3 +139,7 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
+
+/************************************************************************/
+/*							UNNAMED										*/
+/************************************************************************/
