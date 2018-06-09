@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Created by https://www.gitignore.io/api/c,c++,visualstudio,visualstudiocode
 
@@ -15,11 +16,22 @@
 *.ilk
 *.map
 *.exp
+=======
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+>>>>>>> 3bb0075974b572f9db4c7c894bcc33a5f7e97ae4
 
 # Precompiled Headers
 *.gch
 *.pch
 
+<<<<<<< HEAD
 # Libraries
 # *.lib
 # *.a
@@ -64,6 +76,12 @@ dkms.conf
 # Precompiled Headers
 
 # Compiled Dynamic libraries
+=======
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+>>>>>>> 3bb0075974b572f9db4c7c894bcc33a5f7e97ae4
 
 # Fortran module files
 *.mod
@@ -71,6 +89,7 @@ dkms.conf
 
 # Compiled Static libraries
 *.lai
+<<<<<<< HEAD
 
 # Executables
 
@@ -376,3 +395,13 @@ __pycache__/
 
 
 # End of https://www.gitignore.io/api/c,c++,visualstudio,visualstudiocode
+=======
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+>>>>>>> 3bb0075974b572f9db4c7c894bcc33a5f7e97ae4
