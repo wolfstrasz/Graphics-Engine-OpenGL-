@@ -143,6 +143,10 @@ int main(void)
 	/************************************************************************/
 
 	// Define vertices:
+	unsigned int vertices_size = 4;
+	unsigned int triangle_count = 2;
+	unsigned int indices_size = triangle_count * 3;
+
 	float vertices[] = {
 		0.5f,  0.5f, 0.0f,   // [0] = top right 
 		0.5f, -0.5f, 0.0f,   // [1] = bottom right
@@ -164,7 +168,7 @@ int main(void)
 	// Generate Vertex Buffer Object (VBO)
 	glGenBuffers(1, &VBO);
 	// Generate Element_Array Buffer Object (EBO)
-	//glGenBuffers(1, &EBO);
+	glGenBuffers(1, &EBO);
 
 	// Fitst Bind VAO ! 
 	glBindVertexArray(VAO);
@@ -174,8 +178,8 @@ int main(void)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// Bind EBO then copy data to buffer memory
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// Link Vertex Attributes pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr); //*// check for GL_TRUE
@@ -197,7 +201,8 @@ int main(void)
 		// Draw a triangle
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
 		// check and call events and swap the buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
