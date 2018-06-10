@@ -1,0 +1,4 @@
+{
+    // The path to the glslangValidator executable
+  "glsllint.glslangValidatorPath": "D:/glslangValidator.exe"
+}

@@ -1,30 +1,7 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include<iostream>
-
-// Basic Vertex Shader string
-const char *basicVertexShaderSource = "#version 450 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;\n"
-"out vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos, 1.0);\n"
-"	ourColor = aColor;\n"
-"}\0";
-
-// Basic Fragment Shader string
-const char *fragmentShaderSource = "#version 450 core\n"
-"out vec4 FragColor;\n"
-"in vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(ourColor,1.0f);\n"
-"}\n\0";
-
-// For debugging
-int  success;							// success flag for debugging
-char infoLog[512];						// log msg for debugging
+#include "Shader.h"
 
 // resize window and viewport
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -67,8 +44,6 @@ int main(void)
 	glfwMakeContextCurrent(window);
 	
 	/************************************************************************/
-	/*							LOAD OpenGL FUNCTIONS						*/
-	/************************************************************************/
 	
 	if (!gladLoadGL())
 	{
@@ -83,73 +58,13 @@ int main(void)
 	// Set up FrameBuffer Size Callback for given window
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-
 	// Check number of vertex attributes available 
 	int nrAttributes;
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
 	std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
 
-	/************************************************************************/
-	/*						SHADERS: SET && COMPILE							*/
-	/************************************************************************/
-
-	// Vertex Shader: set and compile
-	unsigned int basicVertexShader;
-	basicVertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(basicVertexShader, 1, &basicVertexShaderSource, NULL);
-	glCompileShader(basicVertexShader);
-
-	// check if compilation of Vertex Shaderwas successful
-	glGetShaderiv(basicVertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(basicVertexShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
-	// Fragment Shader: set and compile
-	unsigned int basicFragmentShader;
-	basicFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(basicFragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(basicFragmentShader);
-
-	// check if compilation of Fragment Shader was successful
-	glGetShaderiv(basicFragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(basicFragmentShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
-	/************************************************************************/
-	/*						SHADERS PROGRAMS								*/
-	/************************************************************************/
-
-	// Creating Shader program
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
-
-	// Adding shaders to program
-	glAttachShader(shaderProgram, basicVertexShader);
-	glAttachShader(shaderProgram, basicFragmentShader);
-
-	// Linking shaders
-	glLinkProgram(shaderProgram);
-
-	// check if compilation of the shader program was successful
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout<< "ERROR::PROGRAM::LINK::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
-	// set shader program to be used
-	glUseProgram(shaderProgram);
-
-	// delete shaders to free space;
-	glDeleteShader(basicVertexShader);
-	glDeleteShader(basicFragmentShader);
+	// Create a Shader
+	Shader mShader("basic.4.5", "basic.4.5");
 
 
 	/************************************************************************/
@@ -220,14 +135,6 @@ int main(void)
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Gradually changing color via UNIFORM in shaders
-		/*float timeValue = (float) glfwGetTime();
-		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-		glUseProgram(shaderProgram);
-		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 0.0f);*/
-
-
 		// Bind the vertex array in order to read
 		glBindVertexArray(VAO);
 		/*
@@ -236,7 +143,8 @@ int main(void)
 		*/
 
 		// Draw a triangle
-		glUseProgram(shaderProgram);
+		mShader.use();
+		//glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
