@@ -1,15 +1,12 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include<iostream>
 #include<string>
 #include "Shader.h"
 #include "stb_image.h"
 
 std::string TEX_PATH = "res/textures/";
-
+float textureMixValue = 0.5f;
 // resize window and viewport
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -21,6 +18,16 @@ void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+	{
+		textureMixValue = (textureMixValue + 0.001f);
+		if (textureMixValue >= 1.0f)textureMixValue = 1.0f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+	{
+		textureMixValue = (textureMixValue - 0.001f);
+		if (textureMixValue <= 0.0f)textureMixValue = 0.0f;
+	}
 }
 
 int main(void)
@@ -72,8 +79,7 @@ int main(void)
 
 	// Create a Shader
 	//Shader mShader("basic.4.5", "basic.4.5");
-	//Shader mShader("basic.texture.4.5", "basic.texture.4.5");
-	Shader mShader("mattrans.4.5", "mattrans.4.5");
+	Shader mShader("basic.texture.4.5", "basic.texture.4.5");
 	//Shader mShader("ex3", "ex3");
 	/************************************************************************/
 	/*							TEXTURES									*/
@@ -92,7 +98,7 @@ int main(void)
 
 	// load and generate the texture
 	int width, height, nrChannels;
-	std::string texturePath = TEX_PATH + "container.jpg";
+	std::string texturePath = TEX_PATH + "pepeok.jpg";
 	unsigned char *textureData = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
 
 	// Check if data was loaded and load to texture
@@ -122,7 +128,7 @@ int main(void)
 
 	// load and generate the texture
 	//int width, height, nrChannels;
-	texturePath = TEX_PATH + "wall.jpg";
+	texturePath = TEX_PATH + "pepefck.jpg";
 	textureData = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
 
 	// Check if data was loaded and load to texture
@@ -160,8 +166,8 @@ int main(void)
 	//	1, 2, 3   // second triangle
 	//};
 	unsigned int indices[] = {
-		1,2,4,
-		2,3,0
+		1,2,3,
+		0,1,3
 	};
 	/************************************************************************/
 	/*							BINDING VERTEX OBJECTS						*/
@@ -213,6 +219,7 @@ int main(void)
 
 	while (!glfwWindowShouldClose(window))
 	{
+		
 		// input
 		processInput(window);
 
@@ -220,21 +227,14 @@ int main(void)
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// correct mix value for textures
+		mShader.setFloat("mixValue", textureMixValue);
+
 		// bind textures on corresponding texture units
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
-
-
-		// create transformations
-		glm::mat4 transform = glm::mat4 (1.0f);
-		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		// get matrix's uniform location and set matrix
-		mShader.use();
-		unsigned int transformLoc = glGetUniformLocation(mShader.ID, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
 		// Bind the vertex array in order to read
 		glBindVertexArray(VAO);
@@ -243,11 +243,11 @@ int main(void)
 			if only read action the only bind VAO
 		*/
 
-		// Draw a triangle
+		mShader.use();
 		
 		//glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 
