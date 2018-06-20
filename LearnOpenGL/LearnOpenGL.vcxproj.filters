@@ -41,5 +41,8 @@
     <ClInclude Include="src\window.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\data.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

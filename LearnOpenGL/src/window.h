@@ -23,6 +23,7 @@ private:
 	void processInput();
 	void cls();
 	int createWindow();
+
 	// Public Vars && Func
 public:
 	int init();
@@ -32,7 +33,5 @@ public:
 	void setTitle(const char* title);
 	void setCurrentContext();
 	int shouldClose();
-	
-	
 };
 #endif // !_WINDOW_H
