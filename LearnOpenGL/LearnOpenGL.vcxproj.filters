@@ -27,12 +27,18 @@
     <ClCompile Include="src\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stb_image.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

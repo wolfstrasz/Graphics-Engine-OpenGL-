@@ -1,13 +1,13 @@
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include<iostream>
-#include<string>
+#include <iostream>
+#include <string>
 #include "Shader.h"
 #include "stb_image.h"
-
+#include "window.h"
 std::string TEX_PATH = "res/textures/";
 
 // resize window and viewport
@@ -22,59 +22,28 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
-
 int main(void)
 {
-	
-	/************************************************************************/
-	/*							SETUP GLFW									*/
-	/************************************************************************/
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);						///> Use Versions 4.0 ++
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);						///> Use version 4.5
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);		///> Set profile to Core profile
-	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);			    ///> Set profile to Forward profile (macOS)
+	// CREATE A WINDOW
+	Window window = Window();
+	if (!window.init())return -1;
 
-
-	/************************************************************************/
-	/*							CREATING WINDOW								*/
-	/************************************************************************/
-	GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", nullptr, nullptr);
-	if (window == nullptr)
-	{
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-
-	// set Context to window
-	glfwMakeContextCurrent(window);
-	
-	/************************************************************************/
-	
+	// SET UP GLAD POINTERS
 	if (!gladLoadGL())
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
-	
-	// Set up View Port
-	glViewport(0, 0, 800, 600);
 
-	// Set up FrameBuffer Size Callback for given window
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	/************************************************************************/
 
-	// Check number of vertex attributes available 
-	int nrAttributes;
-	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-	std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
+	// CREATE SHADERS
 
-	// Create a Shader
 	//Shader mShader("basic.4.5", "basic.4.5");
 	//Shader mShader("basic.texture.4.5", "basic.texture.4.5");
 	Shader mShader("mattrans.4.5", "mattrans.4.5");
-	//Shader mShader("ex3", "ex3");
+
 	/************************************************************************/
 	/*							TEXTURES									*/
 	/************************************************************************/
@@ -211,21 +180,16 @@ int main(void)
 	/*							RENDER LOOP									*/
 	/************************************************************************/
 
-	while (!glfwWindowShouldClose(window))
+	//while (!glfwWindowShouldClose(window))
+	while(!window.shouldClose())
 	{
-		// input
-		processInput(window);
-
-		// rendering commands:
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		window.update();
 
 		// bind textures on corresponding texture units
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
-
 
 		// create transformations
 		glm::mat4 transform = glm::mat4 (1.0f);
@@ -250,10 +214,6 @@ int main(void)
 		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
-
-		// check and call events and swap the buffers
-		glfwSwapBuffers(window);
-		glfwPollEvents();
 	}
 	// unbind buffers
 	glBindVertexArray(0);
