@@ -32,6 +32,7 @@ public:
 	void setSize(unsigned int width, unsigned int height);
 	void setTitle(const char* title);
 	void setCurrentContext();
+	float getRatio();
 	int shouldClose();
 };
 #endif // !_WINDOW_H

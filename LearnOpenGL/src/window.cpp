@@ -60,6 +60,12 @@ void Window::setCurrentContext()
 	glfwMakeContextCurrent(mWindow);
 }
 
+float Window::getRatio()
+{
+	return ((float)mWidth / (float)mHeight);
+}
+
+
 int Window::shouldClose()
 {
 	return glfwWindowShouldClose(mWindow);
@@ -75,5 +81,5 @@ void Window::cls()
 {
 	glClearColor(mClsColors.x, mClsColors.y, mClsColors.z, mClsColors.w);
 	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

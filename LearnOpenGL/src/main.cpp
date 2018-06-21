@@ -9,20 +9,8 @@
 #include "stb_image.h"
 #include "window.h"
 #include "data.h"
+
 std::string TEX_PATH = "res/textures/";
-
-// resize window and viewport
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	glViewport(0, 0, width, height);
-}
-
-// Check if btn is pressed while window is on, if ESC btn is pressed window should close
-void processInput(GLFWwindow *window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-}
 int main(void)
 {
 	// CREATE A WINDOW
@@ -40,10 +28,11 @@ int main(void)
 	/************************************************************************/
 
 	// CREATE SHADERS
-
 	//Shader mShader("basic.4.5", "basic.4.5");
 	//Shader mShader("basic.texture.4.5", "basic.texture.4.5");
-	Shader mShader("mattrans.4.5", "mattrans.4.5");
+	//Shader mShader("mattrans.4.5", "mattrans.4.5");
+	Shader mShader("coordsystem.4.5", "coordsystem.4.5");
+#pragma region textures
 
 	/************************************************************************/
 	/*							TEXTURES									*/
@@ -53,20 +42,20 @@ int main(void)
 	unsigned int texture1;
 	glGenTextures(1, &texture1);
 	glBindTexture(GL_TEXTURE_2D, texture1);
-
 	// set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+
 	// load and generate the texture
 	int width, height, nrChannels;
-	std::string texturePath = TEX_PATH + "container.jpg";
+	std::string texturePath = TEX_PATH + "pepefck.jpg";
 	unsigned char *textureData = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
 
 	// Check if data was loaded and load to texture
-	if (textureData)
+	if (textureData)	
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -108,6 +97,9 @@ int main(void)
 	// free image data
 	stbi_image_free(textureData);
 
+#pragma endregion
+
+#pragma region binding_vertex_objects
 
 
 	/************************************************************************/
@@ -148,48 +140,73 @@ int main(void)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+#pragma endregion
 
 
 	// Pre-set
 	mShader.use();
 	mShader.setInt("texture1", 0);
 	mShader.setInt("texture2", 1);
+
 	/************************************************************************/
 	/*							RENDER LOOP									*/
 	/************************************************************************/
+	glEnable(GL_DEPTH_TEST);
+	// bind textures on corresponding texture units
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2);
 
-	//while (!glfwWindowShouldClose(window))
 	while(!window.shouldClose())
 	{
 		window.update();
 
-		// bind textures on corresponding texture units
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
+#pragma region using_transform_matrix;
+		//// create transformations
+		//glm::mat4 transform = glm::mat4 (1.0f);
+		//transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+		//transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+		//// get matrix's uniform location and set matrix
+		//mShader.use();
+		//unsigned int transformLoc = glGetUniformLocation(mShader.ID, "transform");
+		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+#pragma endregion
 
-		// create transformations
-		glm::mat4 transform = glm::mat4 (1.0f);
-		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		// get matrix's uniform location and set matrix
+		glm::mat4 model = glm::mat4 (1.0f);
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.0f, 1.0f));
+
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+
+		glm::mat4 projection = glm::mat4(1.0f);
+		projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 0.1f, 100.0f);
+
 		mShader.use();
-		unsigned int transformLoc = glGetUniformLocation(mShader.ID, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+		//int modelLoc = glGetUniformLocation(mShader.ID, "model");
+		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		int viewLoc = glGetUniformLocation(mShader.ID, "view");
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		int projectionLoc = glGetUniformLocation(mShader.ID, "projection");
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
 
 		// Bind the vertex array in order to read
 		glBindVertexArray(VAO);
-		/*
-			bind VBO and EBO if we are going to change the attributes,
-			if only read action the only bind VAO
-		*/
+		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.0f * (i+1);
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			mShader.setMat4("model", model);
 
-		// Draw a triangle
-		
-		//glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+	
 		glBindVertexArray(0);
 
 	}
