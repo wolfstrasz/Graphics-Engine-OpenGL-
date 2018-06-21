@@ -173,18 +173,13 @@ int main(void)
 		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 #pragma endregion
 
-		glm::mat4 model = glm::mat4 (1.0f);
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.0f, 1.0f));
-
 		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
-
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+		view = glm::rotate(view, (float)glfwGetTime() * glm::radians(15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
 
 		mShader.use();
-		//int modelLoc = glGetUniformLocation(mShader.ID, "model");
-		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		int viewLoc = glGetUniformLocation(mShader.ID, "view");
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 		int projectionLoc = glGetUniformLocation(mShader.ID, "projection");
@@ -200,16 +195,17 @@ int main(void)
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * (i+1);
+
+			// model matrix
 			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			mShader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-	
 		glBindVertexArray(0);
-
 	}
+
 	// unbind buffers
 	glBindVertexArray(0);
 	// Clean all resources
