@@ -9,7 +9,6 @@
 #include "stb_image.h"
 #include "window.h"
 #include "data.h"
-
 std::string TEX_PATH = "res/textures/";
 int main(void)
 {
@@ -142,11 +141,11 @@ int main(void)
 
 #pragma endregion
 
-
 	// Pre-set
 	mShader.use();
 	mShader.setInt("texture1", 0);
 	mShader.setInt("texture2", 1);
+
 
 	/************************************************************************/
 	/*							RENDER LOOP									*/
@@ -158,38 +157,54 @@ int main(void)
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture2);
 
+	
+	// Camera position vector
+	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
+	// Camera target vector, set to origin
+	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+	// Camera direction vector = actually, inverse of what the looking direction of the camera is 
+	glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+	// Define a vector to create the world-UP-axis
+	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	// Camera-Right-Axis || Get RIGHTaxis a.k.a positive X axis by Right-hand rule:
+	//						palm point vector = cross(fingers pointing, thumb pointing)
+	glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, cameraDirection));
+	// Camera-Up-Axis
+	glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);	// no need for normalization as cDirection and cRight are normals
+																	// Camera-Front-Axis
+	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+
+	// Camera View Matrix
+	glm::mat4 cameraView = glm::mat4(1.0f);
+	//cameraView = glm::lookAt(cameraPos, cameraTarget, worldUp);
+	cameraView = glm::lookAt(cameraPos, cameraPos + cameraFront, worldUp);
+
 	while(!window.shouldClose())
 	{
 		window.update();
+		mShader.use();
+		//// Camera View matrix:
+		//mShader.setMat4("view", cameraView);
 
-#pragma region using_transform_matrix;
-		//// create transformations
-		//glm::mat4 transform = glm::mat4 (1.0f);
-		//transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-		//transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		//// get matrix's uniform location and set matrix
-		//mShader.use();
-		//unsigned int transformLoc = glGetUniformLocation(mShader.ID, "transform");
-		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
-#pragma endregion
-
-		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-		view = glm::rotate(view, (float)glfwGetTime() * glm::radians(15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		// Camera Rotate and view;
+		float radius = 10.0f;
+		float camX = (float)-sin(glfwGetTime()) * radius;
+		float camZ = (float)cos(glfwGetTime()) * radius;
+		cameraPos = glm::vec3(camX, 0.0f, camZ);
+		cameraView = glm::lookAt(cameraPos, cameraTarget, worldUp);
+		mShader.setMat4("view", cameraView);
+		//// VIEW MATRIX:
+		//glm::mat4 view = glm::mat4(1.0f);
+		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+		//view = glm::rotate(view, (float)glfwGetTime() * glm::radians(15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//mShader.setMat4("view", view);
+		// PROJECTION MATRIX:
 		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
+		mShader.setMat4("projection", projection);
 
-		mShader.use();
-		int viewLoc = glGetUniformLocation(mShader.ID, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		int projectionLoc = glGetUniformLocation(mShader.ID, "projection");
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-
-		// Bind the vertex array in order to read
+		// Bind the vertex array in order to read and then write
 		glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
@@ -202,7 +217,10 @@ int main(void)
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
+		// Unbind the vertex array
 		glBindVertexArray(0);
 	}
 

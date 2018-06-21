@@ -1,5 +1,4 @@
 #include "window.h"
-
 Window::Window()
 {
 }
@@ -75,6 +74,15 @@ void Window::processInput()
 {
 	if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(mWindow, true);
+	//float cameraSpeed = 0.05f; // adjust accordingly
+	//if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+	//	cameraPos += cameraSpeed * cameraFront;
+	//if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
+	//	cameraPos -= cameraSpeed * cameraFront;
+	//if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
+	//	cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	//if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
+	//	cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 void Window::cls()
