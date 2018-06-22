@@ -14,11 +14,31 @@
 #include "data.h"
 #include "camera.h"
 
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+
 std::string TEX_PATH = "res/textures/";
+Camera camera(cameraPos.x,cameraPos.y,cameraPos.z, worldUp.x, worldUp.y,worldUp .z, -90.0f, 0.0f);
+//Camera camera = Camera(cameraPos, cameraFront, worldUp, 2.5f);
+Window window = Window();
+
+bool firstMouse = true;
+float lastX = 800 / 2.0f;
+float lastY = 600 / 2.0f;
+
+//void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+//{
+//	// make sure the viewport matches the new window dimensions; note that width and 
+//	// height will be significantly larger than specified on retina displays.
+//	glViewport(0, 0, width, height);
+//}
 int main(void)
 {
 	// CREATE A WINDOW
-	Window window = Window();
+	
 	if (!window.init())return -1;
 
 	// SET UP GLAD POINTERS
@@ -29,6 +49,9 @@ int main(void)
 	}
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
+	glfwSetFramebufferSizeCallback(window.getWindow(), framebuffer_size_callback);
+	glfwSetCursorPosCallback(window.getWindow(), mouse_callback);
+	glfwSetScrollCallback(window.getWindow(), scroll_callback);
 	/************************************************************************/
 
 	// CREATE SHADER
@@ -148,6 +171,9 @@ int main(void)
 	mShader.setInt("texture1", 0);
 	mShader.setInt("texture2", 1);
 
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// Set Depth Testing for shaders
 	glEnable(GL_DEPTH_TEST);
 
@@ -159,7 +185,7 @@ int main(void)
 
 
 	// Create camera
-	Camera camera = Camera(cameraPos, cameraFront, worldUp, 2.5f);
+	//Camera camera = Camera(cameraPos, cameraFront, worldUp, 2.5f);
 	camera.init();
 
 	// Bind camera to window
@@ -167,8 +193,7 @@ int main(void)
 
 	// PROJECTION MATRIX:
 	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
-	mShader.setMat4("projection", projection);
+	
 
 	/************************************************************************/
 	/*							RENDER LOOP									*/
@@ -180,7 +205,9 @@ int main(void)
 		camera.update();
 
 		mShader.setMat4("view", window.getCamera()->getView());
-
+		glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), window.getRatio(), 0.1f, 100.0f);
+		//projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
+		mShader.setMat4("projection", projection);
 		// Bind the vertex array
 		glBindVertexArray(VAO);
 
@@ -201,12 +228,47 @@ int main(void)
 		// Unbind the vertex array
 		glBindVertexArray(0);
 	}
-
-	// unbind buffers
-	glBindVertexArray(0);
+	// optional: de-allocate all resources once they've outlived their purpose:
+	// ------------------------------------------------------------------------
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
 	// Clean all resources
 	glfwTerminate();
 	return 0;
+}
+void framebuffer_size_callback(GLFWwindow * window, int width, int height)
+{
+	// make sure the viewport matches the new window dimensions; note that width and 
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
+}
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = (float) xpos;
+		lastY = (float) ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = (float) xpos - lastX;
+	float yoffset =  lastY - (float)ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = (float) xpos;
+	lastY = (float) ypos;
+
+	//window.getCamera()->proccesMouseMovement(xoffset, yoffset);
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll((float) yoffset);
 }
 
 /************************************************************************/

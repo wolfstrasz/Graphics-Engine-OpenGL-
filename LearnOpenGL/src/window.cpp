@@ -10,7 +10,6 @@ void Window::update()
 	checkCameraError();
 	processInput();
 	glfwPollEvents();
-	//std::cout << mWidth << " " << mHeight << std::endl;
 	glfwGetFramebufferSize(mWindow, (int*)&mWidth, (int*)&mHeight);
 	glViewport(0, 0, mWidth, mHeight);
 	cls();
@@ -30,24 +29,6 @@ int Window::init()
 	return 1;
 }
 
-void Window::setClsColors(glm::vec4 colors)
-{
-	mClsColors = colors;
-}
-
-void Window::setSize(unsigned int width, unsigned int height)
-{
-	mWidth = width;
-	mHeight = height;
-	glfwSetWindowSize(mWindow, mWidth, mHeight);
-}
-
-void Window::setTitle(const char * title)
-{
-	mTitle = title;
-	glfwSetWindowTitle(mWindow, title);
-}
-
 int Window::createWindow()
 {
 	mWindow = glfwCreateWindow(mWidth, mHeight, mTitle, nullptr, nullptr);
@@ -60,12 +41,6 @@ int Window::createWindow()
 	return 1;
 }
 
-void Window::calculateDelta()
-{
-	mDeltaTime = (float)glfwGetTime() - mLastFrame;
-	mLastFrame += mDeltaTime;
-}
-
 void Window::checkCameraError()
 {
 	if (currentCamera == nullptr)
@@ -74,17 +49,43 @@ void Window::checkCameraError()
 	}
 }
 
-void Window::setCurrentContext()
+void Window::processInput()
 {
-	glfwMakeContextCurrent(mWindow);
+	if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(mWindow, true);
+	//float cameraSpeed = 0.05f; // adjust accordingly
+	if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+		currentCamera->processKeyboard(FORWARD, mDeltaTime);
+	if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
+		currentCamera->processKeyboard(BACKWARD, mDeltaTime);
+	if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
+		//currentCamera->moveLeft(mDeltaTime);
+		currentCamera->processKeyboard(LEFT, mDeltaTime);
+	if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
+		currentCamera->processKeyboard(RIGHT, mDeltaTime);
 }
 
-float Window::getRatio()
+void Window::cls()
 {
-	return ((float)mWidth / (float)mHeight);
+	glClearColor(mClsColors.x, mClsColors.y, mClsColors.z, mClsColors.w);
+	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-
-
+void Window::setClsColors(glm::vec4 colors)
+{
+	mClsColors = colors;
+}
+void Window::setSize(unsigned int width, unsigned int height)
+{
+	mWidth = width;
+	mHeight = height;
+	glfwSetWindowSize(mWindow, mWidth, mHeight);
+}
+void Window::setTitle(const char * title)
+{
+	mTitle = title;
+	glfwSetWindowTitle(mWindow, title);
+}
 int Window::shouldClose()
 {
 	return glfwWindowShouldClose(mWindow);
@@ -100,24 +101,25 @@ Camera * Window::getCamera()
 	return currentCamera;
 }
 
-void Window::processInput()
+GLFWwindow * Window::getWindow()
 {
-	if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(mWindow, true);
-	//float cameraSpeed = 0.05f; // adjust accordingly
-	if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
-		currentCamera->moveForward(mDeltaTime);
-	if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
-		currentCamera->moveBackward(mDeltaTime);
-	if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
-		currentCamera->moveLeft(mDeltaTime);
-	if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
-		currentCamera->moveRight(mDeltaTime);
+	return mWindow;
 }
 
-void Window::cls()
+void Window::setCurrentContext()
 {
-	glClearColor(mClsColors.x, mClsColors.y, mClsColors.z, mClsColors.w);
-	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glfwMakeContextCurrent(mWindow);
 }
+
+float Window::getRatio()
+{
+	return ((float)mWidth / (float)mHeight);
+}
+
+void Window::calculateDelta()
+{
+	mDeltaTime = (float)glfwGetTime() - mLastFrame;
+	mLastFrame += mDeltaTime;
+}
+
+

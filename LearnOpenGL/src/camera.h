@@ -68,5 +68,6 @@ public:
 	void moveRight(float deltaTime);
 	glm::mat4 getView();
 
+	float getZoom();
 };
 #endif // !_CAMERA_H

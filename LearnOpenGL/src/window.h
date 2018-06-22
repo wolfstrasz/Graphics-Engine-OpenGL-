@@ -12,14 +12,16 @@ class Window
 	// Constructors
 public:
 	Window();
-
+	
 	// Private Vars && Func
 private:
+	
 	Camera * currentCamera = nullptr;
+	GLFWwindow* mWindow = nullptr;
 	float mDeltaTime;
 	float mLastFrame;
 	glm::vec4 mClsColors = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	GLFWwindow* mWindow;
+	
 	unsigned int mWidth = 800;
 	unsigned int mHeight = 600;
 	const char* mTitle = "Learn OpenGL";
@@ -43,5 +45,6 @@ public:
 	int shouldClose();
 	void bindCamera(Camera *camera);
 	Camera* getCamera();
+	GLFWwindow* getWindow();
 };
 #endif // !_WINDOW_H

@@ -123,3 +123,8 @@ glm::mat4 Camera::getView()
 {
 	return mView;
 }
+
+float Camera::getZoom()
+{
+	return mZoom;
+}
