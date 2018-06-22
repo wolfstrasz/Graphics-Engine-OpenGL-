@@ -29,6 +29,8 @@ private:
 	int createWindow();
 	void calculateDelta();
 	void checkCameraError();
+
+
 	// Public Vars && Func
 public:
 	int init();

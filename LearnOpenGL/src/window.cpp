@@ -10,6 +10,7 @@ void Window::update()
 	checkCameraError();
 	processInput();
 	glfwPollEvents();
+	//std::cout << mWidth << " " << mHeight << std::endl;
 	glfwGetFramebufferSize(mWindow, (int*)&mWidth, (int*)&mHeight);
 	glViewport(0, 0, mWidth, mHeight);
 	cls();
@@ -23,6 +24,7 @@ int Window::init()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);		///> Set profile to Core profile
 	if (!createWindow() == 1) return -1;
 	setCurrentContext();
+	//std::cout << mWidth << " " << mHeight << std::endl;
 	mLastFrame = 0.0f;
 	mDeltaTime = 0.0f;
 	return 1;
