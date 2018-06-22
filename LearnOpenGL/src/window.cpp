@@ -6,6 +6,8 @@ Window::Window()
 void Window::update()
 {
 	glfwSwapBuffers(mWindow);
+	calculateDelta();
+	checkCameraError();
 	processInput();
 	glfwPollEvents();
 	glfwGetFramebufferSize(mWindow, (int*)&mWidth, (int*)&mHeight);
@@ -21,6 +23,8 @@ int Window::init()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);		///> Set profile to Core profile
 	if (!createWindow() == 1) return -1;
 	setCurrentContext();
+	mLastFrame = 0.0f;
+	mDeltaTime = 0.0f;
 	return 1;
 }
 
@@ -54,6 +58,20 @@ int Window::createWindow()
 	return 1;
 }
 
+void Window::calculateDelta()
+{
+	mDeltaTime = (float)glfwGetTime() - mLastFrame;
+	mLastFrame += mDeltaTime;
+}
+
+void Window::checkCameraError()
+{
+	if (currentCamera == nullptr)
+	{
+		std::cout << "ERROR: NO CAMERA BINDED TO CURRENT WINDOW!" << std::endl;
+	}
+}
+
 void Window::setCurrentContext()
 {
 	glfwMakeContextCurrent(mWindow);
@@ -70,19 +88,29 @@ int Window::shouldClose()
 	return glfwWindowShouldClose(mWindow);
 }
 
+void Window::bindCamera(Camera * camera)
+{
+	currentCamera = camera;
+}
+
+Camera * Window::getCamera()
+{
+	return currentCamera;
+}
+
 void Window::processInput()
 {
 	if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(mWindow, true);
 	//float cameraSpeed = 0.05f; // adjust accordingly
-	//if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
-	//	cameraPos += cameraSpeed * cameraFront;
-	//if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
-	//	cameraPos -= cameraSpeed * cameraFront;
-	//if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
-	//	cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	//if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
-	//	cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+		currentCamera->moveForward(mDeltaTime);
+	if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
+		currentCamera->moveBackward(mDeltaTime);
+	if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
+		currentCamera->moveLeft(mDeltaTime);
+	if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
+		currentCamera->moveRight(mDeltaTime);
 }
 
 void Window::cls()

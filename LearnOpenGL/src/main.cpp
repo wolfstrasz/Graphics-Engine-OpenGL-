@@ -9,6 +9,8 @@
 #include "stb_image.h"
 #include "window.h"
 #include "data.h"
+#include "camera.h"
+
 std::string TEX_PATH = "res/textures/";
 int main(void)
 {
@@ -26,10 +28,7 @@ int main(void)
 
 	/************************************************************************/
 
-	// CREATE SHADERS
-	//Shader mShader("basic.4.5", "basic.4.5");
-	//Shader mShader("basic.texture.4.5", "basic.texture.4.5");
-	//Shader mShader("mattrans.4.5", "mattrans.4.5");
+	// CREATE SHADER
 	Shader mShader("coordsystem.4.5", "coordsystem.4.5");
 #pragma region textures
 
@@ -141,84 +140,60 @@ int main(void)
 
 #pragma endregion
 
-	// Pre-set
+	// Pre-set Textures
 	mShader.use();
 	mShader.setInt("texture1", 0);
 	mShader.setInt("texture2", 1);
 
-
-	/************************************************************************/
-	/*							RENDER LOOP									*/
-	/************************************************************************/
+	// Set Depth Testing for shaders
 	glEnable(GL_DEPTH_TEST);
+
 	// bind textures on corresponding texture units
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture2);
 
-	
-	// Camera position vector
-	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
-	// Camera target vector, set to origin
-	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-	// Camera direction vector = actually, inverse of what the looking direction of the camera is 
-	glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-	// Define a vector to create the world-UP-axis
-	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	// Camera-Right-Axis || Get RIGHTaxis a.k.a positive X axis by Right-hand rule:
-	//						palm point vector = cross(fingers pointing, thumb pointing)
-	glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, cameraDirection));
-	// Camera-Up-Axis
-	glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);	// no need for normalization as cDirection and cRight are normals
-																	// Camera-Front-Axis
-	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 
-	// Camera View Matrix
-	glm::mat4 cameraView = glm::mat4(1.0f);
-	//cameraView = glm::lookAt(cameraPos, cameraTarget, worldUp);
-	cameraView = glm::lookAt(cameraPos, cameraPos + cameraFront, worldUp);
+	// Create camera
+	Camera camera = Camera(cameraPos, cameraFront, worldUp, 2.5f);
+	camera.init();
 
+	// Bind camera to window
+	window.bindCamera(&camera);
+
+	// PROJECTION MATRIX:
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
+	mShader.setMat4("projection", projection);
+
+	/************************************************************************/
+	/*							RENDER LOOP									*/
+	/************************************************************************/
 	while(!window.shouldClose())
 	{
 		window.update();
 		mShader.use();
-		//// Camera View matrix:
-		//mShader.setMat4("view", cameraView);
+		camera.update();
 
-		// Camera Rotate and view;
-		float radius = 10.0f;
-		float camX = (float)-sin(glfwGetTime()) * radius;
-		float camZ = (float)cos(glfwGetTime()) * radius;
-		cameraPos = glm::vec3(camX, 0.0f, camZ);
-		cameraView = glm::lookAt(cameraPos, cameraTarget, worldUp);
-		mShader.setMat4("view", cameraView);
-		//// VIEW MATRIX:
-		//glm::mat4 view = glm::mat4(1.0f);
-		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-		//view = glm::rotate(view, (float)glfwGetTime() * glm::radians(15.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		//mShader.setMat4("view", view);
-		// PROJECTION MATRIX:
-		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
-		mShader.setMat4("projection", projection);
+		mShader.setMat4("view", window.getCamera()->getView());
 
-		// Bind the vertex array in order to read and then write
+		// Bind the vertex array
 		glBindVertexArray(VAO);
+
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * (i+1);
 
-			// model matrix
+			// MODEL MATRIX:
 			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			mShader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		}
-		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		// Unbind the vertex array
 		glBindVertexArray(0);
