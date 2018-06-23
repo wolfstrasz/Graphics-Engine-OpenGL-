@@ -21,8 +21,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
 std::string TEX_PATH = "res/textures/";
-Camera camera(cameraPos.x,cameraPos.y,cameraPos.z, worldUp.x, worldUp.y,worldUp .z, -90.0f, 0.0f);
-//Camera camera = Camera(cameraPos, cameraFront, worldUp, 2.5f);
+Camera camera(cameraPos);
 Window window = Window();
 
 bool firstMouse = true;
@@ -183,11 +182,6 @@ int main(void)
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture2);
 
-
-	// Create camera
-	//Camera camera = Camera(cameraPos, cameraFront, worldUp, 2.5f);
-	camera.init();
-
 	// Bind camera to window
 	window.bindCamera(&camera);
 
@@ -202,7 +196,6 @@ int main(void)
 	{
 		window.update();
 		mShader.use();
-		camera.update();
 
 		mShader.setMat4("view", window.getCamera()->getView());
 		glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), window.getRatio(), 0.1f, 100.0f);

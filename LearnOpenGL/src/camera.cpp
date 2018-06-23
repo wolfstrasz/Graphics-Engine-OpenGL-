@@ -7,8 +7,11 @@ Camera::Camera(glm::vec3 cameraPos, glm::vec3 cameraFront, glm::vec3 upVec, floa
 	mWorldUp = upVec;
 	mMovementSpeed = speed;
 }
-Camera::Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) 
-		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), mMovementSpeed(SPEED), mMouseSensitivity(SENSITIVITY), mZoom(ZOOM)
+Camera::Camera(glm::vec3 position , glm::vec3 up , float yaw , float pitch) 
+		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), 
+		  mMovementSpeed(Camera_Defaults::SPEED),
+		  mMouseSensitivity(Camera_Defaults::SENSITIVITY),
+		  mZoom(Camera_Defaults::ZOOM)
 {
 	mPosition = position;
 	mWorldUp = up;
@@ -17,7 +20,10 @@ Camera::Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = 
 	updateCameraVectors();
 }
 Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) 
-		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), mMouseSensitivity(SENSITIVITY), mMovementSpeed(SPEED), mZoom(ZOOM)
+		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), 
+		  mMouseSensitivity(Camera_Defaults::SENSITIVITY), 
+		  mMovementSpeed(Camera_Defaults::SPEED),
+		  mZoom(Camera_Defaults::ZOOM)
 {
 	mPosition = glm::vec3(posX, posY, posZ);
 	mWorldUp = glm::vec3(upX, upY, upZ);
@@ -27,13 +33,10 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
 }
 void Camera::update()
 {
-	mView = glm::lookAt(mPosition, mPosition + mFront, mWorldUp);
 }
 
 void Camera::init()
 {
-	mView = glm::mat4(1.0f);
-	mView = glm::lookAt(mPosition, mPosition + mFront, mWorldUp);
 }
 
 void Camera::updateCameraVectors()
@@ -74,10 +77,10 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPi
 	// Make sure that when pitch is out of bounds, screen doesn't get flipped
 	if (constrainPitch)
 	{
-		if (mPitch > PITCH_MAX)
-			mPitch = PITCH_MAX;
-		if (mPitch < PITCH_MIN)
-			mPitch = PITCH_MIN;
+		if (mPitch > Camera_Margins::PITCH_MAX)
+			mPitch = Camera_Margins::PITCH_MAX;
+		if (mPitch < Camera_Margins::PITCH_MIN)
+			mPitch = Camera_Margins::PITCH_MIN;
 	}
 
 	// Update Front, Right and Up Vectors using the updated Euler angles
@@ -86,42 +89,18 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPi
 
 void Camera::ProcessMouseScroll(float yoffset)
 {
-	if (mZoom >= ZOOM_MIN && mZoom <= ZOOM_MAX)
+	if (mZoom >= Camera_Margins::ZOOM_MIN && mZoom <= Camera_Margins::ZOOM_MAX)
 		mZoom -= yoffset;
-	if (mZoom < ZOOM_MIN)
-		mZoom = ZOOM_MIN;
-	if (mZoom > ZOOM_MAX)
-		mZoom = ZOOM_MAX;
+	if (mZoom < Camera_Margins::ZOOM_MIN)
+		mZoom = Camera_Margins::ZOOM_MIN;
+	if (mZoom > Camera_Margins::ZOOM_MAX)
+		mZoom = Camera_Margins::ZOOM_MAX;
 }
 
-void Camera::moveForward(float deltaTime)
-{
-	float distance = mMovementSpeed * deltaTime;
-	mPosition += glm::normalize(mFront) * distance;
-}
-
-void Camera::moveBackward(float deltaTime)
-{
-	float distance = mMovementSpeed * deltaTime;
-	mPosition -= glm::normalize(mFront) * distance;
-}
-
-void Camera::moveLeft(float deltaTime)
-{
-	float distance = mMovementSpeed * deltaTime;
-	mPosition -= glm::normalize(glm::cross(mFront, mWorldUp)) * distance;
-	//	cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-}
-
-void Camera::moveRight(float deltaTime)
-{
-	float distance = mMovementSpeed * deltaTime;
-	mPosition += glm::normalize(glm::cross(mFront, mWorldUp)) * distance;
-}
 
 glm::mat4 Camera::getView()
 {
-	return mView;
+	return glm::lookAt(mPosition, mPosition + mFront, mUp);
 }
 
 float Camera::getZoom()
