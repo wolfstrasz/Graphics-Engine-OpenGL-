@@ -27,10 +27,10 @@ Camera* curCamera = nullptr;
 std::string TEX_PATH = "res/textures/";
 
 // Initialise windows
-Window window = Window();
+Window window1 = Window();
 // Initialise cameras
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
-Camera camera(cameraPos);
+Camera camera1(cameraPos);
 
 bool firstMouse = true;
 float lastX = 800 / 2.0f;
@@ -41,11 +41,14 @@ float lastFrame = 0.0f;
 
 int main(void)
 {
-	// CREATE A WINDOW
-	if (!window.init())return -1;
-	
+	// Set camera as current
+	curCamera = &camera1;
+	// Initialise window and set it as current
+	if (!window1.init())return -1;
+	curWindow = &window1;
+
 	// Set context
-	glfwMakeContextCurrent(window.getWindow());
+	glfwMakeContextCurrent(curWindow->getWindow());
 
 	// SET UP GLAD POINTERS
 	if (!gladLoadGL())
@@ -58,9 +61,9 @@ int main(void)
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 	
 	// Set callbacks
-	glfwSetFramebufferSizeCallback(window.getWindow(), framebuffer_size_callback);
-	glfwSetCursorPosCallback(window.getWindow(), mouse_callback);
-	glfwSetScrollCallback(window.getWindow(), scroll_callback);
+	glfwSetFramebufferSizeCallback(curWindow->getWindow(), framebuffer_size_callback);
+	glfwSetCursorPosCallback(curWindow->getWindow(), mouse_callback);
+	glfwSetScrollCallback(curWindow->getWindow(), scroll_callback);
 
 #pragma region _CREATE_TEXTURES
 	/************************************************************************/
@@ -180,23 +183,21 @@ int main(void)
 	glBindTexture(GL_TEXTURE_2D, texture2);
 #pragma endregion
 
-
 	// PROJECTION MATRIX:
 	glm::mat4 projection = glm::mat4(1.0f);
 	
-
 	/************************************************************************/
 	/*							RENDER LOOP									*/
 	/************************************************************************/
-	while(!window.shouldClose())
+	while(!curWindow->shouldClose())
 	{
 		calculateDelta();
-		processInput(window.getWindow());
-		window.update();
+		processInput(curWindow->getWindow());
+		curWindow->update();
 		mShader.use();
 		// Set 
-		mShader.setMat4("view", camera.getView());
-		glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), window.getRatio(), 0.1f, 100.0f);
+		mShader.setMat4("view", curCamera->getView());
+		glm::mat4 projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
 		mShader.setMat4("projection", projection);
 		// Bind the vertex array
 		glBindVertexArray(VAO);
@@ -252,7 +253,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastY = (float) ypos;
 
 	//window.getCamera()->proccesMouseMovement(xoffset, yoffset);
-	camera.ProcessMouseMovement(xoffset, yoffset);
+	curCamera->ProcessMouseMovement(xoffset, yoffset);
 }
 
 
@@ -260,7 +261,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	camera.ProcessMouseScroll((float) yoffset);
+	curCamera->ProcessMouseScroll((float) yoffset);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -271,14 +272,14 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 	//float cameraSpeed = 0.05f; // adjust accordingly
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.processKeyboard(FORWARD, deltaTime);
+		curCamera->processKeyboard(FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.processKeyboard(BACKWARD, deltaTime);
+		curCamera->processKeyboard(BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		//currentCamera->moveLeft(mDeltaTime);
-		camera.processKeyboard(LEFT, deltaTime);
+		curCamera->processKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.processKeyboard(RIGHT, deltaTime);
+		curCamera->processKeyboard(RIGHT, deltaTime);
 }
 
 // void Window::calculateDelta()
