@@ -34,7 +34,7 @@ class Camera
 {
 private:
 	// Camera Attributes
-	//float mMovementSpeed;
+	unsigned int ID;
 	glm::vec3 mPosition;
 	glm::vec3 mFront;
 	glm::vec3 mWorldUp;
@@ -52,10 +52,9 @@ private:
 
 public:
 	//Constructors
-	Camera(glm::vec3 cameraPos, glm::vec3 cameraFront, glm::vec3 upVec, float speed);
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+	Camera(unsigned int id, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
 			float yaw = Camera_Defaults::YAW, float pitch = Camera_Defaults::PITCH);
-	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
+	Camera(unsigned int id, float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
 
 	//Functions
 	void update();
@@ -65,5 +64,6 @@ public:
 	void ProcessMouseScroll(float yoffset);
 	glm::mat4 getView();
 	float getZoom();
+	unsigned int getID();
 };
 #endif // !_CAMERA_H

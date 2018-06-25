@@ -1,30 +1,25 @@
 #include "camera.h"
 
-Camera::Camera(glm::vec3 cameraPos, glm::vec3 cameraFront, glm::vec3 upVec, float speed)
-{
-	mPosition = cameraPos;
-	mFront = cameraFront;
-	mWorldUp = upVec;
-	mMovementSpeed = speed;
-}
-Camera::Camera(glm::vec3 position , glm::vec3 up , float yaw , float pitch) 
+Camera::Camera(unsigned int id, glm::vec3 position , glm::vec3 up , float yaw , float pitch)
 		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), 
 		  mMovementSpeed(Camera_Defaults::SPEED),
 		  mMouseSensitivity(Camera_Defaults::SENSITIVITY),
 		  mZoom(Camera_Defaults::ZOOM)
 {
+	ID = id;
 	mPosition = position;
 	mWorldUp = up;
 	mYaw = yaw;
 	mPitch = pitch;
 	updateCameraVectors();
 }
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) 
+Camera::Camera(unsigned int id, float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
 		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), 
 		  mMouseSensitivity(Camera_Defaults::SENSITIVITY), 
 		  mMovementSpeed(Camera_Defaults::SPEED),
 		  mZoom(Camera_Defaults::ZOOM)
 {
+	ID = id;
 	mPosition = glm::vec3(posX, posY, posZ);
 	mWorldUp = glm::vec3(upX, upY, upZ);
 	mYaw = yaw;
@@ -98,4 +93,9 @@ glm::mat4 Camera::getView()
 float Camera::getZoom()
 {
 	return mZoom;
+}
+
+unsigned int Camera::getID()
+{
+	return ID;
 }

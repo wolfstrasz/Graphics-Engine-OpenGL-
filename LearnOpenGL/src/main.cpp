@@ -19,6 +19,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void calculateDelta();
+void switchCameras();
 
 // Pointers to currents
 Window* curWindow = nullptr;
@@ -30,14 +31,19 @@ std::string TEX_PATH = "res/textures/";
 Window window1 = Window();
 // Initialise cameras
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
-Camera camera1(cameraPos);
+Camera camera1(1, cameraPos);
+Camera camera2(2, cameraPos);
 
 bool firstMouse = true;
 float lastX = 800 / 2.0f;
 float lastY = 600 / 2.0f;
 
+// Calculate time differences
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// Last frame the "TAB" btn was pressed
+float lastFrame_Tab = 0.0f;
 
 int main(void)
 {
@@ -280,6 +286,14 @@ void processInput(GLFWwindow* window)
 		curCamera->processKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		curCamera->processKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+	{
+		if ((float)lastFrame - lastFrame_Tab > 0.5f)
+		{
+			switchCameras();
+			lastFrame_Tab = lastFrame;
+		}
+	}
 }
 
 // void Window::calculateDelta()
@@ -287,6 +301,12 @@ void calculateDelta()
 {
 	deltaTime = (float)glfwGetTime() - lastFrame;
 	lastFrame += deltaTime;
+}
+
+void switchCameras()
+{
+	if ((int)curCamera->getID() == 1) curCamera = &camera2;
+	else if ((int)curCamera->getID() == 2) curCamera = &camera1;
 }
 
 /************************************************************************/
