@@ -12,46 +12,33 @@ struct Window_Defaults
 	static constexpr int WIDTH = 800;
 	static constexpr int HEIGHT = 600;
 	static constexpr const char* TITLE = "LEARN OPEN GL";
-	static constexpr float SCR_COL_R = 1.0f;
-	static constexpr float SCR_COL_G = 0.0f;
-	static constexpr float SCR_COL_B = 0.0f;
-	static constexpr float SCR_COL_ALPHA = 1.0f;
 };
 class Window
 {
-	// Private Vars && Func
 private:
 	
+	// Window attributes
 	int mWidth;
 	int mHeight;
-	const char* mTitle = "Learn OpenGL";
-
-	Camera * currentCamera = nullptr;
-	GLFWwindow* mWindow = nullptr;
-	float mDeltaTime;
-	float mLastFrame;
+	const char* mTitle = nullptr;
 	glm::vec4 mScrColors;
+	GLFWwindow* mWindow = nullptr;
 	
-	
+	// Functionality
 	int createWindow();
-	void processInput();
-	void cls();
-	void calculateDelta();
-	void checkCameraError();
+	void clearScreen();
 
+	
+public:
 	// Constructors
-public:
-	Window(int width = Window_Defaults::WIDTH, int height = Window_Defaults::HEIGHT, glm::vec4 colors = glm::vec4(1.0f,0.0f,0.0f,1.0f));
+	Window(int width = Window_Defaults::WIDTH, int height = Window_Defaults::HEIGHT,
+			const char * title = Window_Defaults::TITLE, glm::vec4 colors = glm::vec4(1.0f,0.0f,0.0f,1.0f));
 
-	// Public Vars && Func
-public:
+	// Public functionality
 	int init();
 	void update();
-	void setCurrentContext();
 	float getRatio();
 	int shouldClose();
-	void bindCamera(Camera *camera);
 	GLFWwindow* getWindow();
-	Camera* getCamera();
 };
 #endif // !_WINDOW_H

@@ -14,24 +14,38 @@
 #include "data.h"
 #include "camera.h"
 
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
+void calculateDelta();
 
-
+// Pointers to currents
+Window* curWindow = nullptr;
+Camera* curCamera = nullptr;
+// Path to textures folder
 std::string TEX_PATH = "res/textures/";
-Camera camera(cameraPos);
+
+// Initialise windows
 Window window = Window();
+// Initialise cameras
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
+Camera camera(cameraPos);
 
 bool firstMouse = true;
 float lastX = 800 / 2.0f;
 float lastY = 600 / 2.0f;
 
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 int main(void)
 {
 	// CREATE A WINDOW
 	if (!window.init())return -1;
+	
+	// Set context
+	glfwMakeContextCurrent(window.getWindow());
 
 	// SET UP GLAD POINTERS
 	if (!gladLoadGL())
@@ -42,7 +56,7 @@ int main(void)
 	// Set Depth Testing for shaders
 	glEnable(GL_DEPTH_TEST);
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
-
+	
 	// Set callbacks
 	glfwSetFramebufferSizeCallback(window.getWindow(), framebuffer_size_callback);
 	glfwSetCursorPosCallback(window.getWindow(), mouse_callback);
@@ -166,8 +180,6 @@ int main(void)
 	glBindTexture(GL_TEXTURE_2D, texture2);
 #pragma endregion
 
-	// Bind camera to window
-	window.bindCamera(&camera);
 
 	// PROJECTION MATRIX:
 	glm::mat4 projection = glm::mat4(1.0f);
@@ -178,10 +190,12 @@ int main(void)
 	/************************************************************************/
 	while(!window.shouldClose())
 	{
+		calculateDelta();
+		processInput(window.getWindow());
 		window.update();
 		mShader.use();
 		// Set 
-		mShader.setMat4("view", window.getCamera()->getView());
+		mShader.setMat4("view", camera.getView());
 		glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), window.getRatio(), 0.1f, 100.0f);
 		mShader.setMat4("projection", projection);
 		// Bind the vertex array
@@ -247,6 +261,31 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera.ProcessMouseScroll((float) yoffset);
+}
+
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	//float cameraSpeed = 0.05f; // adjust accordingly
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.processKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.processKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		//currentCamera->moveLeft(mDeltaTime);
+		camera.processKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.processKeyboard(RIGHT, deltaTime);
+}
+
+// void Window::calculateDelta()
+void calculateDelta()
+{
+	deltaTime = (float)glfwGetTime() - lastFrame;
+	lastFrame += deltaTime;
 }
 
 /************************************************************************/
