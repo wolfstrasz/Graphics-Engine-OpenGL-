@@ -1,4 +1,4 @@
-#include<camera.h>
+#include "camera.h"
 
 Camera::Camera(glm::vec3 cameraPos, glm::vec3 cameraFront, glm::vec3 upVec, float speed)
 {
@@ -34,11 +34,9 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
 void Camera::update()
 {
 }
-
 void Camera::init()
 {
 }
-
 void Camera::updateCameraVectors()
 {
 	// Calculate the new Front vector
@@ -52,7 +50,6 @@ void Camera::updateCameraVectors()
 	mRight = glm::normalize(glm::cross(mFront, mWorldUp));  
 	mUp = glm::normalize(glm::cross(mRight, mFront));
 }
-
 void Camera::processKeyboard(Camera_Movement direction, float deltaTime)
 {
 	float distance = mMovementSpeed * deltaTime;
@@ -65,7 +62,6 @@ void Camera::processKeyboard(Camera_Movement direction, float deltaTime)
 	if (direction == RIGHT)
 		mPosition += mRight * distance;
 }
-
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
 {
 	xoffset *= mMouseSensitivity;
@@ -86,7 +82,6 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPi
 	// Update Front, Right and Up Vectors using the updated Euler angles
 	updateCameraVectors();
 }
-
 void Camera::ProcessMouseScroll(float yoffset)
 {
 	if (mZoom >= Camera_Margins::ZOOM_MIN && mZoom <= Camera_Margins::ZOOM_MAX)
@@ -96,13 +91,10 @@ void Camera::ProcessMouseScroll(float yoffset)
 	if (mZoom > Camera_Margins::ZOOM_MAX)
 		mZoom = Camera_Margins::ZOOM_MAX;
 }
-
-
 glm::mat4 Camera::getView()
 {
 	return glm::lookAt(mPosition, mPosition + mFront, mUp);
 }
-
 float Camera::getZoom()
 {
 	return mZoom;

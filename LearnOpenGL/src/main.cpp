@@ -9,7 +9,7 @@
 #include <iostream>
 #include <string>
 
-#include "Shader.h"
+#include "shader.h"
 #include "window.h"
 #include "data.h"
 #include "camera.h"
@@ -28,16 +28,9 @@ bool firstMouse = true;
 float lastX = 800 / 2.0f;
 float lastY = 600 / 2.0f;
 
-//void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-//{
-//	// make sure the viewport matches the new window dimensions; note that width and 
-//	// height will be significantly larger than specified on retina displays.
-//	glViewport(0, 0, width, height);
-//}
 int main(void)
 {
 	// CREATE A WINDOW
-	
 	if (!window.init())return -1;
 
 	// SET UP GLAD POINTERS
@@ -46,37 +39,34 @@ int main(void)
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
+	// Set Depth Testing for shaders
+	glEnable(GL_DEPTH_TEST);
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
+	// Set callbacks
 	glfwSetFramebufferSizeCallback(window.getWindow(), framebuffer_size_callback);
 	glfwSetCursorPosCallback(window.getWindow(), mouse_callback);
 	glfwSetScrollCallback(window.getWindow(), scroll_callback);
-	/************************************************************************/
 
-	// CREATE SHADER
-	Shader mShader("coordsystem.4.5", "coordsystem.4.5");
-#pragma region textures
-
+#pragma region _CREATE_TEXTURES
 	/************************************************************************/
-	/*							TEXTURES									*/
+	/*							CREATE TEXTURES								*/
 	/************************************************************************/
 	stbi_set_flip_vertically_on_load(true);
-	// create texture
+	// Initialise image loading size and channels
+	int width, height, nrChannels;
+#pragma region _TEXTURE_01
 	unsigned int texture1;
 	glGenTextures(1, &texture1);
 	glBindTexture(GL_TEXTURE_2D, texture1);
-	// set the texture wrapping/filtering options (on the currently bound texture object)
+	// Set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	// load and generate the texture
-	int width, height, nrChannels;
+	// Load and generate the texture
 	std::string texturePath = TEX_PATH + "pepefck.jpg";
 	unsigned char *textureData = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-
 	// Check if data was loaded and load to texture
 	if (textureData)	
 	{
@@ -87,26 +77,22 @@ int main(void)
 	{
 		std::cout << "Failed to load texture" << std::endl;
 	}
-	// free image data
+	// Free image data
 	stbi_image_free(textureData);
-
-	// TEXTURE 2
-	// create texture
+#pragma endregion _TEXTURE_01
+#pragma region _TEXTURE_02
 	unsigned int texture2;
 	glGenTextures(1, &texture2);
 	glBindTexture(GL_TEXTURE_2D, texture2);
 
-	// set the texture wrapping/filtering options (on the currently bound texture object)
+	// Set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// load and generate the texture
-	//int width, height, nrChannels;
+	// Load and generate the texture
 	texturePath = TEX_PATH + "wall.jpg";
 	textureData = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-
 	// Check if data was loaded and load to texture
 	if (textureData)
 	{
@@ -117,14 +103,12 @@ int main(void)
 	{
 		std::cout << "Failed to load texture" << std::endl;
 	}
-	// free image data
+	// Free image data
 	stbi_image_free(textureData);
-
+#pragma endregion _TEXTURE_02
 #pragma endregion
 
-#pragma region binding_vertex_objects
-
-
+#pragma region _BIND_VERTEX_OBJECTS
 	/************************************************************************/
 	/*							BINDING VERTEX OBJECTS						*/
 	/************************************************************************/
@@ -165,22 +149,22 @@ int main(void)
 
 #pragma endregion
 
+#pragma region _CREATE_SHADERS
+	/************************************************************************/
+	/*							CREATE SHADERS								*/
+	/************************************************************************/
+	// Compile Shader program
+	Shader mShader("coordsystem.4.5", "coordsystem.4.5");
 	// Pre-set Textures
 	mShader.use();
 	mShader.setInt("texture1", 0);
 	mShader.setInt("texture2", 1);
-
-	// tell GLFW to capture our mouse
-	glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	// Set Depth Testing for shaders
-	glEnable(GL_DEPTH_TEST);
-
 	// bind textures on corresponding texture units
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture2);
+#pragma endregion
 
 	// Bind camera to window
 	window.bindCamera(&camera);
@@ -196,10 +180,9 @@ int main(void)
 	{
 		window.update();
 		mShader.use();
-
+		// Set 
 		mShader.setMat4("view", window.getCamera()->getView());
 		glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), window.getRatio(), 0.1f, 100.0f);
-		//projection = glm::perspective(glm::radians(45.0f), window.getRatio(), 1.0f, 100.0f);
 		mShader.setMat4("projection", projection);
 		// Bind the vertex array
 		glBindVertexArray(VAO);
@@ -229,12 +212,14 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
+
 void framebuffer_size_callback(GLFWwindow * window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
 }
+
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)

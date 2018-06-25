@@ -1,6 +1,9 @@
 #include "window.h"
-Window::Window()
+Window::Window(int width, int height, glm::vec4 colors)
 {
+	mWidth = width;
+	mHeight = height;
+	mScrColors = colors;
 }
 
 void Window::update()
@@ -18,14 +21,14 @@ void Window::update()
 int Window::init()
 {
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);						///> Use Versions 4.0 ++
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);						///> Use version 4.5
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);		///> Set profile to Core profile
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	if (!createWindow() == 1) return -1;
 	setCurrentContext();
-	//std::cout << mWidth << " " << mHeight << std::endl;
 	mLastFrame = 0.0f;
 	mDeltaTime = 0.0f;
+	glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	return 1;
 }
 
@@ -41,13 +44,7 @@ int Window::createWindow()
 	return 1;
 }
 
-void Window::checkCameraError()
-{
-	if (currentCamera == nullptr)
-	{
-		std::cout << "ERROR: NO CAMERA BINDED TO CURRENT WINDOW!" << std::endl;
-	}
-}
+
 
 void Window::processInput()
 {
@@ -67,25 +64,11 @@ void Window::processInput()
 
 void Window::cls()
 {
-	glClearColor(mClsColors.x, mClsColors.y, mClsColors.z, mClsColors.w);
+	glClearColor(mScrColors.x, mScrColors.y, mScrColors.z, mScrColors.w);
 	//glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-void Window::setClsColors(glm::vec4 colors)
-{
-	mClsColors = colors;
-}
-void Window::setSize(unsigned int width, unsigned int height)
-{
-	mWidth = width;
-	mHeight = height;
-	glfwSetWindowSize(mWindow, mWidth, mHeight);
-}
-void Window::setTitle(const char * title)
-{
-	mTitle = title;
-	glfwSetWindowTitle(mWindow, title);
-}
+
 int Window::shouldClose()
 {
 	return glfwWindowShouldClose(mWindow);
@@ -94,6 +77,13 @@ int Window::shouldClose()
 void Window::bindCamera(Camera * camera)
 {
 	currentCamera = camera;
+}
+void Window::checkCameraError()
+{
+	if (currentCamera == nullptr)
+	{
+		std::cout << "ERROR: NO CAMERA BINDED TO CURRENT WINDOW!" << std::endl;
+	}
 }
 
 Camera * Window::getCamera()

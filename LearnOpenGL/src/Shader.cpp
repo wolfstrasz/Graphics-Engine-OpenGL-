@@ -1,9 +1,12 @@
+#include "shader.h"
+
 #include <glad/glad.h>
+
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "Shader.h"
+
 
 std::string Shader::SHADERS_PATH = "res/shaders/";
 
