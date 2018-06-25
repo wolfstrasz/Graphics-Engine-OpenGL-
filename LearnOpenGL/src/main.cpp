@@ -38,7 +38,7 @@ bool firstMouse = true;
 float lastX = 800 / 2.0f;
 float lastY = 600 / 2.0f;
 
-// Calculate time differences
+// Calculate time difference
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 

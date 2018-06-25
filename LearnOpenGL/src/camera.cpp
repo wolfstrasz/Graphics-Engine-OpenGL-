@@ -86,6 +86,7 @@ void Camera::ProcessMouseScroll(float yoffset)
 	if (mZoom > Camera_Margins::ZOOM_MAX)
 		mZoom = Camera_Margins::ZOOM_MAX;
 }
+// Getters
 glm::mat4 Camera::getView()
 {
 	return glm::lookAt(mPosition, mPosition + mFront, mUp);
@@ -94,7 +95,6 @@ float Camera::getZoom()
 {
 	return mZoom;
 }
-
 unsigned int Camera::getID()
 {
 	return ID;

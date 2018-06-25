@@ -1,17 +1,11 @@
 #include "window.h"
+
 Window::Window(int width, int height, const char* title, glm::vec4 colors)
 {
 	mWidth		= width;
 	mHeight		= height;
 	mTitle		= title;
 	mScrColors	= colors;
-}
-
-void Window::update()
-{
-	glfwSwapBuffers(mWindow);
-	glfwPollEvents();
-	clearScreen();
 }
 
 int Window::init()
@@ -24,7 +18,6 @@ int Window::init()
 	glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	return 1;
 }
-
 int Window::createWindow()
 {
 	mWindow = glfwCreateWindow(mWidth, mHeight, mTitle, nullptr, nullptr);
@@ -36,27 +29,27 @@ int Window::createWindow()
 	}
 	return 1;
 }
-
+int Window::shouldClose()
+{
+	return glfwWindowShouldClose(mWindow);
+}
+void Window::update()
+{
+	glfwSwapBuffers(mWindow);
+	glfwPollEvents();
+	clearScreen();
+}
 void Window::clearScreen()
 {
 	glClearColor(mScrColors.x, mScrColors.y, mScrColors.z, mScrColors.w);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-
-int Window::shouldClose()
-{
-	return glfwWindowShouldClose(mWindow);
-}
-
+// Getters
 GLFWwindow * Window::getWindow()
 {
 	return mWindow;
 }
-
 float Window::getRatio()
 {
 	return ((float)mWidth / (float)mHeight);
 }
-
-
-

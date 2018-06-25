@@ -1,23 +1,6 @@
 #pragma once
 #ifndef _DATA_H
 #define _DATA_H
-/************************************************************************/
-/*							CREATING TRIANGLES							*/
-/************************************************************************/
-//float vertices[] = {
-//	// positions			//colors			//texture coordinate		// point preview
-//	0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,	1.0f, 1.0f,					// [0] = top right, red , top right 
-//	0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	1.0f, 0.0f,					// [1] = bottom right, green, bottom right
-//	-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,	0.0f, 0.0f,					// [2] = bottom left, blue, bottom left
-//	-0.5f,  0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	0.0f, 1.0f,					// [3] = top left , green, top left
-//	0.0f, 0.5f, 0.0f,		1.0f, 1.0f, 0.0f,	0.5f, 1.0f					// [4] = top mid, yellow, top mid
-//};
-// Pepe triangle
-//unsigned int indices[] = {
-//	1,2,4,
-//	2,3,0
-//};
-
 
 //  COORDINATES				COLORS				TEXTURE POINTS
 float vertices[] = {
