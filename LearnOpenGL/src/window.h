@@ -27,7 +27,7 @@ private:
 public:
 	// Constructors
 	Window(int width = Window_Defaults::WIDTH, int height = Window_Defaults::HEIGHT,
-			const char * title = Window_Defaults::TITLE, glm::vec4 colors = glm::vec4(1.0f,0.0f,0.0f,1.0f));
+			const char * title = Window_Defaults::TITLE, glm::vec4 colors = glm::vec4(0.1f,0.1f, 0.1,1.0f));
 	// Public functionality
 	int init();
 	int shouldClose();
