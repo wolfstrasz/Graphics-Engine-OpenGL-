@@ -11,7 +11,6 @@
 
 #include "shader.h"
 #include "window.h"
-#include "data.h"
 #include "camera.h"
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -21,6 +20,85 @@ void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
 
+#pragma region _DATA_INIT_VERTECES
+//  COORDINATES				COLORS				TEXTURE POINTS
+float vertices[] = {
+	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+
+	0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,	0.0f, 0.0f, 0.0f,   0.0f, 1.0f
+};
+unsigned int indices[] = {
+	0,  1,  2,
+	3,  4,  5,
+
+	6,  7,  8,
+	9, 10, 11,
+
+	12, 13, 14,
+	15, 16, 17,
+
+	18, 19, 20,
+	21, 22, 23,
+
+	24, 25, 26,
+	27, 28, 29,
+
+	30, 31, 32,
+	33, 34, 35
+};
+glm::vec3 cubeWorldPositions[] = {
+	glm::vec3(0.0f,   0.0f,   0.0f),
+	glm::vec3(2.0f,   5.0f, -15.0f),
+	glm::vec3(-1.5f,  -2.2f,  -2.5f),
+	glm::vec3(-3.8f,  -2.0f, -12.3f),
+	glm::vec3(2.4f,  -0.4f,  -3.5f),
+	glm::vec3(-1.7f,   3.0f,  -7.5f),
+	glm::vec3(1.3f,  -2.0f,  -2.5f),
+	glm::vec3(1.5f,   2.0f,  -2.5f),
+	glm::vec3(1.5f,   0.2f,  -1.5f),
+	glm::vec3(-1.3f,   1.0f,  -1.5f)
+};
+#pragma endregion
+
+#pragma region _DATA_INIT_COMPONENTS
 // Pointers to currents
 Window* curWindow = nullptr;
 Camera* curCamera = nullptr;
@@ -44,6 +122,7 @@ float lastFrame = 0.0f;
 
 // Last frame the "TAB" btn was pressed
 float lastFrame_Tab = 0.0f;
+#pragma endregion
 
 int main(void)
 {
@@ -211,7 +290,7 @@ int main(void)
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
+			model = glm::translate(model, cubeWorldPositions[i]);
 			float angle = 20.0f * (i+1);
 
 			// MODEL MATRIX:
@@ -295,14 +374,15 @@ void processInput(GLFWwindow* window)
 		}
 	}
 }
-
-// void Window::calculateDelta()
+// calculate frame difference
+// --------------------------
 void calculateDelta()
 {
 	deltaTime = (float)glfwGetTime() - lastFrame;
 	lastFrame += deltaTime;
 }
-
+// operate the camera switching
+// ----------------------------
 void switchCameras()
 {
 	if ((int)curCamera->getID() == 1) curCamera = &camera2;
