@@ -65,5 +65,6 @@ public:
 	glm::mat4 getView();
 	float getZoom();
 	unsigned int getID();
+	glm::vec3 getPosition();
 };
 #endif // !_CAMERA_H

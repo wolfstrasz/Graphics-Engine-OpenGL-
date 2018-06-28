@@ -99,3 +99,8 @@ unsigned int Camera::getID()
 {
 	return ID;
 }
+
+glm::vec3 Camera::getPosition()
+{
+	return mPosition;
+}

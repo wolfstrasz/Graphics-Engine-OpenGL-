@@ -278,6 +278,7 @@ int main(void)
 		lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 		lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 		lightingShader.setVec3("lightPos", lightPos);
+		lightingShader.setVec3("viewPos", curCamera->getPosition());
 		// Set Lighting Shader matrices
 		lightingShader.setMat4("projection", projection);
 		lightingShader.setMat4("view", view);

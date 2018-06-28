@@ -12,12 +12,31 @@ out vec3 FragmentPos;
 
 void main()
 {
+	// Get clip position of vector
 	gl_Position = projection * view * model * vec4(aPos, 1.0);
 	// Get fragment position
-	FragmentPos = vec3(model * vec4(aPos,1.0));
+	FragmentPos = vec3(model * vec4(aPos,1.0));						//(0)
 	
 	// Create Normal matrix from Model matrix
-	mat3 normalMatrix = mat3(transpose(inverse(model)));
+	mat3 normalMatrix = mat3(transpose(inverse(model)));			//(1),(2) 
 	// Get the fragment normal in world space:
 	Normal = normalMatrix * aNormal;
 }
+/*----------------------------------------------------------------------------
+	(0) :
+	In order to calculate the direction vector of the light to
+	 the object we need the object's position vector in WORLD SPACE
+	  Done by multiplying the vector by the model matrix of the world
+//----------------------------------------------------------------------------
+	(1) :
+	Translation and non-Uniform scaling matrices can severely affect the
+	 NORMAL vector of a model when doing TRANSFORMATION from LOCAL to WORLD
+	  space, thus we need a NORMAL MATRIX that is the "transpose of the inverse
+	   of the upper-left corner of the model matrix"
+	    More info: http://www.lighthouse3d.com "normal matrix"
+//----------------------------------------------------------------------------
+	(2) :
+	INVERSE(ofMatrix) - is a heavy operation so it is better to
+						 calculate the normalMatrix in the CPU (main
+						  thread) and then send it to the shader via UNIFORM
+*/
