@@ -1,8 +1,9 @@
 #version 450 core
 // Material Structure
 struct Material {
-    vec3 ambient;
-    vec3 diffuse;
+    //vec3 ambient;
+    //vec3 diffuse;
+    sampler2D diffuse;
     vec3 specular;
     float shininess;
 };
@@ -17,6 +18,7 @@ struct Light {
 // Entering
 in vec3 Normal;
 in vec3 FragmentPos;
+in vec2 TexCoords;
 // Global
 uniform Material material;
 uniform Light light;
@@ -28,13 +30,14 @@ out vec4 FragColor;
 void main()
 {
     // Calculate Ambient Light                                                          // (0)
-    vec3 ambientLight = light.ambient * material.ambient;
+    //vec3 ambientLight = light.ambient * material.ambient;
+    vec3 ambientLight = light.ambient * vec3(texture(material.diffuse, TexCoords));
 
     // Calculate Diffuse Light                                                          // (1)
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(light.position - FragmentPos);
     float diffuseIntensity = max(dot(norm,lightDir), 0.0);
-    vec3 diffuseLight = light.diffuse * (diffuseIntensity * material.diffuse);
+    vec3 diffuseLight = light.diffuse * (diffuseIntensity * vec3(texture(material.diffuse, TexCoords)));
 
     // Calculate Specular Light                                                         // (2)
     vec3 viewDir = normalize(viewPos - FragmentPos);
