@@ -144,6 +144,7 @@ int main(void)
 	// load textures (we now use a utility function to keep the code more organized)
 	// -----------------------------------------------------------------------------
 	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png");
+	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png");
 #pragma endregion _CREATE_TEXTURES
 
 #pragma region _CREATE_SHADERS
@@ -153,7 +154,16 @@ int main(void)
 	// Pre-set Textures
 	lightingShader.use();
 	lightingShader.setInt("material.diffuse", 0);
+	lightingShader.setInt("material.specular", 1);
 #pragma endregion
+
+	// bind diffuse map
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+	// bind specular map
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularMap);
 
 #pragma region _MAIN_LOOP
 	while(!curWindow->shouldClose())
@@ -171,15 +181,18 @@ int main(void)
 		// be sure to activate shader when setting uniforms/drawing objects
 		lightingShader.use();
 		// Set Lighting Shader object and light colors
+		// Material properties
 		lightingShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
 		lightingShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
 		lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
 		lightingShader.setFloat("material.shininess", 32.0f);
+		// Light properties
 		lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
 		lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 		lightingShader.setVec3("light.position", lightPos);
 		lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		// View position
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
 
 		// Set Lighting Shader matrices
@@ -187,9 +200,7 @@ int main(void)
 		lightingShader.setMat4("view", view);
 		lightingShader.setMat4("model", model);
 
-		// bind diffuse map
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
 
 		// render the cube object
 		glBindVertexArray(cubeVAO);

@@ -4,7 +4,8 @@ struct Material {
     //vec3 ambient;
     //vec3 diffuse;
     sampler2D diffuse;
-    vec3 specular;
+    //vec3 specular;
+    sampler2D specular;
     float shininess;
 };
 
@@ -36,18 +37,18 @@ void main()
     // Calculate Diffuse Light                                                          // (1)
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(light.position - FragmentPos);
-    float diffuseIntensity = max(dot(norm,lightDir), 0.0);
-    vec3 diffuseLight = light.diffuse * (diffuseIntensity * vec3(texture(material.diffuse, TexCoords)));
+    float diffuseStrength = max(dot(norm,lightDir), 0.0);
+    vec3 diffuseLight = light.diffuse * (diffuseStrength * vec3(texture(material.diffuse, TexCoords)));
 
     // Calculate Specular Light                                                         // (2)
     vec3 viewDir = normalize(viewPos - FragmentPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float specularIntensity = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specularLight = light.specular * (specularIntensity * material.specular);
+    float specularStrength = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specularLight = light.specular * (specularStrength * vec3(texture(material.specular, TexCoords)));
 
     // Calculate result                                                                 // (3)
-    vec3 result = ambientLight + diffuseLight + specularLight;
-    FragColor = vec4(result, 1.0);
+    vec3 resultLight = ambientLight + diffuseLight + specularLight;
+    FragColor = vec4(resultLight, 1.0);
 }
 
 /*----------------------------------------------------------------------------
