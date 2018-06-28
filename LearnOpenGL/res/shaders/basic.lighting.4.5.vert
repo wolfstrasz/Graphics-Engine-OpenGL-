@@ -15,6 +15,9 @@ void main()
 	gl_Position = projection * view * model * vec4(aPos, 1.0);
 	// Get fragment position
 	FragmentPos = vec3(model * vec4(aPos,1.0));
-	// Get fragment plane normal
-	Normal = aNormal;
+	
+	// Create Normal matrix from Model matrix
+	mat3 normalMatrix = mat3(transpose(inverse(model)));
+	// Get the fragment normal in world space:
+	Normal = normalMatrix * aNormal;
 }
