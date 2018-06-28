@@ -1,37 +1,49 @@
 #version 450 core
+// Material Structure
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
 // Entering
 in vec3 Normal;
 in vec3 FragmentPos;
 // Global
-uniform vec3 objectColor;
+uniform Material material;
+uniform Light light;
 uniform vec3 lightColor;
-uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform float ambientStrength;
-uniform float specularStrength;
-uniform int objectShininess;
 // Exit
 out vec4 FragColor;
 
 void main()
 {
-    // Calculate Ambient Light
-    //float ambientStrenght = 0.1f;                                                 // (0)
-    vec3 ambientLight = ambientStrength * lightColor;
-    // Calculate Diffuse Light
-    vec3 norm = normalize(Normal);                                                  // (1)
-    vec3 lightDir = normalize(lightPos - FragmentPos);
-    float diffuseStrenght = max(dot(norm,lightDir), 0.0);
-    vec3 diffuseLight = diffuseStrenght * lightColor;
-    // Calculate Specular Light
-    //float specularStrength = 0.5;                                                 // (2)
+    // Calculate Ambient Light                                                          // (0)
+    vec3 ambientLight = light.ambient * material.ambient;
+
+    // Calculate Diffuse Light                                                          // (1)
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(light.position - FragmentPos);
+    float diffuseIntensity = max(dot(norm,lightDir), 0.0);
+    vec3 diffuseLight = light.diffuse * (diffuseIntensity * material.diffuse);
+
+    // Calculate Specular Light                                                         // (2)
     vec3 viewDir = normalize(viewPos - FragmentPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    //int objectShininess = 256;
-    float specularIntensity = pow(max(dot(viewDir, reflectDir), 0.0), objectShininess);
-    vec3 specularLight = specularStrength * specularIntensity * lightColor;  
-    // Calculate result
-    vec3 result = (ambientLight + diffuseLight + specularLight) * objectColor;      // (3)  
+    float specularIntensity = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specularLight = light.specular * (specularIntensity * material.specular);
+
+    // Calculate result                                                                 // (3)
+    vec3 result = ambientLight + diffuseLight + specularLight;
     FragColor = vec4(result, 1.0);
 }
 

@@ -66,10 +66,10 @@ float lastFrame_Tab = 0.0f;
 
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-float ambientStrength = 0.1f;
-float specularStrength = 0.5f;
-int	  objectShininess = 256;
-float lastFrame_Light = 0.0f;
+//float ambientStrength = 0.1f;
+//float specularStrength = 0.5f;
+//int	  objectShininess = 256;
+//float lastFrame_Light = 0.0f;
 
 // SPACE MATRICES:
 glm::mat4 projection = glm::mat4(1.0f);
@@ -276,18 +276,22 @@ int main(void)
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
 		model = glm::mat4(1.0f);
 		// ROTATE LIGHTS POSITION
-		lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-		lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+		lightPos.x = 1.0f + sin((float)glfwGetTime()) * 2.0f;
+		lightPos.y = sin((float)glfwGetTime() / 2.0f) * 1.0f;
 		// be sure to activate shader when setting uniforms/drawing objects
 		lightingShader.use();
 		// Set Lighting Shader object and light colors
-		lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+		lightingShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+		lightingShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+		lightingShader.setFloat("material.shininess", 32.0f);
+		lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+		lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		lightingShader.setVec3("light.position", lightPos);
 		lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		lightingShader.setVec3("lightPos", lightPos);
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
-		lightingShader.setFloat("ambientStrength", ambientStrength);
-		lightingShader.setFloat("specularStrength", specularStrength);
-		lightingShader.setInt("objectShininess", objectShininess);
+
 		// Set Lighting Shader matrices
 		lightingShader.setMat4("projection", projection);
 		lightingShader.setMat4("view", view);
@@ -407,63 +411,63 @@ void processInput(GLFWwindow* window)
 			lastFrame_Tab = lastFrame;
 		}
 	}
-	// Set OBJECT SHININESS
-	if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS)
-	{
-		if ((float)lastFrame - lastFrame_Light > 0.5f)
-		{
-		objectShininess = objectShininess / 2;
-		if (objectShininess < 32) objectShininess = 32;
-		lastFrame_Light = lastFrame;
-		}
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS)
-	{
-		if ((float)lastFrame - lastFrame_Light > 0.5f)
-		{
-			objectShininess = objectShininess * 2;
-			if (objectShininess > 256) objectShininess = 256;
-			lastFrame_Light = lastFrame;
-		}
-	}
-	// Set AMBIENT STRENGTH
-	if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)
-	{
-		if ((float)lastFrame - lastFrame_Light > 0.5f)
-		{
-			ambientStrength = ambientStrength - 0.1f;
-			if (ambientStrength < 0.0f) ambientStrength = 0.0f;
-			lastFrame_Light = lastFrame;
-		}
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS)
-	{
-		if ((float)lastFrame - lastFrame_Light > 0.5f)
-		{
-			ambientStrength = ambientStrength + 0.1f;
-			if (ambientStrength > 1.0f) ambientStrength = 1.0f;
-			lastFrame_Light = lastFrame;
-		}
-	}
-	// Set SPECULAR STRENGTH
-	if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)
-	{
-		if ((float)lastFrame - lastFrame_Light > 0.5f)
-		{
-			specularStrength = specularStrength - 0.1f;
-			if (specularStrength < 0.0f) specularStrength = 0.0f;
-			lastFrame_Light = lastFrame;
-		}
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS)
-	{
-		if ((float)lastFrame - lastFrame_Light > 0.5f)
-		{
-			specularStrength = specularStrength + 0.1f;
-			if (specularStrength > 1.0f) specularStrength = 1.0f;
-			lastFrame_Light = lastFrame;
-		}
-	}
+	//// Set OBJECT SHININESS
+	//if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS)
+	//{
+	//	if ((float)lastFrame - lastFrame_Light > 0.5f)
+	//	{
+	//	objectShininess = objectShininess / 2;
+	//	if (objectShininess < 32) objectShininess = 32;
+	//	lastFrame_Light = lastFrame;
+	//	}
+	//}
+	//if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS)
+	//{
+	//	if ((float)lastFrame - lastFrame_Light > 0.5f)
+	//	{
+	//		objectShininess = objectShininess * 2;
+	//		if (objectShininess > 256) objectShininess = 256;
+	//		lastFrame_Light = lastFrame;
+	//	}
+	//}
+	//// Set AMBIENT STRENGTH
+	//if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)
+	//{
+	//	if ((float)lastFrame - lastFrame_Light > 0.5f)
+	//	{
+	//		ambientStrength = ambientStrength - 0.1f;
+	//		if (ambientStrength < 0.0f) ambientStrength = 0.0f;
+	//		lastFrame_Light = lastFrame;
+	//	}
+	//}
+	//if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS)
+	//{
+	//	if ((float)lastFrame - lastFrame_Light > 0.5f)
+	//	{
+	//		ambientStrength = ambientStrength + 0.1f;
+	//		if (ambientStrength > 1.0f) ambientStrength = 1.0f;
+	//		lastFrame_Light = lastFrame;
+	//	}
+	//}
+	//// Set SPECULAR STRENGTH
+	//if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)
+	//{
+	//	if ((float)lastFrame - lastFrame_Light > 0.5f)
+	//	{
+	//		specularStrength = specularStrength - 0.1f;
+	//		if (specularStrength < 0.0f) specularStrength = 0.0f;
+	//		lastFrame_Light = lastFrame;
+	//	}
+	//}
+	//if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS)
+	//{
+	//	if ((float)lastFrame - lastFrame_Light > 0.5f)
+	//	{
+	//		specularStrength = specularStrength + 0.1f;
+	//		if (specularStrength > 1.0f) specularStrength = 1.0f;
+	//		lastFrame_Light = lastFrame;
+	//	}
+	//}
 
 }
 // calculate frame difference
