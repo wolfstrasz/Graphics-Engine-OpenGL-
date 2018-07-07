@@ -23,6 +23,7 @@ void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
 unsigned int loadTexture(char const * path);
+void generateAttenuationTerms(glm::vec3 &attenuationTerms, float distance);
 #pragma endregion _FUNCTION_INIT
 
 #pragma region _DATA_INIT_CUBES
@@ -41,6 +42,9 @@ glm::vec3 cubeWorldPositions[] = {
 #pragma endregion _DATA_INIT_CUBES
 
 #pragma region _DATA_INIT_COMPONENTS
+// Attenuation Terms Constants
+float LINEAR_CONST = 4.5f;
+float QUADRATIC_CONST = 73.0f;
 // Pointers to currents
 Window* curWindow = nullptr;
 Camera* curCamera = nullptr;
@@ -146,6 +150,7 @@ int main(void)
 	// -----------------------------------------------------------------------------
 	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png");
 	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png");
+	unsigned int emissionMap = loadTexture("res/textures/matrixblue.jpg");
 #pragma endregion _CREATE_TEXTURES
 
 #pragma region _CREATE_SHADERS
@@ -158,6 +163,7 @@ int main(void)
 	lightingShader.use();
 	lightingShader.setInt("material.diffuse", 0);
 	lightingShader.setInt("material.specular", 1);
+	lightingShader.setInt("material.emission", 2);
 #pragma endregion
 
 #pragma region _BIND_TEXTURES_AND_MAPS
@@ -170,6 +176,10 @@ int main(void)
 	// bind specular map
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, specularMap);
+
+	// bind emission map
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissionMap);
 #pragma endregion _BIND_TEXTURES_AND_MAPS
 
 #pragma region _MAIN_LOOP
@@ -197,23 +207,50 @@ int main(void)
 		lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
 		lightingShader.setFloat("material.shininess", 32.0f);
 		// Light properties
+		glm::vec3 attTerms;
+		generateAttenuationTerms(attTerms, 100.0f);
+		lightingShader.setFloat("light.constant", attTerms.x);
+		lightingShader.setFloat("light.linear", attTerms.y);
+		lightingShader.setFloat("light.quadratic", attTerms.z);
 		lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
 		lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 		lightingShader.setVec3("light.position", lightPos);
 		lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		lightingShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+		lightingShader.setInt("multilights", 2); // set: use position vector
+		//lightingShader.setInt("multilights", 3); // set: use direction vector instead
 		// View position
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
+		lightingShader.setVec3("light.position", curCamera->getPosition());
+		lightingShader.setVec3("light.direction", curCamera->getFront());
+		lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+		lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+		
+		// Set utility Uniforms
+		//---------------------
+		//lightingShader.setFloat("time", (float)glfwGetTime());
 
 		// Set Lighting Shader matrices
 		//-----------------------------
 		lightingShader.setMat4("projection", projection);
 		lightingShader.setMat4("view", view);
-		lightingShader.setMat4("model", model);
+		//lightingShader.setMat4("model", model);
 
 		// Render the cube object
 		glBindVertexArray(cubeVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			// calculate the model matrix for each object and pass it to shader before drawing
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, cubeWorldPositions[i]);
+			float angle = 20.0f * i;
+			//model = glm::rotate(model, glm::radians(angle) * (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
+			lightingShader.setMat4("model", model);
+			lightingShader.setFloat("time", (float)glfwGetTime());
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		// Draw the lamp object
 		lampShader.use();
@@ -357,5 +394,19 @@ unsigned int loadTexture(char const * path)
 	}
 
 	return textureID;
+}
+
+// utility function for calculating light attentuation terms
+// ---------------------------------------------------------
+void generateAttenuationTerms(glm::vec3 &attenuationTerms, float distance)
+{
+	if (distance < 1.0f)
+	{
+		std::cout << "ATTENUATION::TERMS::GENERATION:: Distance value invalid";
+		return;
+	}
+	attenuationTerms.x = 1.0f;
+	attenuationTerms.y = LINEAR_CONST / distance;
+	attenuationTerms.z = QUADRATIC_CONST / (distance * distance - distance);
 }
 #pragma endregion _FUNCTIONS_DECLARATION

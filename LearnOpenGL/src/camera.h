@@ -66,5 +66,6 @@ public:
 	float getZoom();
 	unsigned int getID();
 	glm::vec3 getPosition();
+	glm::vec3 getFront();
 };
 #endif // !_CAMERA_H
