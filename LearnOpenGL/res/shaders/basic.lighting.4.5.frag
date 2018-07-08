@@ -37,7 +37,6 @@ uniform int multilights;
 out vec4 FragColor;
 
 void main()
-
 {   
      // Calculate Light Direction vector
     vec3 lightDir;
