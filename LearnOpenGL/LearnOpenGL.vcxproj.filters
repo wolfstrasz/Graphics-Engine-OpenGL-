@@ -33,6 +33,12 @@
     <ClCompile Include="src\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\point_light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dir_light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\stb_image.h">
@@ -51,6 +57,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\indices.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\point_light.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dir_light.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
