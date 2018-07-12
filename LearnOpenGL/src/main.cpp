@@ -50,6 +50,8 @@ glm::vec3 pointLightPositions[] = {
 
 #pragma region _DATA_INIT_COMPONENTS
 // LIGHTS
+#define NR_POINT_LIGHTS 4
+#define NR_DIR_LIGHTS 1
 PointLight pointLights[4];
 DirLight dirLights[1];
 
@@ -193,12 +195,12 @@ int main(void)
 #pragma endregion _BIND_TEXTURES_AND_MAPS
 
 #pragma region _CREATE_LIGHTS
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < NR_POINT_LIGHTS; i++)
 	{
 		pointLights[i] = PointLight(pointLightPositions[i]);
 	}
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < NR_DIR_LIGHTS; i++)
 	{
 		dirLights[i] = DirLight();
 	}
@@ -212,43 +214,34 @@ int main(void)
 		// Check for keyboard input and update the window
 		processInput(curWindow->getWindow());
 		curWindow->update();
-
-		// NEW CODE
-		// ---------------------------------------------------------------------------------------------
-		// ---------------------------------------------------------------------------------------------
 		// be sure to activate shader when setting uniforms/drawing objects
 		lightingShader.use();
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
 		lightingShader.setFloat("material.shininess", 32.0f);
 
 #pragma region _LIGHTS
-	
 		// directional lights
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < NR_DIR_LIGHTS; i++)
 		{
 			dirLights[i].setLight(lightingShader, i);
 		}
 		// point lights
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < NR_POINT_LIGHTS; i++)
 		{
 			pointLights[i].setLight(lightingShader, i);
 		}
 		// spot lights
-		lightingShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f);
-		lightingShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
 		lightingShader.setVec3("spotLight.position", curCamera->getPosition());
 		lightingShader.setVec3("spotLight.direction", curCamera->getFront());
 		lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-		//lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-		//lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+		lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+		lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
 		lightingShader.setFloat("spotLight.constant", 1.0f);
 		lightingShader.setFloat("spotLight.linear", 0.09f);
 		lightingShader.setFloat("spotLight.quadratic", 0.032f);
 		lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
 		lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-
 #pragma endregion _LIGHTS
-
 		// Get the view, model and projection matrices
 		view = curCamera->getView();
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
@@ -269,7 +262,6 @@ int main(void)
 			float angle = 20.0f * i;
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			lightingShader.setMat4("model", model);
-
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
@@ -278,14 +270,16 @@ int main(void)
 		lampShader.setMat4("projection", projection);
 		lampShader.setMat4("view", view);
 
-		//// we now draw as many light bulbs as we have point lights.
-		//glBindVertexArray(lightVAO);
-		//for (unsigned int i = 0; i < 4; i++)
-		//{
-		//	lampShader.setMat4("model", pointLights.getModelMatrix(i));
-		//	glDrawArrays(GL_TRIANGLES, 0, 36);
-		//}
-#pragma endregion OLD_CODE
+		// we now draw as many light bulbs as we have point lights.
+		glBindVertexArray(lightVAO);
+		for (unsigned int i = 0; i < 4; i++)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.2f));
+			lampShader.setMat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 	}
 #pragma endregion _MAIN_LOOP
 

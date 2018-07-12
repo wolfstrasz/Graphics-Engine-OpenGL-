@@ -13,7 +13,7 @@ struct Dir_Light_Defaults
 {
 	static constexpr glm::vec3 DIRECTION = glm::vec3(-0.2f, -1.0f, -0.3f);
 	static constexpr glm::vec3 AMBIENT = glm::vec3(0.05f, 0.05f, 0.05f);
-	static constexpr glm::vec3 DIFFUSE = glm::vec3(0.0f, 0.0f, 1.0f);
+	static constexpr glm::vec3 DIFFUSE = glm::vec3(0.4f, 0.4f, 0.4f);
 	static constexpr glm::vec3 SPECULAR = glm::vec3(0.5f, 0.5f, 0.5f);
 };
 class DirLight
