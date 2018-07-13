@@ -16,6 +16,7 @@
 #include "camera.h"
 #include "point_light.h"
 #include "dir_light.h"
+#include "spot_light.h"
 
 #pragma region _FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -52,8 +53,10 @@ glm::vec3 pointLightPositions[] = {
 // LIGHTS
 #define NR_POINT_LIGHTS 4
 #define NR_DIR_LIGHTS 1
-PointLight pointLights[4];
-DirLight dirLights[1];
+#define NR_SPOT_LIGHTS 1
+PointLight pointLights[NR_POINT_LIGHTS];
+DirLight dirLights[NR_DIR_LIGHTS];
+SpotLight spotLights[NR_SPOT_LIGHTS];
 
 // Pointers to currents
 Window* curWindow = nullptr;
@@ -204,6 +207,11 @@ int main(void)
 	{
 		dirLights[i] = DirLight();
 	}
+
+	for (int i = 0; i < NR_DIR_LIGHTS; i++)
+	{
+		spotLights[i] = SpotLight();
+	}
 #pragma endregion _CREATE_LIGHTS
 
 #pragma region _MAIN_LOOP
@@ -219,7 +227,6 @@ int main(void)
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
 		lightingShader.setFloat("material.shininess", 32.0f);
 
-#pragma region _LIGHTS
 		// directional lights
 		for (int i = 0; i < NR_DIR_LIGHTS; i++)
 		{
@@ -231,17 +238,13 @@ int main(void)
 			pointLights[i].setLight(lightingShader, i);
 		}
 		// spot lights
-		lightingShader.setVec3("spotLight.position", curCamera->getPosition());
-		lightingShader.setVec3("spotLight.direction", curCamera->getFront());
-		lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-		lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-		lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.setFloat("spotLight.constant", 1.0f);
-		lightingShader.setFloat("spotLight.linear", 0.09f);
-		lightingShader.setFloat("spotLight.quadratic", 0.032f);
-		lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-#pragma endregion _LIGHTS
+		for (int i = 0; i < NR_SPOT_LIGHTS; i++)
+		{
+			spotLights[i].updatePosition(curCamera->getPosition());
+			spotLights[i].updateDirection(curCamera->getFront());
+			spotLights[i].setLight(lightingShader, i);
+		}
+
 		// Get the view, model and projection matrices
 		view = curCamera->getView();
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);

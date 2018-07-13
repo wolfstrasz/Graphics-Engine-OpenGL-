@@ -128,6 +128,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\point_light.cpp" />
     <ClCompile Include="src\shader.cpp" />
+    <ClCompile Include="src\spot_light.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\window.cpp" />
   </ItemGroup>
@@ -137,6 +138,7 @@
     <ClInclude Include="src\indices.h" />
     <ClInclude Include="src\point_light.h" />
     <ClInclude Include="src\shader.h" />
+    <ClInclude Include="src\spot_light.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\vertices.h" />
     <ClInclude Include="src\window.h" />

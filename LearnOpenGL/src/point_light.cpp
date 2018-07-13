@@ -33,11 +33,11 @@ void PointLight::setLight(Shader & shader, unsigned int pos)
 {
 	std::string index = std::to_string(pos);
 	shader.setVec3("pointLights[" + index + "].position",	mPosition);
-	shader.setVec3("pointLights[" + index + "].ambient",		mAmbient);
-	shader.setVec3("pointLights[" + index + "].diffuse",		mDiffuse);
+	shader.setVec3("pointLights[" + index + "].ambient",	mAmbient);
+	shader.setVec3("pointLights[" + index + "].diffuse",	mDiffuse);
 	shader.setVec3("pointLights[" + index + "].specular",	mSpecular);
 
 	shader.setFloat("pointLights[" + index + "].constant",	mConstant);
-	shader.setFloat("pointLights[" + index + "].linear",		mLinear);
+	shader.setFloat("pointLights[" + index + "].linear",	mLinear);
 	shader.setFloat("pointLights[" + index + "].quadratic",	mQuadratic);
 }

@@ -45,7 +45,7 @@ struct SpotLight {
 
 #define NR_POINT_LIGHTS 4
 #define NR_DIR_LIGHTS 1
-
+#define NR_SPOT_LIGHTS 1
 // ENTERING
 // --------
 in vec3 FragmentPos;
@@ -57,7 +57,7 @@ in vec2 TexCoords;
 uniform vec3 viewPos;
 uniform DirLight dirLights[NR_DIR_LIGHTS];
 uniform PointLight pointLights[NR_POINT_LIGHTS];
-uniform SpotLight spotLight;
+uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 uniform Material material;
 
 // EXITING
@@ -80,15 +80,13 @@ void main()
     vec3 result = vec3(0.0f,0.0f,0.0f);
     // phase 1: Directional lighting
     for(int i =0; i< NR_DIR_LIGHTS; i++)
-    {
         result +=CalcDirLight(dirLights[i], norm, viewDir);
-    }
-    //vec3 result = CalcDirLight(dirLight, norm, viewDir);
     // phase 2: Point lights
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
         result += CalcPointLight(pointLights[i], norm, FragmentPos, viewDir);    
     // phase 3: Spot light
-    result += CalcSpotLight(spotLight, norm, FragmentPos, viewDir);    
+    for(int i = 0; i < NR_SPOT_LIGHTS; i++)
+        result += CalcSpotLight(spotLights[i], norm, FragmentPos, viewDir);    
     
     FragColor = vec4(result, 1.0);
 }
