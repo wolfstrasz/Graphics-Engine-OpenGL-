@@ -39,12 +39,26 @@ void SpotLight::setLight(Shader & shader, unsigned int pos)
 	shader.setFloat("spotLights[" + index + "].outerCutOff", mOuterCutOff);
 }
 
-void SpotLight::updatePosition(glm::vec3 position)
+void SpotLight::setVec3(Spot_Light_Vector_Attributes attrib, glm::vec3 value)
 {
-	mPosition = position;
+	if (attrib == POSITION)
+		mPosition = value;
+	if (attrib == DIRECTION)
+		mDirection = value;
+	if (attrib == AMBIENT)
+		mAmbient == value;
+	if (attrib == DIFFUSE)
+		mDiffuse = value;
+	if (attrib == SPECULAR)
+		mSpecular = value;
 }
 
-void SpotLight::updateDirection(glm::vec3 direction)
+void SpotLight::setFloat(Spot_Light_Float_Attributes attrib, float value)
 {
-	mDirection = direction;
+	if (attrib == DISTANCE)
+		generateAttenuationTerms(value);
+	if (attrib == CUT_OFF_ANGLE)
+		mCutOff = glm::cos(glm::radians(value));
+	if (attrib == OUTER_CUT_OFF_ANGLE)
+		mOuterCutOff = glm::cos(glm::radians(value));
 }

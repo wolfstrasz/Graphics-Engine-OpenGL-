@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string.h>
 #include "shader.h"
+
 struct Spot_Light_Constants {
 	static constexpr float LINEAR = 4.5f;
 	static constexpr float QUADRATIC = 73.0f;
@@ -27,6 +28,22 @@ struct Spot_Light_Defaults {
 class SpotLight
 {
 public:
+	enum Spot_Light_Vector_Attributes
+	{
+		POSITION,
+		DIRECTION,
+		AMBIENT,
+		DIFFUSE,
+		SPECULAR
+	};
+
+	enum Spot_Light_Float_Attributes
+	{
+		DISTANCE,
+		CUT_OFF_ANGLE,
+		OUTER_CUT_OFF_ANGLE
+	};
+
 	SpotLight(glm::vec3 position = Spot_Light_Defaults::POSITION,
 		glm::vec3 direction = Spot_Light_Defaults::DIRECTION,
 		glm::vec3 ambient = Spot_Light_Defaults::AMBIENT,
@@ -50,7 +67,7 @@ private:
 	void generateAttenuationTerms(float distance);
 public:
 	void setLight(Shader& shader, unsigned int pos);
-	void updatePosition(glm::vec3 position);
-	void updateDirection(glm::vec3 direction);
+	void setVec3(Spot_Light_Vector_Attributes attrib, glm::vec3 value);
+	void setFloat(Spot_Light_Float_Attributes attrib, float value);
 };
 #endif // !_SPOT_LIGHT

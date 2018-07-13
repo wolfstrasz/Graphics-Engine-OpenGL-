@@ -17,3 +17,15 @@ void DirLight::setLight(Shader & shader, unsigned int pos)
 	shader.setVec3("dirLights[" + index + "].diffuse",	mDiffuse);
 	shader.setVec3("dirLights[" + index + "].specular",	mSpecular);
 }
+
+void DirLight::setVec3(Dir_Light_Vector_Attributes attrib, glm::vec3 value)
+{
+	if (attrib == DIRECTION)
+		mDirection = value;
+	if (attrib == AMBIENT)
+		mAmbient == value;
+	if (attrib == DIFFUSE)
+		mDiffuse = value;
+	if (attrib == SPECULAR)
+		mSpecular = value;
+}

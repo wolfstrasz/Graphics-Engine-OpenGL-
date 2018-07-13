@@ -240,8 +240,8 @@ int main(void)
 		// spot lights
 		for (int i = 0; i < NR_SPOT_LIGHTS; i++)
 		{
-			spotLights[i].updatePosition(curCamera->getPosition());
-			spotLights[i].updateDirection(curCamera->getFront());
+			spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
+			spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
 			spotLights[i].setLight(lightingShader, i);
 		}
 

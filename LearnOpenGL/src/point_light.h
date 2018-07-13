@@ -9,6 +9,7 @@
 #include <string.h>
 #include "shader.h"
 
+
 struct Point_Light_Constants {
 	static constexpr float LINEAR = 4.5f;
 	static constexpr float QUADRATIC = 73.0f;
@@ -24,6 +25,19 @@ struct Point_Light_Defaults {
 class PointLight
 {
 public:
+	enum Point_Light_Vector_Attributes
+	{
+		POSITION,
+		AMBIENT,
+		DIFFUSE,
+		SPECULAR
+	};
+
+	enum Point_Light_Float_Attributes
+	{
+		DISTANCE
+	};
+
 	PointLight(glm::vec3 position = Point_Light_Defaults::POSITION,
 		glm::vec3 ambient = Point_Light_Defaults::AMBIENT,
 		glm::vec3 diffuse = Point_Light_Defaults::DIFFUSE,
@@ -38,9 +52,11 @@ private:
 	float mLinear;
 	float mQuadratic;
 
-	void generateAttenuationTerms(glm::vec3 &attenuationTerms, float distance);
+	void generateAttenuationTerms(float distance);
 
 public:
 	void setLight(Shader& shader, unsigned int pos);
+	void setVec3(Point_Light_Vector_Attributes attrib, glm::vec3 value);
+	void setFloat(Point_Light_Float_Attributes attrib, float value);
 };
 #endif // !_POINT_LIGHT_H

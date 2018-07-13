@@ -19,6 +19,14 @@ struct Dir_Light_Defaults
 class DirLight
 {
 public:
+	enum Dir_Light_Vector_Attributes
+	{
+		DIRECTION,
+		AMBIENT,
+		DIFFUSE,
+		SPECULAR
+	};
+
 	DirLight(glm::vec3 direction = Dir_Light_Defaults::DIRECTION,
 			glm::vec3 ambient = Dir_Light_Defaults::AMBIENT,
 			glm::vec3 diffuse = Dir_Light_Defaults::DIFFUSE,
@@ -32,5 +40,6 @@ private:
 
 public:
 	void setLight(Shader& shader, unsigned int pos);
+	void setVec3(Dir_Light_Vector_Attributes attrib, glm::vec3 value);
 };
 #endif // !_DIR_LIGHT
