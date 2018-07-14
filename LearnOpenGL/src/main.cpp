@@ -17,6 +17,7 @@
 #include "point_light.h"
 #include "dir_light.h"
 #include "spot_light.h"
+#include "model.h"
 
 #pragma region _FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
