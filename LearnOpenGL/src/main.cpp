@@ -234,27 +234,17 @@ int main(void)
 	// Compile Shader program
 	Shader lightingShader("multiple.lighting", "multiple.lighting");
 	Shader lampShader("basic.lamp.4.5", "basic.lamp.4.5");
+	Shader modelShader("1.model_loading", "1.model_loading");
 	// Pre-set Textures
 	lightingShader.use();
 	lightingShader.setInt("material.diffuse", 0);
 	lightingShader.setInt("material.specular", 1);
 	lightingShader.setInt("material.emission", 2);
+	// load models
+	// -----------
+	Model ourModel("res/models/nanosuit/nanosuit.obj");
 #pragma endregion
-#pragma region _BIND_TEXTURES_AND_MAPS
-	// Binding textures and diffuse/specular maps to TEXTURE units
-	//------------------------------------------------------------
-	// bind diffuse map
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseMap);
 
-	// bind specular map
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
-
-	// bind emission map
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, emissionMap);
-#pragma endregion _BIND_TEXTURES_AND_MAPS
 #pragma region _CREATE_LIGHTS
 	for (int i = 0; i < NR_POINT_LIGHTS; i++)
 	{
@@ -277,6 +267,22 @@ int main(void)
 		// Check for keyboard input and update the window
 		processInput(curWindow->getWindow());
 		curWindow->update();
+#pragma region _BIND_TEXTURES_AND_MAPS
+		// Binding textures and diffuse/specular maps to TEXTURE units
+		//------------------------------------------------------------
+		// bind diffuse map
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+		// bind specular map
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
+
+		// bind emission map
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, emissionMap);
+#pragma endregion _BIND_TEXTURES_AND_MAPS
+
 		// be sure to activate shader when setting uniforms/drawing objects
 		lightingShader.use();
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
@@ -338,6 +344,16 @@ int main(void)
 			lampShader.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+
+		// render the loaded model
+		modelShader.use();
+		modelShader.setMat4("projection", projection);
+		modelShader.setMat4("view", view);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(10.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		modelShader.setMat4("model", model);
+		ourModel.Draw(modelShader);
 	}
 #pragma endregion _MAIN_LOOP
 #pragma region _TERMINATION
