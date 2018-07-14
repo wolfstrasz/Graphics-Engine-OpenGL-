@@ -135,12 +135,10 @@
   <ItemGroup>
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\dir_light.h" />
-    <ClInclude Include="src\indices.h" />
     <ClInclude Include="src\point_light.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\spot_light.h" />
     <ClInclude Include="src\stb_image.h" />
-    <ClInclude Include="src\vertices.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

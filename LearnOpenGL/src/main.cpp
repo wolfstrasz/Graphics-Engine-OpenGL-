@@ -9,8 +9,8 @@
 #include <iostream>
 #include <string>
 
-#include "vertices.h"
-#include "indices.h"
+//#include "vertices.h"
+//#include "indices.h"
 #include "shader.h"
 #include "window.h"
 #include "camera.h"
@@ -27,8 +27,74 @@ void calculateDelta();
 void switchCameras();
 unsigned int loadTexture(char const * path);
 #pragma endregion _FUNCTION_INIT
+#pragma region _DATA_INIT_COMPONENTS
 
-#pragma region _DATA_INIT_CUBES_AND_LIGHTS
+// CUBE VERTICES AND INDICES
+float vertices[] = {
+	// positions          // normals           // texture coords
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+	0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+	0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+	0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+	0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+	0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+	0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+};
+unsigned int indices[] = {
+	0,  1,  2,
+	3,  4,  5,
+
+	6,  7,  8,
+	9, 10, 11,
+
+	12, 13, 14,
+	15, 16, 17,
+
+	18, 19, 20,
+	21, 22, 23,
+
+	24, 25, 26,
+	27, 28, 29,
+
+	30, 31, 32,
+	33, 34, 35
+};
+
+// CUBE OBJECTS
 glm::vec3 cubePositions[] = {
 	glm::vec3(0.0f,   0.0f,   0.0f),
 	glm::vec3(2.0f,   5.0f, -15.0f),
@@ -41,15 +107,7 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(1.5f,   0.2f,  -1.5f),
 	glm::vec3(-1.3f,   1.0f,  -1.5f)
 };
-glm::vec3 pointLightPositions[] = {
-	glm::vec3(0.7f,  0.2f,  2.0f),
-	glm::vec3(2.3f, -3.3f, -4.0f),
-	glm::vec3(-4.0f,  2.0f, -12.0f),
-	glm::vec3(0.0f,  0.0f, -3.0f)
-};
-#pragma endregion _DATA_INIT_CUBES_AND_LIGHTS
 
-#pragma region _DATA_INIT_COMPONENTS
 // LIGHTS
 #define NR_POINT_LIGHTS 4
 #define NR_DIR_LIGHTS 1
@@ -57,38 +115,43 @@ glm::vec3 pointLightPositions[] = {
 PointLight pointLights[NR_POINT_LIGHTS];
 DirLight dirLights[NR_DIR_LIGHTS];
 SpotLight spotLights[NR_SPOT_LIGHTS];
+glm::vec3 pointLightPositions[] = {
+	glm::vec3(0.7f,  0.2f,  2.0f),
+	glm::vec3(2.3f, -3.3f, -4.0f),
+	glm::vec3(-4.0f,  2.0f, -12.0f),
+	glm::vec3(0.0f,  0.0f, -3.0f)
+};
 
 // Pointers to currents
 Window* curWindow = nullptr;
 Camera* curCamera = nullptr;
+
 // Path to textures folder
 std::string TEX_PATH = "res/textures/";
 
 // Initialise windows
 Window window1 = Window();
+
 // Initialise cameras
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
 Camera camera1(1, cameraPos);
 Camera camera2(2, cameraPos);
+float lastFrame_Tab = 0.0f;
 
+// Mouse detection
 bool firstMouse = true;
 float lastX = 800 / 2.0f;
 float lastY = 600 / 2.0f;
 
-// Calculate time difference
+// Calculate frame differences
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-// Last frame the "TAB" btn was pressed
-float lastFrame_Tab = 0.0f;
-
-// lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 // SPACE MATRICES:
 glm::mat4 projection = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 glm::mat4 model = glm::mat4(1.0f);
+
 #pragma endregion _DATA_INIT_COMPONENTS
 
 int main(void)
@@ -96,11 +159,12 @@ int main(void)
 #pragma region _SET_UP
 	// Set camera as current
 	curCamera = &camera1;
+
 	// Initialise window and set it as current
 	if (!window1.init())return -1;
 	curWindow = &window1;
 
-	// Set context
+	// Set context window
 	glfwMakeContextCurrent(curWindow->getWindow());
 
 	// SET UP GLAD POINTERS
@@ -119,7 +183,6 @@ int main(void)
 	glfwSetScrollCallback(curWindow->getWindow(), scroll_callback);
 
 #pragma endregion _SET_UP
-
 #pragma region _BINDINGS
 	// Bind VAOs, VBOs and set Attribute pointers
 	//-------------------------------------------
@@ -157,7 +220,6 @@ int main(void)
 	glEnableVertexAttribArray(0);
 
 #pragma endregion _BINDINGS
-
 #pragma region _CREATE_TEXTURES
 	// Load textures (we now use a utility function to keep the code more organized)
 	// -----------------------------------------------------------------------------
@@ -165,13 +227,10 @@ int main(void)
 	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png");
 	unsigned int emissionMap = loadTexture("res/textures/matrixblue.jpg");
 #pragma endregion _CREATE_TEXTURES
-
 #pragma region _CREATE_SHADERS
 	// Create shader programs, compile them and set textures
 	//------------------------------------------------------
 	// Compile Shader program
-	//Shader lightingShader("basic.lighting.4.5", "basic.lighting.4.5");
-	//Shader lightingShader("basic.lighting.4.5", "multiple.lighting");
 	Shader lightingShader("multiple.lighting", "multiple.lighting");
 	Shader lampShader("basic.lamp.4.5", "basic.lamp.4.5");
 	// Pre-set Textures
@@ -180,7 +239,6 @@ int main(void)
 	lightingShader.setInt("material.specular", 1);
 	lightingShader.setInt("material.emission", 2);
 #pragma endregion
-
 #pragma region _BIND_TEXTURES_AND_MAPS
 	// Binding textures and diffuse/specular maps to TEXTURE units
 	//------------------------------------------------------------
@@ -196,24 +254,20 @@ int main(void)
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, emissionMap);
 #pragma endregion _BIND_TEXTURES_AND_MAPS
-
 #pragma region _CREATE_LIGHTS
 	for (int i = 0; i < NR_POINT_LIGHTS; i++)
 	{
 		pointLights[i] = PointLight(pointLightPositions[i]);
 	}
-
 	for (int i = 0; i < NR_DIR_LIGHTS; i++)
 	{
 		dirLights[i] = DirLight();
 	}
-
 	for (int i = 0; i < NR_DIR_LIGHTS; i++)
 	{
 		spotLights[i] = SpotLight();
 	}
 #pragma endregion _CREATE_LIGHTS
-
 #pragma region _MAIN_LOOP
 	while(!curWindow->shouldClose())
 	{
@@ -285,7 +339,6 @@ int main(void)
 		}
 	}
 #pragma endregion _MAIN_LOOP
-
 #pragma region _TERMINATION
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------

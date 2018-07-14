@@ -56,12 +56,6 @@
     <ClInclude Include="src\shader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\vertices.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\indices.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\point_light.h">
       <Filter>Source Files</Filter>
     </ClInclude>
