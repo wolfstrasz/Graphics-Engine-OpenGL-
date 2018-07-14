@@ -97,7 +97,7 @@ unsigned int indices[] = {
 
 // CUBE OBJECTS
 glm::vec3 cubePositions[] = {
-	glm::vec3(0.0f,   0.0f,   0.0f),
+	glm::vec3(10.0f,   0.0f,   0.0f),
 	glm::vec3(2.0f,   5.0f, -15.0f),
 	glm::vec3(-1.5f,  -2.2f,  -2.5f),
 	glm::vec3(-3.8f,  -2.0f, -12.3f),
@@ -235,6 +235,7 @@ int main(void)
 	Shader lightingShader("multiple.lighting", "multiple.lighting");
 	Shader lampShader("basic.lamp.4.5", "basic.lamp.4.5");
 	Shader modelShader("1.model_loading", "1.model_loading");
+	Shader modelShader2("2.model_loading", "2.model_loading");
 	// Pre-set Textures
 	lightingShader.use();
 	lightingShader.setInt("material.diffuse", 0);
@@ -267,7 +268,7 @@ int main(void)
 		// Check for keyboard input and update the window
 		processInput(curWindow->getWindow());
 		curWindow->update();
-#pragma region _BIND_TEXTURES_AND_MAPS
+#pragma region _BIND_TEXTURES_CUBES
 		// Binding textures and diffuse/specular maps to TEXTURE units
 		//------------------------------------------------------------
 		// bind diffuse map
@@ -281,8 +282,8 @@ int main(void)
 		// bind emission map
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, emissionMap);
-#pragma endregion _BIND_TEXTURES_AND_MAPS
-
+#pragma endregion
+#pragma region _DRAW_CUBES
 		// be sure to activate shader when setting uniforms/drawing objects
 		lightingShader.use();
 		lightingShader.setVec3("viewPos", curCamera->getPosition());
@@ -328,6 +329,9 @@ int main(void)
 			lightingShader.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		glBindVertexArray(0);
+#pragma endregion
+#pragma region _DRAW_LAMPS
 
 		// also draw the lamp object(s)
 		lampShader.use();
@@ -344,7 +348,10 @@ int main(void)
 			lampShader.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-
+		glBindVertexArray(0);
+#pragma endregion
+		
+#pragma region _LOAD_MODEL1
 		// render the loaded model
 		modelShader.use();
 		modelShader.setMat4("projection", projection);
@@ -354,6 +361,48 @@ int main(void)
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
 		modelShader.setMat4("model", model);
 		ourModel.Draw(modelShader);
+#pragma endregion
+
+#pragma region _LOAD_MODEL2
+		// render the loaded model 2
+		modelShader2.use();
+		modelShader2.setVec3("viewPos", curCamera->getPosition());
+		modelShader2.setFloat("texture_shininess", 32.0f);
+
+		// directional lights
+		for (int i = 0; i < NR_DIR_LIGHTS; i++)
+		{
+			dirLights[i].setLight(modelShader2, i);
+		}
+		// point lights
+		for (int i = 0; i < NR_POINT_LIGHTS; i++)
+		{
+			pointLights[i].setLight(modelShader2, i);
+		}
+		// spot lights
+		for (int i = 0; i < NR_SPOT_LIGHTS; i++)
+		{
+			spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
+			spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
+			spotLights[i].setLight(modelShader2, i);
+		}
+
+		// Get the view, model and projection matrices
+		view = curCamera->getView();
+		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
+		model = glm::mat4(1.0f);
+		// Set the matrices in the lighting shader
+		modelShader2.setMat4("projection", projection);
+		modelShader2.setMat4("view", view);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		modelShader2.setMat4("model", model);
+		/*glm::mat3 inverseMatrix = glm::mat3(1.0f);
+		inverseMatrix = glm::mat3(transpose(inverse(model)));
+		model*/
+		ourModel.Draw(modelShader2);
+#pragma endregion
 	}
 #pragma endregion _MAIN_LOOP
 #pragma region _TERMINATION

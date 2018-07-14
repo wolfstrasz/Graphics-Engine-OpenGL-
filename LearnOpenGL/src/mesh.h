@@ -62,8 +62,13 @@ public:
 		unsigned int specularNr = 1;
 		unsigned int normalNr = 1;
 		unsigned int heightNr = 1;
+		
+		//std::cout << "TEXTURES SIZE: " << textures.size()<<std::endl;
+		//std::cout << "NEW TEXTURE ============================ " << std::endl;
 		for (unsigned int i = 0; i < textures.size(); i++)
 		{
+
+			//std::cout << "TEXTURE TYPE: " << textures[i].type << std::endl;
 			glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
 											  // retrieve texture number (the N in diffuse_textureN)
 			string number;
@@ -79,6 +84,7 @@ public:
 
 													 // now set the sampler to the correct texture unit
 			glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+			
 			// and finally bind the texture
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
