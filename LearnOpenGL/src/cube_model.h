@@ -19,7 +19,7 @@
 class Cube
 {
 private:
-	float cube_vertices[6*6*8] = {
+	float cube_vertices[8*6*6] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,

@@ -17,8 +17,9 @@
 #include "spot_light.h"
 #include "model.h"
 #include "cube_model.h"
+#include "plane_model.h"
 
-#pragma region _FUNCTION_INIT
+#pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -26,9 +27,12 @@ void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
 unsigned int loadTexture(char const * path);
+#pragma endregion
+
+#pragma region _DRAW_INIT
 void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader);
 void drawModelScene(Model modelObject, Shader modelShader);
-#pragma endregion _FUNCTION_INIT
+#pragma endregion
 
 // SPACE MATRICES:
 glm::mat4 projection = glm::mat4(1.0f);
@@ -119,6 +123,7 @@ int main(void)
 	}
 	// Set Depth Testing for shaders
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
 	// Set callbacks
@@ -132,22 +137,32 @@ int main(void)
 	// -----------------------------------------------------------------------------
 	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png");
 	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png");
+	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg");
+	unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png");
 
 	// compile shader programs
 	// -----------------------
 	Shader lightingShader("multiple.lighting", "multiple.lighting");
 	Shader lampShader("lamp", "lamp");
 	Shader modelShader("model_loading.3", "model_loading.3");
+	Shader depthShader("depth.1", "depth.1");
 
 	// load models
 	// -----------
-	Model ourModel("res/models/nanosuit/nanosuit.obj");
+	//Model ourModel("res/models/nanosuit/nanosuit.obj");
 	Cube ourCube(diffuseMap, specularMap);
-	
+	Plane woodFloor(floorDiffuseMap, floorDiffuseMap);
+	Cube marbleCube(marbleDiffuseMap, marbleDiffuseMap);
+
+
 	// create lights
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
+
+	// ---------------------------------------------------
+	// ---------------------------------------------------
+
 
 	while(!curWindow->shouldClose())
 	{
@@ -156,13 +171,39 @@ int main(void)
 		// Check for keyboard input and update the window
 		processInput(curWindow->getWindow());
 		curWindow->update();
+		
+		//Get view and projection matrices
+		view = curCamera->getView();
+		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
 
+		//--------------------------------------------------------------------------------------------------
+		// DRAW
+		depthShader.use();
+		depthShader.setMat4("view", view);
+		depthShader.setMat4("projection", projection);
+
+		// floor
+		depthShader.setMat4("model", glm::mat4(1.0f));
+		woodFloor.draw(depthShader);
+
+		// cubes
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		depthShader.setMat4("model", model);
+		marbleCube.drawCube(depthShader);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		depthShader.setMat4("model", model);
+		marbleCube.drawCube(depthShader);
+
+		//-------------------------------------------------------------------------------------
 		// Draw Scenery
-		drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, lightingShader);
-		drawModelScene(ourModel, modelShader);
-		drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		//drawStensilScene();
+		//drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, lightingShader);
+		//drawModelScene(ourModel, modelShader);
+		//drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
 	}
-
 	glfwTerminate();
 	return 0;
 }
@@ -305,11 +346,6 @@ void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::ve
 		spotLights[i].setLight(shader, i);
 	}
 
-	// Get the view, model and projection matrices
-	view = curCamera->getView();
-	projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
-	model = glm::mat4(1.0f);
-
 	// Set the matrices in the lighting shader
 	shader.setMat4("projection", projection);
 	shader.setMat4("view", view);
@@ -352,14 +388,10 @@ void drawModelScene(Model modelObject, Shader modelShader)
 		spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
 		spotLights[i].setLight(modelShader, i);
 	}
-
-	// Get the view, model and projection matrices
-	view = curCamera->getView();
-	projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
-	model = glm::mat4(1.0f);
 	// Set the matrices in the lighting shader
 	modelShader.setMat4("projection", projection);
 	modelShader.setMat4("view", view);
+
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
 	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
