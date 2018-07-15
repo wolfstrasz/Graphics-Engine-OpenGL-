@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "shader.h"
 #include "window.h"
@@ -26,7 +27,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
-unsigned int loadTexture(char const * path);
+unsigned int loadTexture(char const * path, GLint wrapping_mode);
 #pragma endregion
 
 #pragma region _DRAW_INIT
@@ -135,10 +136,11 @@ int main(void)
 
 	// Load textures (we now use a utility function to keep the code more organized)
 	// -----------------------------------------------------------------------------
-	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png");
-	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png");
-	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg");
-	unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png");
+	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
+	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
+	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
+	unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+	unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
 
 	// compile shader programs
 	// -----------------------
@@ -146,10 +148,12 @@ int main(void)
 	Shader lampShader("lamp", "lamp");
 	Shader modelShader("model_loading.3", "model_loading.3");
 	Shader depthShader("depth.1", "depth.1");
+	Shader blendingShader("blending.1", "blending.1");
+	Shader blendingShader2("blending.2", "blending.2");
 
 	// load models
 	// -----------
-	//Model ourModel("res/models/nanosuit/nanosuit.obj");
+	Model ourModel("res/models/nanosuit/nanosuit.obj");
 	Cube ourCube(diffuseMap, specularMap);
 	Plane woodFloor(floorDiffuseMap, floorDiffuseMap);
 	Cube marbleCube(marbleDiffuseMap, marbleDiffuseMap);
@@ -162,7 +166,42 @@ int main(void)
 
 	// ---------------------------------------------------
 	// ---------------------------------------------------
+	float windowPanelVertices[] = {
+		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
 
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+	};
+	// Window VAO
+	unsigned int windowPanelsVAO, windowPanelsVBO;
+	glGenVertexArrays(1, &windowPanelsVAO);
+	glGenBuffers(1, &windowPanelsVBO);
+	glBindVertexArray(windowPanelsVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, windowPanelsVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(windowPanelVertices), windowPanelVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glBindVertexArray(0);
+
+	unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
+
+	
+	// create windows
+	std::vector<glm::vec3> windowPanelsPositions;
+	windowPanelsPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+	windowPanelsPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+	windowPanelsPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+	windowPanelsPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+	windowPanelsPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	while(!curWindow->shouldClose())
 	{
@@ -176,33 +215,62 @@ int main(void)
 		view = curCamera->getView();
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
 
-		//--------------------------------------------------------------------------------------------------
-		// DRAW
-		depthShader.use();
-		depthShader.setMat4("view", view);
-		depthShader.setMat4("projection", projection);
-
-		// floor
-		depthShader.setMat4("model", glm::mat4(1.0f));
-		woodFloor.draw(depthShader);
-
-		// cubes
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		depthShader.setMat4("model", model);
-		marbleCube.drawCube(depthShader);
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		depthShader.setMat4("model", model);
-		marbleCube.drawCube(depthShader);
-
-		//-------------------------------------------------------------------------------------
 		// Draw Scenery
-		//drawStensilScene();
 		//drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, lightingShader);
 		//drawModelScene(ourModel, modelShader);
 		//drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+
+		//--------------------------------------------------------------------------------------------------
+		// DRAW
+		blendingShader.use();
+		blendingShader.setMat4("view", view);
+		blendingShader.setMat4("projection", projection);
+
+		// floor
+		blendingShader.setMat4("model", glm::mat4(1.0f));
+		woodFloor.draw(blendingShader);
+
+		// cubes
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0001f, -1.0f));
+		blendingShader.setMat4("model", model);
+		marbleCube.drawCube(blendingShader);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0001f, 0.0f));
+		blendingShader.setMat4("model", model);
+		marbleCube.drawCube(blendingShader);
+
+		blendingShader2.use();
+		blendingShader2.setMat4("view", view);
+		blendingShader2.setMat4("projection", projection);
+		// Window Panels
+
+		// Sort them
+		std::map<float, glm::vec3> sorted;
+		for (unsigned int i = 0; i < windowPanelsPositions.size(); i++)
+		{
+			float distance = glm::length(curCamera->getPosition() - windowPanelsPositions[i]);
+			sorted[distance] = windowPanelsPositions[i];
+		}
+
+		glBindVertexArray(windowPanelsVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, windowPanelTexture);
+		
+		blendingShader2.use();
+		blendingShader2.setInt("texture1", 0);
+		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, it->second);
+			blendingShader2.setMat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		glBindVertexArray(0);
+		
+		//-------------------------------------------------------------------------------------
+		
 	}
 	glfwTerminate();
 	return 0;
@@ -288,7 +356,7 @@ void switchCameras()
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
-unsigned int loadTexture(char const * path)
+unsigned int loadTexture(char const * path, GLint wrapping_mode)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -309,8 +377,10 @@ unsigned int loadTexture(char const * path)
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping_mode); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping_mode);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
