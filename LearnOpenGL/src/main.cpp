@@ -16,6 +16,7 @@
 #include "dir_light.h"
 #include "spot_light.h"
 #include "model.h"
+#include "cube_model.h"
 
 #pragma region _FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -25,78 +26,19 @@ void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
 unsigned int loadTexture(char const * path);
-void drawCubesScene(Shader shader);
+void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader);
 void drawModelScene(Model modelObject, Shader modelShader);
-void drawLampsScene(Shader shader);
 #pragma endregion _FUNCTION_INIT
-#pragma region _DATA_INIT_COMPONENTS
 
-// CUBE VERTICES AND INDICES
-float vertices[] = {
-	// positions          // normals           // texture coords
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-	0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+// SPACE MATRICES:
+glm::mat4 projection = glm::mat4(1.0f);
+glm::mat4 view = glm::mat4(1.0f);
+glm::mat4 model = glm::mat4(1.0f);
 
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-	0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-	0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-	0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-	0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-	0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-	0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-};
-unsigned int indices[] = {
-	0,  1,  2,
-	3,  4,  5,
-
-	6,  7,  8,
-	9, 10, 11,
-
-	12, 13, 14,
-	15, 16, 17,
-
-	18, 19, 20,
-	21, 22, 23,
-
-	24, 25, 26,
-	27, 28, 29,
-
-	30, 31, 32,
-	33, 34, 35
-};
+#pragma region _OBJECTS
 // CUBE OBJECTS
-glm::vec3 cubePositions[] = {
+#define NR_CONTAINERS 10
+glm::vec3 containerPositions[NR_CONTAINERS] = {
 	glm::vec3(0.0f,   -7.0f,   0.0f),
 	glm::vec3(2.0f,   5.0f, -15.0f),
 	glm::vec3(-1.5f,  -2.2f,  -2.5f),
@@ -109,26 +51,33 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(-1.3f,   1.0f,  -1.5f)
 };
 
-// LIGHTS
-#define NR_POINT_LIGHTS 4
-#define NR_DIR_LIGHTS 1
-#define NR_SPOT_LIGHTS 1
-PointLight pointLights[NR_POINT_LIGHTS];
-DirLight dirLights[NR_DIR_LIGHTS];
-SpotLight spotLights[NR_SPOT_LIGHTS];
-glm::vec3 pointLightPositions[] = {
+// LAMP OBJECTS
+#define NR_LAMPS 4
+glm::vec3 lampsPositions[NR_LAMPS] = {
 	glm::vec3(0.7f,  0.2f,  2.0f),
 	glm::vec3(2.3f, -3.3f, -4.0f),
 	glm::vec3(-4.0f,  2.0f, -12.0f),
 	glm::vec3(0.0f,  0.0f, -3.0f)
 };
 
+#pragma endregion
+#pragma region _LIGHTS
+// POINT LIGHTS
+#define NR_POINT_LIGHTS 4
+PointLight pointLights[NR_POINT_LIGHTS];
+
+// DIRECTIONAL LIGHTS
+#define NR_DIR_LIGHTS 1
+DirLight dirLights[NR_DIR_LIGHTS];
+
+// SPOT LIGHTS
+#define NR_SPOT_LIGHTS 1
+SpotLight spotLights[NR_SPOT_LIGHTS];
+#pragma endregion
+#pragma region _WINDOW_AND_CAMERAS
 // Pointers to currents
 Window* curWindow = nullptr;
 Camera* curCamera = nullptr;
-
-// Path to textures folder
-std::string TEX_PATH = "res/textures/";
 
 // Initialise windows
 Window window1 = Window();
@@ -147,16 +96,7 @@ float lastY = 600 / 2.0f;
 // Calculate frame differences
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-// SPACE MATRICES:
-glm::mat4 projection = glm::mat4(1.0f);
-glm::mat4 view = glm::mat4(1.0f);
-glm::mat4 model = glm::mat4(1.0f);
-
-#pragma endregion _DATA_INIT_COMPONENTS
-
-unsigned int diffuseMap;
-unsigned int specularMap;
+#pragma endregion
 
 int main(void)
 {
@@ -190,22 +130,22 @@ int main(void)
 
 	// Load textures (we now use a utility function to keep the code more organized)
 	// -----------------------------------------------------------------------------
-	diffuseMap = loadTexture("res/textures/wooden_container.png");
-	specularMap = loadTexture("res/textures/wooden_container_specular.png");
-	//unsigned int emissionMap = loadTexture("res/textures/matrixblue.jpg");
+	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png");
+	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png");
 
 	// compile shader programs
 	// -----------------------
 	Shader lightingShader("multiple.lighting", "multiple.lighting");
-	Shader lampShader("basic.lamp.4.5", "basic.lamp.4.5");
-	Shader modelShader("3.model_loading", "3.model_loading");
+	Shader lampShader("lamp", "lamp");
+	Shader modelShader("model_loading.3", "model_loading.3");
 
 	// load models
 	// -----------
 	Model ourModel("res/models/nanosuit/nanosuit.obj");
-
+	Cube ourCube(diffuseMap, specularMap);
+	
 	// create lights
-	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(pointLightPositions[i]); }
+	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
 
@@ -218,23 +158,15 @@ int main(void)
 		curWindow->update();
 
 		// Draw Scenery
-		drawCubesScene(lightingShader);
+		drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, lightingShader);
 		drawModelScene(ourModel, modelShader);
-		drawLampsScene(lampShader);
+		drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
 	}
 
-#pragma region _TERMINATION
-	// optional: de-allocate all resources once they've outlived their purpose:
-	// ------------------------------------------------------------------------
-	//glDeleteVertexArrays(1, &cubeVAO);
-	//glDeleteVertexArrays(1, &lightVAO);
-	//glDeleteBuffers(1, &VBO);
-	// Clean all resources
 	glfwTerminate();
 	return 0;
-#pragma endregion _TERMINATION
 }
-#pragma region _FUNCTIONS_DECLARATION
+#pragma region _UTILITY_FUNCTIONS
 void framebuffer_size_callback(GLFWwindow * window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and 
@@ -352,66 +284,22 @@ unsigned int loadTexture(char const * path)
 	return textureID;
 }
 
-#pragma endregion _FUNCTIONS_DECLARATION
+#pragma endregion
 
-void drawCubesScene(Shader shader)
+#pragma region _DRAW_SCENES
+void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader)
 {
-	// Setup Cubes
-	unsigned int VBO, cubeVAO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &VBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindVertexArray(cubeVAO);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0 * sizeof(float)));
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coordinates
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	glBindVertexArray(0);
-
-	// Set up Textures
-	// Binding textures and diffuse/specular maps to TEXTURE units
-	//------------------------------------------------------------
-	// bind diffuse map
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-	// bind specular map
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
-
-	// Set up textures to shader
-	shader.use();
-	shader.setInt("material.diffuse", 0);
-	shader.setInt("material.specular", 1);
-	//shader.setInt("material.emission", 2);
-
 	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
 	shader.setVec3("viewPos", curCamera->getPosition());
 	shader.setFloat("material.shininess", 32.0f);
 
 	// directional lights
-	for (int i = 0; i < NR_DIR_LIGHTS; i++)
-	{
-		dirLights[i].setLight(shader, i);
-	}
+	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i].setLight(shader, i); }
 	// point lights
-	for (int i = 0; i < NR_POINT_LIGHTS; i++)
-	{
-		pointLights[i].setLight(shader, i);
-	}
+	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i].setLight(shader, i); }
 	// spot lights
-	for (int i = 0; i < NR_SPOT_LIGHTS; i++)
-	{
+	for (int i = 0; i < NR_SPOT_LIGHTS; i++) {
 		spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
 		spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
 		spotLights[i].setLight(shader, i);
@@ -427,19 +315,17 @@ void drawCubesScene(Shader shader)
 	shader.setMat4("view", view);
 	shader.setMat4("model", model);
 
-	// render containers
-	glBindVertexArray(cubeVAO);
-	for (unsigned int i = 0; i < 10; i++)
+	for (int i = 0; i < objectCount; i++)
 	{
 		// calculate the model matrix for each object and pass it to shader before drawing
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, cubePositions[i]);
+		model = glm::translate(model, positionVectors[i]);
 		float angle = 20.0f * i;
 		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		model = glm::scale(model, glm::vec3 (objectScale));
 		shader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		cubeObject.drawCube(shader);
 	}
-	glBindVertexArray(0);
 }
 
 void drawModelScene(Model modelObject, Shader modelShader)
@@ -484,41 +370,4 @@ void drawModelScene(Model modelObject, Shader modelShader)
 	modelObject.Draw(modelShader);
 }
 
-void drawLampsScene(Shader shader)
-{
-	// first, configure the cube's VAO (and VBO)
-	unsigned int VBO;
-
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO);
-	glBindVertexArray(lightVAO);
-
-	// we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it;
-	//the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0 * sizeof(float)));
-	glEnableVertexAttribArray(0);
-
-	// also draw the lamp object(s)
-	shader.use();
-	shader.setMat4("projection", projection);
-	shader.setMat4("view", view);
-
-	// we now draw as many light bulbs as we have point lights.
-	glBindVertexArray(lightVAO);
-	for (unsigned int i = 0; i < 4; i++)
-	{
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, pointLightPositions[i]);
-		model = glm::scale(model, glm::vec3(0.2f));
-		shader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-	}
-	glBindVertexArray(0);
-}
+#pragma endregion

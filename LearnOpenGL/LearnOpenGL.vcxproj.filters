@@ -51,6 +51,9 @@
     <ClCompile Include="src\mesh.cpp">
       <Filter>Source Files\Sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\cube_model.cpp">
+      <Filter>Source Files\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -78,6 +81,9 @@
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
     <ClInclude Include="src\model.h">
+      <Filter>Source Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cube_model.h">
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
   </ItemGroup>
