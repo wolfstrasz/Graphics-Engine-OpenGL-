@@ -36,9 +36,9 @@ struct SpotLight {
     vec3 specular;       
 };
 
-#define NR_POINT_LIGHTS 4
-#define NR_DIR_LIGHTS 1
-#define NR_SPOT_LIGHTS 1
+#define NR_POINT_LIGHTS 10
+#define NR_DIR_LIGHTS 10
+#define NR_SPOT_LIGHTS 10
 // ENTERING
 // --------
 in vec3 FragmentPos;
@@ -47,6 +47,10 @@ in vec2 TexCoords;
 in vec3 Tangent;
 in vec3 Bitangent;
 
+// UNIFORM SIZE COUNTERS
+uniform int DIR_LIGHT_COUNT;
+uniform int POINT_LIGHT_COUNT;
+uniform int SPOT_LIGHT_COUNT;
 // UNIFORMS
 // --------
 uniform vec3 viewPos;
@@ -55,7 +59,7 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 uniform sampler2D texture_diffuse1;          // Diffuse map
 uniform sampler2D texture_specular1;         // Specular map
-uniform float texture_shininess;
+uniform float texture_shininess = 32.0f;
 // EXITING
 // -------
 out vec4 FragColor;
@@ -75,13 +79,13 @@ void main()
      vec3 viewDir = normalize(viewPos - FragmentPos);
      vec3 result = vec3(0.0f, 0.0f, 0.0f);
     // phase 1: Directional lighting
-    for(int i =0; i< NR_DIR_LIGHTS; i++)
+    for(int i =0; i< DIR_LIGHT_COUNT; i++)
         result +=CalcDirLight(dirLights[i], norm, viewDir);
     // phase 2: Point lights
-    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+    for(int i = 0; i < POINT_LIGHT_COUNT; i++)
         result += CalcPointLight(pointLights[i], norm, FragmentPos, viewDir);    
     // phase 3: Spot light
-    for(int i = 0; i < NR_SPOT_LIGHTS; i++)
+    for(int i = 0; i < SPOT_LIGHT_COUNT; i++)
         result += CalcSpotLight(spotLights[i], norm, FragmentPos, viewDir);    
     //FragColor = texture(texture_diffuse1, TexCoords);
     FragColor = vec4(result, 1.0);

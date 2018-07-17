@@ -18,12 +18,9 @@ void Mesh::Draw(Shader shader)
 	unsigned int normalNr = 1;
 	unsigned int heightNr = 1;
 
-	//std::cout << "TEXTURES SIZE: " << textures.size()<<std::endl;
-	//std::cout << "NEW TEXTURE ============================ " << std::endl;
 	for (unsigned int i = 0; i < textures.size(); i++)
 	{
 
-		//std::cout << "TEXTURE TYPE: " << textures[i].type << std::endl;
 		glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
 										  // retrieve texture number (the N in diffuse_textureN)
 		string number;
@@ -43,7 +40,6 @@ void Mesh::Draw(Shader shader)
 		// and finally bind the texture
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
-
 	// draw mesh
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, 0);
@@ -74,7 +70,7 @@ void Mesh::setupMesh()
 	// set the vertex attribute pointers
 	// vertex Positions
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 	// vertex normals
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));

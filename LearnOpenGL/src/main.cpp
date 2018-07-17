@@ -19,6 +19,7 @@
 #include "model.h"
 #include "cube_model.h"
 #include "plane_model.h"
+#include "simple_cube.h"
 
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -30,9 +31,11 @@ void switchCameras();
 unsigned int loadTexture(char const * path, GLint wrapping_mode);
 #pragma endregion
 
+void setLighting(Shader &shader);
 #pragma region _DRAW_INIT
 void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader);
-void drawModelScene(Model modelObject, Shader modelShader);
+void drawModelScene(Model modelObject, Shader shader);
+void drawPlaneScene(Plane planeObject, Shader shader);
 #pragma endregion
 
 // SPACE MATRICES:
@@ -41,7 +44,7 @@ glm::mat4 view = glm::mat4(1.0f);
 glm::mat4 model = glm::mat4(1.0f);
 
 #pragma region _OBJECTS
-// CUBE OBJECTS
+// CONTAINER OBJECTS
 #define NR_CONTAINERS 10
 glm::vec3 containerPositions[NR_CONTAINERS] = {
 	glm::vec3(0.0f,   -7.0f,   0.0f),
@@ -65,6 +68,12 @@ glm::vec3 lampsPositions[NR_LAMPS] = {
 	glm::vec3(0.0f,  0.0f, -3.0f)
 };
 
+// MARBLE CUBES
+#define NR_MARBLE_CUBES 2
+glm::vec3 marbleCubePositions[NR_MARBLE_CUBES] = {
+	glm::vec3(-1.0f, 0.0001f, -1.0f),
+	glm::vec3(2.0f, 0.0001f, 0.0f)
+};
 #pragma endregion
 #pragma region _LIGHTS
 // POINT LIGHTS
@@ -122,7 +131,7 @@ int main(void)
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-	// Set Depth Testing for shaders
+	// Set Testing for shaders
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
@@ -144,16 +153,13 @@ int main(void)
 
 	// compile shader programs
 	// -----------------------
-	Shader lightingShader("multiple.lighting", "multiple.lighting");
 	Shader lampShader("lamp", "lamp");
 	Shader modelShader("model_loading.3", "model_loading.3");
-	Shader depthShader("depth.1", "depth.1");
-	Shader blendingShader("blending.1", "blending.1");
 	Shader blendingShader2("blending.2", "blending.2");
 
 	// load models
 	// -----------
-	Model ourModel("res/models/nanosuit/nanosuit.obj");
+	//Model ourModel("res/models/nanosuit/nanosuit.obj");
 	Cube ourCube(diffuseMap, specularMap);
 	Plane woodFloor(floorDiffuseMap, floorDiffuseMap);
 	Cube marbleCube(marbleDiffuseMap, marbleDiffuseMap);
@@ -163,7 +169,7 @@ int main(void)
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
-
+#pragma region PANELS
 	// ---------------------------------------------------
 	// ---------------------------------------------------
 	float windowPanelVertices[] = {
@@ -202,6 +208,11 @@ int main(void)
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#pragma endregion
+
+	SimpleCube simpleCube = SimpleCube();
+	simpleCube.addTexture(DIFFUSE, marbleDiffuseMap);
+	simpleCube.addTexture(SPECULAR, marbleDiffuseMap);
 
 	while(!curWindow->shouldClose())
 	{
@@ -216,59 +227,56 @@ int main(void)
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
 
 		// Draw Scenery
-		//drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, lightingShader);
+		// ------------
+		setLighting(modelShader);
+		// draw containers
+		drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, modelShader);
+		// draw marble cubes
+		drawCubesScene(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
+		// draw nanosuit model
 		//drawModelScene(ourModel, modelShader);
-		//drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
-
+		// draw lamps
+		drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		// draw floor
+		drawPlaneScene(woodFloor, modelShader);
 		//--------------------------------------------------------------------------------------------------
-		// DRAW
-		blendingShader.use();
-		blendingShader.setMat4("view", view);
-		blendingShader.setMat4("projection", projection);
-
-		// floor
-		blendingShader.setMat4("model", glm::mat4(1.0f));
-		woodFloor.draw(blendingShader);
-
-		// cubes
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0001f, -1.0f));
-		blendingShader.setMat4("model", model);
-		marbleCube.drawCube(blendingShader);
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0001f, 0.0f));
-		blendingShader.setMat4("model", model);
-		marbleCube.drawCube(blendingShader);
-
+		/*
 		blendingShader2.use();
 		blendingShader2.setMat4("view", view);
 		blendingShader2.setMat4("projection", projection);
-		// Window Panels
-
-		// Sort them
-		std::map<float, glm::vec3> sorted;
-		for (unsigned int i = 0; i < windowPanelsPositions.size(); i++)
-		{
-			float distance = glm::length(curCamera->getPosition() - windowPanelsPositions[i]);
-			sorted[distance] = windowPanelsPositions[i];
-		}
-
-		glBindVertexArray(windowPanelsVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, windowPanelTexture);
-		
-		blendingShader2.use();
-		blendingShader2.setInt("texture1", 0);
-		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, it->second);
-			blendingShader2.setMat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
-		glBindVertexArray(0);
-		
+		blendingShader2.setMat4("model", glm::mat4(1.0f));*/
+		modelShader.setMat4("view", view);
+		modelShader.setMat4("projection", projection);
+		modelShader.setMat4("model", glm::mat4(1.0f));
+		simpleCube.draw(modelShader);
+		//blendingShader2.use();
+		//blendingShader2.setMat4("view", view);
+		//blendingShader2.setMat4("projection", projection);
+		//// Window Panels
+		//
+		//// Sort them
+		//std::map<float, glm::vec3> sorted;
+		//for (unsigned int i = 0; i < windowPanelsPositions.size(); i++)
+		//{
+		//	float distance = glm::length(curCamera->getPosition() - windowPanelsPositions[i]);
+		//	sorted[distance] = windowPanelsPositions[i];
+		//}
+		//
+		//glBindVertexArray(windowPanelsVAO);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, windowPanelTexture);
+		//
+		//blendingShader2.use();
+		//blendingShader2.setInt("texture1", 0);
+		//for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+		//{
+		//	model = glm::mat4(1.0f);
+		//	model = glm::translate(model, it->second);
+		//	blendingShader2.setMat4("model", model);
+		//	glDrawArrays(GL_TRIANGLES, 0, 6);
+		//}
+		//glBindVertexArray(0);
+		//
 		//-------------------------------------------------------------------------------------
 		
 	}
@@ -398,28 +406,41 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode)
 #pragma endregion
 
 #pragma region _DRAW_SCENES
-void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader)
+void setLighting(Shader & shader)
 {
-	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
 	shader.setVec3("viewPos", curCamera->getPosition());
-	shader.setFloat("material.shininess", 32.0f);
 
 	// directional lights
-	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i].setLight(shader, i); }
+	shader.setInt("DIR_LIGHT_COUNT", NR_DIR_LIGHTS);
+	for (int i = 0; i < NR_DIR_LIGHTS; i++)
+	{
+		dirLights[i].setLight(shader, i);
+	}
 	// point lights
-	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i].setLight(shader, i); }
+	shader.setInt("POINT_LIGHT_COUNT", NR_POINT_LIGHTS);
+	for (int i = 0; i < NR_POINT_LIGHTS; i++)
+	{
+		pointLights[i].setLight(shader, i);
+	}
 	// spot lights
-	for (int i = 0; i < NR_SPOT_LIGHTS; i++) {
+	shader.setInt("SPOT_LIGHT_COUNT", NR_SPOT_LIGHTS);
+	for (int i = 0; i < NR_SPOT_LIGHTS; i++)
+	{
 		spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
 		spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
 		spotLights[i].setLight(shader, i);
 	}
+}
+
+void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader)
+{
+	// be sure to activate shader when setting uniforms/drawing objects
+	shader.use();
 
 	// Set the matrices in the lighting shader
 	shader.setMat4("projection", projection);
 	shader.setMat4("view", view);
-	shader.setMat4("model", model);
 
 	for (int i = 0; i < objectCount; i++)
 	{
@@ -430,46 +451,43 @@ void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::ve
 		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 		model = glm::scale(model, glm::vec3 (objectScale));
 		shader.setMat4("model", model);
+
+		// Set the transpose inverse model matrix
+		glm::mat3 transposeInverseModel = glm::mat3(1.0f);
+		transposeInverseModel = glm::mat3(transpose(inverse(model)));
+		shader.setMat3("tiModel", transposeInverseModel);
+
 		cubeObject.drawCube(shader);
 	}
 }
 
-void drawModelScene(Model modelObject, Shader modelShader)
+void drawModelScene(Model modelObject, Shader shader)
 {
 	// render the loaded model 2
-	modelShader.use();
-	modelShader.setVec3("viewPos", curCamera->getPosition());
-	modelShader.setFloat("texture_shininess", 32.0f);
+	shader.use();
 
-	// directional lights
-	for (int i = 0; i < NR_DIR_LIGHTS; i++)
-	{
-		dirLights[i].setLight(modelShader, i);
-	}
-	// point lights
-	for (int i = 0; i < NR_POINT_LIGHTS; i++)
-	{
-		pointLights[i].setLight(modelShader, i);
-	}
-	// spot lights
-	for (int i = 0; i < NR_SPOT_LIGHTS; i++)
-	{
-		spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
-		spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
-		spotLights[i].setLight(modelShader, i);
-	}
-	// Set the matrices in the lighting shader
-	modelShader.setMat4("projection", projection);
-	modelShader.setMat4("view", view);
+	// Set the matrices in the shader
+	shader.setMat4("projection", projection);
+	shader.setMat4("view", view);
 
+	// Set the model matrix in the shader
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-	modelShader.setMat4("model", model);
+	model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
+	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+	shader.setMat4("model", model);
+
+	// Set the transpose inverse model matrix
 	glm::mat3 transposeInverseModel = glm::mat3(1.0f);
 	transposeInverseModel = glm::mat3(transpose(inverse(model)));
-	modelShader.setMat3("tiModel", transposeInverseModel);
-	modelObject.Draw(modelShader);
+	shader.setMat3("tiModel", transposeInverseModel);
+	modelObject.Draw(shader);
+}
+
+void drawPlaneScene(Plane planeObject, Shader shader)
+{
+	shader.use();
+	shader.setMat4("model", glm::mat4(1.0f));
+	planeObject.draw(shader);
 }
 
 #pragma endregion

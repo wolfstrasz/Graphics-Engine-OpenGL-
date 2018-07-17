@@ -19,13 +19,16 @@ void Plane::draw(Shader shader)
 	glBindTexture(GL_TEXTURE_2D, specularMap);
 
 	shader.use();
-	shader.setInt("material.diffuse", 0);
-	shader.setInt("material.specular", 1);
+	shader.setInt("texture_diffuse1", 0);
+	shader.setInt("texture_specular1", 1);
 
 	// draw mesh
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
+
+	// Set to defaults
+	glActiveTexture(GL_TEXTURE0);
 }
 
 void Plane::setup()
