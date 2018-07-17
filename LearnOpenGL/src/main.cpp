@@ -17,9 +17,8 @@
 #include "dir_light.h"
 #include "spot_light.h"
 #include "model.h"
-#include "cube_model.h"
-#include "plane_model.h"
 #include "simple_cube.h"
+#include "simple_plane.h"
 
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -33,9 +32,8 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode);
 
 void setLighting(Shader &shader);
 #pragma region _DRAW_INIT
-void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader);
-void drawModelScene(Model modelObject, Shader shader);
-void drawPlaneScene(Plane planeObject, Shader shader);
+void drawSimpleModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
+void drawModelScene(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 #pragma endregion
 
 // SPACE MATRICES:
@@ -74,7 +72,21 @@ glm::vec3 marbleCubePositions[NR_MARBLE_CUBES] = {
 	glm::vec3(-1.0f, 0.0001f, -1.0f),
 	glm::vec3(2.0f, 0.0001f, 0.0f)
 };
+
+// FLOOR
+#define NR_FLOORS 1
+glm::vec3 floorPositions[NR_FLOORS] = {
+	glm::vec3(1.0f, 0.0f, 1.0f)
+};
+
+// NANOSUITS
+#define NR_NANOSUITS 1
+glm::vec3 nanosuitPositions[NR_NANOSUITS] = {
+	glm::vec3(1.0f, 0.0f, 1.0f)
+};
+
 #pragma endregion
+
 #pragma region _LIGHTS
 // POINT LIGHTS
 #define NR_POINT_LIGHTS 4
@@ -145,8 +157,8 @@ int main(void)
 
 	// Load textures (we now use a utility function to keep the code more organized)
 	// -----------------------------------------------------------------------------
-	unsigned int diffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
-	unsigned int specularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
+	unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
+	unsigned int woodBoxSpecularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
 	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
 	unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
 	unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
@@ -159,16 +171,29 @@ int main(void)
 
 	// load models
 	// -----------
-	//Model ourModel("res/models/nanosuit/nanosuit.obj");
-	Cube ourCube(diffuseMap, specularMap);
-	Plane woodFloor(floorDiffuseMap, floorDiffuseMap);
-	Cube marbleCube(marbleDiffuseMap, marbleDiffuseMap);
+	// Nanosuit
+	Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
 
+	// Wooden Containers
+	SimpleCube woodContainer = SimpleCube();
+	woodContainer.addTexture(DIFFUSE, woodBoxDiffuseMap);
+	woodContainer.addTexture(SPECULAR, woodBoxSpecularMap);
+
+	//Plane
+	SimplePlane woodFloor = SimplePlane();
+	woodFloor.addTexture(DIFFUSE, floorDiffuseMap);
+	woodFloor.addTexture(SPECULAR, floorDiffuseMap);
+
+	// Marble Cubes
+	SimpleCube marbleCube = SimpleCube();
+	marbleCube.addTexture(DIFFUSE, marbleDiffuseMap);
+	marbleCube.addTexture(SPECULAR, marbleDiffuseMap);
 
 	// create lights
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
+
 #pragma region PANELS
 	// ---------------------------------------------------
 	// ---------------------------------------------------
@@ -230,25 +255,17 @@ int main(void)
 		// ------------
 		setLighting(modelShader);
 		// draw containers
-		drawCubesScene(ourCube, NR_CONTAINERS, 1.0f, containerPositions, modelShader);
+		drawSimpleModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
 		// draw marble cubes
-		drawCubesScene(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
-		// draw nanosuit model
-		//drawModelScene(ourModel, modelShader);
+		drawSimpleModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
 		// draw lamps
-		drawCubesScene(ourCube, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		drawSimpleModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
 		// draw floor
-		drawPlaneScene(woodFloor, modelShader);
+		drawSimpleModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
+		// draw nanosuit model
+		drawModelScene(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+
 		//--------------------------------------------------------------------------------------------------
-		/*
-		blendingShader2.use();
-		blendingShader2.setMat4("view", view);
-		blendingShader2.setMat4("projection", projection);
-		blendingShader2.setMat4("model", glm::mat4(1.0f));*/
-		modelShader.setMat4("view", view);
-		modelShader.setMat4("projection", projection);
-		modelShader.setMat4("model", glm::mat4(1.0f));
-		simpleCube.draw(modelShader);
 		//blendingShader2.use();
 		//blendingShader2.setMat4("view", view);
 		//blendingShader2.setMat4("projection", projection);
@@ -405,7 +422,6 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode)
 
 #pragma endregion
 
-#pragma region _DRAW_SCENES
 void setLighting(Shader & shader)
 {
 	shader.use();
@@ -432,8 +448,9 @@ void setLighting(Shader & shader)
 		spotLights[i].setLight(shader, i);
 	}
 }
+#pragma region _DRAW_SCENES
 
-void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader)
+void drawSimpleModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
 	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
@@ -448,7 +465,7 @@ void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::ve
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, positionVectors[i]);
 		float angle = 20.0f * i;
-		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		if(rotate) model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 		model = glm::scale(model, glm::vec3 (objectScale));
 		shader.setMat4("model", model);
 
@@ -457,11 +474,11 @@ void drawCubesScene(Cube cubeObject, int objectCount, float objectScale, glm::ve
 		transposeInverseModel = glm::mat3(transpose(inverse(model)));
 		shader.setMat3("tiModel", transposeInverseModel);
 
-		cubeObject.drawCube(shader);
+		smObject.draw(shader);
 	}
 }
 
-void drawModelScene(Model modelObject, Shader shader)
+void drawModelScene(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
 	// render the loaded model 2
 	shader.use();
@@ -470,10 +487,12 @@ void drawModelScene(Model modelObject, Shader shader)
 	shader.setMat4("projection", projection);
 	shader.setMat4("view", view);
 
+	for (int i = 0; i < objectCount; i++)
+	{
 	// Set the model matrix in the shader
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+	model = glm::scale(model, glm::vec3(objectScale));
 	shader.setMat4("model", model);
 
 	// Set the transpose inverse model matrix
@@ -481,13 +500,7 @@ void drawModelScene(Model modelObject, Shader shader)
 	transposeInverseModel = glm::mat3(transpose(inverse(model)));
 	shader.setMat3("tiModel", transposeInverseModel);
 	modelObject.Draw(shader);
-}
-
-void drawPlaneScene(Plane planeObject, Shader shader)
-{
-	shader.use();
-	shader.setMat4("model", glm::mat4(1.0f));
-	planeObject.draw(shader);
+	}
 }
 
 #pragma endregion
