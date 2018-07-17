@@ -57,6 +57,9 @@
     <ClCompile Include="src\plane_model.cpp">
       <Filter>Source Files\Sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\model.cpp">
+      <Filter>Source Files\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
