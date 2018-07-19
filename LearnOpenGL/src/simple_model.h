@@ -140,7 +140,7 @@ public:
 	{
 		unsigned textureID = 0;
 		// Set diffuse textures
-		shader.setInt("TEX_DIFF_COUNT", mDiffuseTextures.size());
+		shader.setInt("TEX_DIFF_COUNT", (int) mDiffuseTextures.size());
 		for (int i = 1; i <= mDiffuseTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
@@ -151,7 +151,7 @@ public:
 			textureID++;
 		}
 		// Set specular textures
-		shader.setInt("TEX_SPEC_COUNT", mSpecularTextures.size());
+		shader.setInt("TEX_SPEC_COUNT", (int) mSpecularTextures.size());
 		for (int i = 1; i <= mSpecularTextures.size(); i++)
 		{
 			// Activate appropriate texture unit

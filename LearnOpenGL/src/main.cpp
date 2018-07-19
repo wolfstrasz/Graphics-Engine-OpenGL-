@@ -31,8 +31,8 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode);
 
 void setLighting(Shader &shader);
 #pragma region _DRAW_INIT
-void drawSimpleModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
-void drawModelScene(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
+void drawModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
+void drawModels(Model smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 #pragma endregion
 
 // SPACE MATRICES:
@@ -254,15 +254,15 @@ int main(void)
 		// ------------
 		setLighting(modelShader);
 		// draw containers
-		drawSimpleModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
+		drawModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
 		// draw marble cubes
-		drawSimpleModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
+		drawModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
 		// draw lamps
-		drawSimpleModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
 		// draw floor
-		drawSimpleModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
+		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		// draw nanosuit model
-		drawModelScene(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
 
 		//--------------------------------------------------------------------------------------------------
 		//blendingShader2.use();
@@ -449,7 +449,7 @@ void setLighting(Shader & shader)
 }
 #pragma region _DRAW_SCENES
 
-void drawSimpleModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
+void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
 	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
@@ -473,32 +473,35 @@ void drawSimpleModels(SimpleModel smObject, int objectCount, float objectScale, 
 		transposeInverseModel = glm::mat3(transpose(inverse(model)));
 		shader.setMat3("tiModel", transposeInverseModel);
 
-		smObject.draw(shader);
+		modelObject.draw(shader);
 	}
 }
 
-void drawModelScene(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
+void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
-	// render the loaded model 2
+	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
 
-	// Set the matrices in the shader
+	// Set the matrices in the lighting shader
 	shader.setMat4("projection", projection);
 	shader.setMat4("view", view);
 
 	for (int i = 0; i < objectCount; i++)
 	{
-	// Set the model matrix in the shader
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, positionVectors[i]);
-	model = glm::scale(model, glm::vec3(objectScale));
-	shader.setMat4("model", model);
+		// calculate the model matrix for each object and pass it to shader before drawing
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, positionVectors[i]);
+		float angle = 20.0f * i;
+		if (rotate) model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		model = glm::scale(model, glm::vec3(objectScale));
+		shader.setMat4("model", model);
 
-	// Set the transpose inverse model matrix
-	glm::mat3 transposeInverseModel = glm::mat3(1.0f);
-	transposeInverseModel = glm::mat3(transpose(inverse(model)));
-	shader.setMat3("tiModel", transposeInverseModel);
-	modelObject.Draw(shader);
+		// Set the transpose inverse model matrix
+		glm::mat3 transposeInverseModel = glm::mat3(1.0f);
+		transposeInverseModel = glm::mat3(transpose(inverse(model)));
+		shader.setMat3("tiModel", transposeInverseModel);
+
+		modelObject.Draw(shader);
 	}
 }
 

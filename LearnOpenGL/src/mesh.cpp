@@ -18,9 +18,6 @@ void Mesh::Draw(Shader shader)
 	unsigned int normalNr = 1;
 	unsigned int heightNr = 1;
 
-	//std::cout << "TEXTURE =============================== " << std::endl;
-	//std::cout << "TEXTURE COUNT" + std::to_string(textures.size()) << std::endl;
-
 	for (unsigned int i = 0; i < textures.size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
@@ -38,13 +35,9 @@ void Mesh::Draw(Shader shader)
 
 												 // now set the sampler to the correct texture unit
 		glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + number + "]").c_str()), i);
-		//std::cout << name << std::endl;
-		// and finally bind the texture
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
 	
-	//std::cout << "DIFFUSE NR = " + std::to_string(diffuseNr) << std::endl;
-	//std::cout << "SPECULAR NR = " + std::to_string(specularNr) <<std::endl;
 	shader.setInt("TEX_DIFF_COUNT", diffuseNr);
 	shader.setInt("TEX_SPEC_COUNT", specularNr);
 	// draw mesh
