@@ -86,14 +86,5 @@
     <ClInclude Include="src\simple_model.h">
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\simple_cube.h">
-      <Filter>Source Files\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sm_enum.h">
-      <Filter>Source Files\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\simple_plane.h">
-      <Filter>Source Files\Headers</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

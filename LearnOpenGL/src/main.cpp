@@ -17,8 +17,7 @@
 #include "dir_light.h"
 #include "spot_light.h"
 #include "model.h"
-#include "simple_cube.h"
-#include "simple_plane.h"
+#include "simple_model.h"
 
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -176,18 +175,18 @@ int main(void)
 
 	// Wooden Containers
 	SimpleCube woodContainer = SimpleCube();
-	woodContainer.addTexture(DIFFUSE, woodBoxDiffuseMap);
-	woodContainer.addTexture(SPECULAR, woodBoxSpecularMap);
+	woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
+	woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
 
 	//Plane
 	SimplePlane woodFloor = SimplePlane();
-	woodFloor.addTexture(DIFFUSE, floorDiffuseMap);
-	woodFloor.addTexture(SPECULAR, floorDiffuseMap);
+	woodFloor.addTexture(SM_DIFFUSE, floorDiffuseMap);
+	woodFloor.addTexture(SM_SPECULAR, floorDiffuseMap);
 
 	// Marble Cubes
 	SimpleCube marbleCube = SimpleCube();
-	marbleCube.addTexture(DIFFUSE, marbleDiffuseMap);
-	marbleCube.addTexture(SPECULAR, marbleDiffuseMap);
+	marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
+	marbleCube.addTexture(SM_SPECULAR, marbleDiffuseMap);
 
 	// create lights
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
@@ -236,8 +235,8 @@ int main(void)
 #pragma endregion
 
 	SimpleCube simpleCube = SimpleCube();
-	simpleCube.addTexture(DIFFUSE, marbleDiffuseMap);
-	simpleCube.addTexture(SPECULAR, marbleDiffuseMap);
+	simpleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
+	simpleCube.addTexture(SM_SPECULAR, marbleDiffuseMap);
 
 	while(!curWindow->shouldClose())
 	{

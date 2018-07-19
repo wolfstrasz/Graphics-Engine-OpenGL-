@@ -1,12 +1,11 @@
 #pragma once
-#ifndef _SPOT_LIGHT
-#define _SPOT_LIGHT
+#ifndef _SPOT_LIGHT_H
+#define _SPOT_LIGHT_H
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <iostream>
-#include <string.h>
+#include <string>
 #include "shader.h"
 
 struct Spot_Light_Constants {

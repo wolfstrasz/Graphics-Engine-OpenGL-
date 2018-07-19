@@ -3,32 +3,74 @@
 #define _SIMPLE_MODEL_H
 #include <glad/glad.h> // holds all OpenGL type declarations
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <string>
+#include <vector>
+#include <type_traits>
 
 #include "shader.h"
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <vector>
+#define SM_POSITION_VECTOR_SIZE		3
+#define SM_NORMAL_VECTOR_SIZE		3
+#define SM_TEXCOORD_VECTOR_SIZE		2
+#define SM_TANGENT_VECTOR_SIZE		3
+#define SM_BITANGENT_VECTOR_SIZE	3
 
-#include "sm_enum.h"
-#define ATTRIBUTE_COUNT 8
-#define POSITION_VECTOR_SIZE	3
-#define NORMAL_VECTOR_SIZE		3
-#define TEXCOORD_VECTOR_SIZE	2
-#define TANGENT_VECTOR_SIZE		3
-#define BITANGENT_VECTOR_SIZE	3
+// define the atttribute enumerator
+// --------------------------------
+#pragma region _ENUM_CLASS::SM_Attrib
+// init enumarator
+enum class SM_Attrib : unsigned char {
+	SM_POSITION = 0x01,
+	SM_NORMAL = 0x02,
+	SM_TEXCOORD = 0x04,
+	SM_TANGENT = 0x08,
+	SM_BITANGENT = 0x10
+};
+using T = std::underlying_type_t <SM_Attrib>;
 
-enum Simple_Model_Maps {
-	DIFFUSE,
-	SPECULAR
+// Overload BITWISE-OR
+inline SM_Attrib operator | (SM_Attrib lhs, SM_Attrib rhs)
+
+{
+	return (SM_Attrib)(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+// Overload BITWISE-OR EQUAL
+inline SM_Attrib& operator |= (SM_Attrib& lhs, SM_Attrib rhs)
+{
+	lhs = (SM_Attrib)(static_cast<T>(lhs) | static_cast<T>(rhs));
+	return lhs;
+}
+
+// Overload BITWISE-AND
+inline SM_Attrib operator & (SM_Attrib lhs, SM_Attrib rhs)
+
+{
+	return (SM_Attrib)(static_cast<T>(lhs) & static_cast<T>(rhs));
+}
+// Overload BITWISE-AND EQUAL
+inline SM_Attrib& operator &= (SM_Attrib& lhs, SM_Attrib rhs)
+{
+	lhs = (SM_Attrib)(static_cast<T>(lhs) & static_cast<T>(rhs));
+	return lhs;
+}
+#pragma endregion
+
+// define texture maps enumerator
+// ------------------------------
+enum SM_Maps : int {
+	SM_DIFFUSE,
+	SM_SPECULAR,
+	SM_NORMAL,
+	SM_HEIGHT
 };
 
+// initialise parent class: simple model
+// -------------------------------------
+#pragma region _SIMPLE_MODEL::Parent
 class SimpleModel
 {
+private:
+	// struct representing each vertex data
 	struct Vertex {
 		glm::vec3 Position;
 		glm::vec3 Normal;
@@ -36,13 +78,18 @@ class SimpleModel
 		glm::vec3 Tangent;
 		glm::vec3 Bitangent;
 	};
+	// data holders (vertices,indices, texture maps)
 	std::vector<Vertex> mVertices;
 	std::vector<unsigned int> mIndices;
-	std::vector<unsigned int> texture_diffuse;
-	std::vector<unsigned int> texture_specular;
+	std::vector<unsigned int> mDiffuseTextures;
+	std::vector<unsigned int> mSpecularTextures;
+	// private buffers
+	unsigned int VAO, VBO, EBO;
 
 public:
-	SimpleModel(const float vertices[], int indicesCount, const unsigned int indices[], SM_ATTRIBS attribs)
+	// constructor
+	// -----------
+	SimpleModel(const float vertices[], int indicesCount, const unsigned int indices[], SM_Attrib attribs)
 	{
 		std::cout << (unsigned char)attribs<< std::endl;
 		unsigned int attribOffset = 0;
@@ -52,60 +99,64 @@ public:
 		{
 			int offset = i * attribOffset;
 			Vertex curVertex;
-			if ((attribs & SM_ATTRIBS::SM_POSITION) == SM_ATTRIBS::SM_POSITION)
+			if ((attribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION)
 			{
 				curVertex.Position = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += POSITION_VECTOR_SIZE;
+				offset += SM_POSITION_VECTOR_SIZE;
 			}
-			if ((attribs & SM_ATTRIBS::SM_NORMAL) == SM_ATTRIBS::SM_NORMAL) {
+			if ((attribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL) {
 				curVertex.Normal = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += NORMAL_VECTOR_SIZE;
+				offset += SM_NORMAL_VECTOR_SIZE;
 			}
-			if ((attribs & SM_ATTRIBS::SM_TEXCOORD) == SM_ATTRIBS::SM_TEXCOORD) {
+			if ((attribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD) {
 				curVertex.TexCoords = glm::vec2(vertices[offset], vertices[offset + 1]);
-				offset += TEXCOORD_VECTOR_SIZE;
+				offset += SM_TEXCOORD_VECTOR_SIZE;
 			}
-			if ((attribs & SM_ATTRIBS::SM_TANGENT) == SM_ATTRIBS::SM_TANGENT) {
+			if ((attribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT) {
 				curVertex.Tangent = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += TANGENT_VECTOR_SIZE;
+				offset += SM_TANGENT_VECTOR_SIZE;
 			}
-			if ((attribs & SM_ATTRIBS::SM_BITANGENT) == SM_ATTRIBS::SM_BITANGENT) {
+			if ((attribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT) {
 				curVertex.Bitangent = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += BITANGENT_VECTOR_SIZE;
+				offset += SM_BITANGENT_VECTOR_SIZE;
 			}
 			mVertices.push_back(curVertex);
 			mIndices.push_back(indices[i]);
 		}
 		setupMesh();
 	}
-	void addTexture(Simple_Model_Maps type, unsigned int texture)
+	// function to add texture components to the model
+	// -----------------------------------------------
+	void addTexture(SM_Maps type, unsigned int texture)
 	{
-		if (type == Simple_Model_Maps::DIFFUSE)
-			texture_diffuse.push_back(texture);
-		if (type == Simple_Model_Maps::SPECULAR)
-			texture_specular.push_back(texture);
+		if (type == SM_DIFFUSE)
+			mDiffuseTextures.push_back(texture);
+		if (type == SM_SPECULAR)
+			mSpecularTextures.push_back(texture);
 	}
+	// call to draw the simple model
+	// -----------------------------
 	void draw(Shader shader)
 	{
 		unsigned textureID = 0;
 		// Set diffuse textures
-		for (int i = 1; i <= texture_diffuse.size(); i++)
+		for (int i = 1; i <= mDiffuseTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
 			shader.setInt("texture_diffuse" + index, textureID);
-			glBindTexture(GL_TEXTURE_2D, texture_diffuse[i-1]);
+			glBindTexture(GL_TEXTURE_2D, mDiffuseTextures[i-1]);
 			textureID++;
 		}
 		// Set specular textures
-		for (int i = 1; i <= texture_specular.size(); i++)
+		for (int i = 1; i <= mSpecularTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
 			shader.setInt("texture_specular" + index, textureID);
-			glBindTexture(GL_TEXTURE_2D, texture_specular[i-1]);
+			glBindTexture(GL_TEXTURE_2D, mSpecularTextures[i-1]);
 			textureID++;
 		}
 		// draw mesh
@@ -118,19 +169,8 @@ public:
 	}
 
 private:
-	unsigned int VAO, VBO, EBO;
-	void calculateAttribOffset(unsigned int & offset, SM_ATTRIBS attribs) {
-		if ((attribs & SM_ATTRIBS::SM_POSITION) == SM_ATTRIBS::SM_POSITION)
-			offset += POSITION_VECTOR_SIZE;
-		if ((attribs & SM_ATTRIBS::SM_NORMAL) == SM_ATTRIBS::SM_NORMAL)
-			offset += NORMAL_VECTOR_SIZE;
-		if ((attribs & SM_ATTRIBS::SM_TEXCOORD) == SM_ATTRIBS::SM_TEXCOORD)
-			offset += TEXCOORD_VECTOR_SIZE;
-		if ((attribs & SM_ATTRIBS::SM_TANGENT) == SM_ATTRIBS::SM_TANGENT)
-			offset += TANGENT_VECTOR_SIZE;
-		if ((attribs & SM_ATTRIBS::SM_BITANGENT) == SM_ATTRIBS::SM_BITANGENT)
-			offset += BITANGENT_VECTOR_SIZE;
-	}
+	// function to set the vertex array and buffers data into corresponding units
+	// --------------------------------------------------------------------------
 	void setupMesh()
 	{
 		// create buffers/arrays
@@ -166,5 +206,125 @@ private:
 		// Reset to defaults
 		glBindVertexArray(0);
 	}
+	// utility function to calculate offset in vertices translation
+	// ------------------------------------------------------------
+	void calculateAttribOffset(unsigned int & offset, SM_Attrib attribs) {
+		if ((attribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION)
+			offset += SM_POSITION_VECTOR_SIZE;
+		if ((attribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL)
+			offset += SM_NORMAL_VECTOR_SIZE;
+		if ((attribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD)
+			offset += SM_TEXCOORD_VECTOR_SIZE;
+		if ((attribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT)
+			offset += SM_TANGENT_VECTOR_SIZE;
+		if ((attribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT)
+			offset += SM_BITANGENT_VECTOR_SIZE;
+	}
 };
+#pragma endregion
+
+// initialise child class: simple model of a cube
+// ----------------------------------------------
+#pragma region _SIMPLE_MODEL::Cube
+#define SM_CUBE_NR_INDICES 36
+#define SM_CUBE_VERTEX_SIZE 8
+#define SM_CUBE_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD)
+
+class SimpleCube : public SimpleModel
+{
+	static constexpr float sm_vertices[SM_CUBE_VERTEX_SIZE * SM_CUBE_NR_INDICES] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+	};
+	static constexpr unsigned int sm_indices[SM_CUBE_NR_INDICES] = {
+		0,  1,  2,
+		3,  4,  5,
+
+		6,  7,  8,
+		9, 10, 11,
+
+		12, 13, 14,
+		15, 16, 17,
+
+		18, 19, 20,
+		21, 22, 23,
+
+		24, 25, 26,
+		27, 28, 29,
+
+		30, 31, 32,
+		33, 34, 35
+	};
+public:
+	SimpleCube() : SimpleModel(sm_vertices, SM_CUBE_NR_INDICES, sm_indices, SM_CUBE_FLAGS) {}
+};
+#pragma endregion
+
+// initialise child class: simple model of a plane
+// -----------------------------------------------
+#pragma region _SIMPLE_MODEL::Plane
+#define SM_PLANE_NR_INDICES 6
+#define SM_PLANE_VERTEX_SIZE 8
+#define SM_PLANE_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD)
+
+class SimplePlane : public SimpleModel
+{
+	static constexpr float sm_vertices[SM_PLANE_VERTEX_SIZE * SM_PLANE_NR_INDICES] = {
+		// positions			normals				texCoords
+		-5.0f, -0.5f,  -5.0f,   0.0f,  1.0f,  0.0f,   0.0f, 4.0f,
+		5.0f, -0.5f,  -5.0f,  0.0f,  1.0f,  0.0f,   4.0f, 4.0f,
+		5.0f, -0.5f, 5.0f,  0.0f,  1.0f,  0.0f,   4.0f, 0.0f,
+
+		5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f, 0.0f,
+		-5.0f, -0.5f, 5.0f,  0.0f,  1.0f,  0.0f,   0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f, 4.0f
+	};
+	static constexpr unsigned int sm_indices[SM_PLANE_NR_INDICES] = {
+		0,  1,  2,
+		3,  4,  5
+	};
+public:
+	SimplePlane() : SimpleModel(sm_vertices, SM_PLANE_NR_INDICES, sm_indices, SM_PLANE_FLAGS) {}
+};
+#pragma endregion
 #endif // !_SIMPLE_MODEL_H
