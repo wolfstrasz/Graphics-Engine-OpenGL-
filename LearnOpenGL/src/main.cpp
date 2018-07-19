@@ -81,7 +81,7 @@ glm::vec3 floorPositions[NR_FLOORS] = {
 // NANOSUITS
 #define NR_NANOSUITS 1
 glm::vec3 nanosuitPositions[NR_NANOSUITS] = {
-	glm::vec3(1.0f, 0.0f, 1.0f)
+	glm::vec3(0.0f, 0.0f, 1.0f)
 };
 
 #pragma endregion
@@ -165,7 +165,7 @@ int main(void)
 	// compile shader programs
 	// -----------------------
 	Shader lampShader("lamp", "lamp");
-	Shader modelShader("model_loading.3", "model_loading.3");
+	Shader modelShader("model_loading.3", "model_loading.4");
 	Shader blendingShader2("blending.2", "blending.2");
 
 	// load models
@@ -186,7 +186,7 @@ int main(void)
 	// Marble Cubes
 	SimpleCube marbleCube = SimpleCube();
 	marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
-	marbleCube.addTexture(SM_SPECULAR, marbleDiffuseMap);
+	//marbleCube.addTexture(SM_SPECULAR, marbleDiffuseMap);
 
 	// create lights
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
@@ -490,7 +490,7 @@ void drawModelScene(Model modelObject, int objectCount, float objectScale, glm::
 	{
 	// Set the model matrix in the shader
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
+	model = glm::translate(model, positionVectors[i]);
 	model = glm::scale(model, glm::vec3(objectScale));
 	shader.setMat4("model", model);
 

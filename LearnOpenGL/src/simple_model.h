@@ -140,22 +140,24 @@ public:
 	{
 		unsigned textureID = 0;
 		// Set diffuse textures
+		shader.setInt("TEX_DIFF_COUNT", mDiffuseTextures.size());
 		for (int i = 1; i <= mDiffuseTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_diffuse" + index, textureID);
+			shader.setInt("texture_diffuse[" + index + "]", textureID);
 			glBindTexture(GL_TEXTURE_2D, mDiffuseTextures[i-1]);
 			textureID++;
 		}
 		// Set specular textures
+		shader.setInt("TEX_SPEC_COUNT", mSpecularTextures.size());
 		for (int i = 1; i <= mSpecularTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_specular" + index, textureID);
+			shader.setInt("texture_specular[" + index + "]", textureID);
 			glBindTexture(GL_TEXTURE_2D, mSpecularTextures[i-1]);
 			textureID++;
 		}
