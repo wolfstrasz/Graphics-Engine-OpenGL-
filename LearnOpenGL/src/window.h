@@ -23,7 +23,7 @@ private:
 	GLFWwindow* mWindow = nullptr;
 	// Functionality
 	int createWindow();
-	void clearScreen();
+	
 public:
 	// Constructors
 	Window(int width = Window_Defaults::WIDTH, int height = Window_Defaults::HEIGHT,
@@ -32,6 +32,7 @@ public:
 	int init();
 	int shouldClose();
 	void update();
+	void clearScreen();
 	// Getters
 	float getRatio();
 	GLFWwindow* getWindow();

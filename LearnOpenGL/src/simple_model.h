@@ -237,16 +237,16 @@ class SimpleCube : public SimpleModel
 	static constexpr float sm_vertices[SM_CUBE_VERTEX_SIZE * SM_CUBE_NR_INDICES] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
 
 		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
 		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
@@ -257,26 +257,26 @@ class SimpleCube : public SimpleModel
 		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
 		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
 
 		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
 		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
 		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
 
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
 	};
 	static constexpr unsigned int sm_indices[SM_CUBE_NR_INDICES] = {
 		0,  1,  2,
@@ -312,14 +312,13 @@ public:
 class SimplePlane : public SimpleModel
 {
 	static constexpr float sm_vertices[SM_PLANE_VERTEX_SIZE * SM_PLANE_NR_INDICES] = {
-		// positions			normals				texCoords
-		-5.0f, -0.5f,  -5.0f,   0.0f,  1.0f,  0.0f,   0.0f, 4.0f,
-		5.0f, -0.5f,  -5.0f,  0.0f,  1.0f,  0.0f,   4.0f, 4.0f,
-		5.0f, -0.5f, 5.0f,  0.0f,  1.0f,  0.0f,   4.0f, 0.0f,
-
-		5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f, 0.0f,
-		-5.0f, -0.5f, 5.0f,  0.0f,  1.0f,  0.0f,   0.0f, 0.0f,
-		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f, 4.0f
+		// positions		   normals				 texCoords
+		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
+		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
+		 5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  4.0f,
+		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
+		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
+		-5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f
 	};
 	static constexpr unsigned int sm_indices[SM_PLANE_NR_INDICES] = {
 		0,  1,  2,
@@ -327,6 +326,33 @@ class SimplePlane : public SimpleModel
 	};
 public:
 	SimplePlane() : SimpleModel(sm_vertices, SM_PLANE_NR_INDICES, sm_indices, SM_PLANE_FLAGS) {}
+};
+#pragma endregion
+
+// initialise child class: simple model of a window
+#pragma region _SIMPLE_MODEL::Window
+#define SM_WINDOW_NR_INDICES 6
+#define SM_WINDOW_VERTEX_SIZE 8
+#define SM_WINDOW_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD)
+
+class SimpleWindow : public SimpleModel
+{
+	static constexpr float sm_vertices[SM_WINDOW_VERTEX_SIZE * SM_WINDOW_NR_INDICES] = {
+		// positions		  normals				texCoords       
+		0.0f,  0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f,
+		0.0f, -0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f,
+
+		0.0f,  0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f,
+		1.0f,  0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   1.0f,  0.0f
+	};
+	static constexpr unsigned int sm_indices[SM_WINDOW_NR_INDICES] = {
+		0,  1,  2,
+		3,  4,  5
+	};
+public:
+	SimpleWindow() : SimpleModel(sm_vertices, SM_WINDOW_NR_INDICES, sm_indices, SM_WINDOW_FLAGS) {}
 };
 #pragma endregion
 #endif // !_SIMPLE_MODEL_H
