@@ -86,5 +86,8 @@
     <ClInclude Include="src\simple_model.h">
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\ipp.h">
+      <Filter>Source Files\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

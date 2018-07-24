@@ -37,7 +37,6 @@ void Window::update()
 {
 	glfwSwapBuffers(mWindow);
 	glfwPollEvents();
-	//clearScreen();
 }
 void Window::clearScreen()
 {
@@ -52,4 +51,14 @@ GLFWwindow * Window::getWindow()
 float Window::getRatio()
 {
 	return ((float)mWidth / (float)mHeight);
+}
+
+int Window::getHeight()
+{
+	return mHeight;
+}
+
+int Window::getWidth()
+{
+	return mWidth;
 }

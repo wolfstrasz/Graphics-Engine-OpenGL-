@@ -35,6 +35,8 @@ public:
 	void clearScreen();
 	// Getters
 	float getRatio();
+	int getHeight();
+	int getWidth();
 	GLFWwindow* getWindow();
 };
 #endif // !_WINDOW_H
