@@ -44,6 +44,10 @@ glm::mat4 model = glm::mat4(1.0f);
 Window* curWindow = nullptr;
 Camera* curCamera = nullptr;
 IPP*	curIPP = nullptr;
+// Utilities
+bool backFaceCulling = false;
+bool faceCulling = false;
+float lastFaceCullSwitchFrame = 0.0f;
 #pragma region _OBJECTS
 // CONTAINER OBJECTS
 #define NR_CONTAINERS 10
@@ -120,7 +124,7 @@ Window window1 = Window();
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
 Camera camera1(1, cameraPos);
 Camera camera2(2, cameraPos);
-float lastFrame_Tab = 0.0f;
+float lastCamSwitchFrame = 0.0f;
 
 // Mouse detection
 bool firstMouse = true;
@@ -216,8 +220,10 @@ int main(void)
 	curIPP = &postProcessor;
 #pragma endregion
 
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_FRONT);
+	// Enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	while(!curWindow->shouldClose())
 	{
 		// Get frame difference
@@ -314,10 +320,10 @@ void processInput(GLFWwindow* window)
 	// Switch CAMERAS
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 	{
-		if ((float)lastFrame - lastFrame_Tab > 0.5f)
+		if ((float)lastFrame - lastCamSwitchFrame > 0.5f)
 		{
 			switchCameras();
-			lastFrame_Tab = lastFrame;
+			lastCamSwitchFrame = lastFrame;
 		}
 	}
 	// Switch post-processor functions
@@ -341,6 +347,27 @@ void processInput(GLFWwindow* window)
 		curIPP->setShaderFunction(9);
 	if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
 		curIPP->setShaderFunction(0);
+	// Face-culling
+	if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS)
+	{
+		if ((float)lastFrame - lastFaceCullSwitchFrame > 0.5f)
+		{
+			lastFaceCullSwitchFrame = lastFrame;
+			if (glIsEnabled(GL_CULL_FACE))
+				glDisable(GL_CULL_FACE);
+			else glEnable(GL_CULL_FACE);
+
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS)
+	{
+		if ((float)lastFrame - lastFaceCullSwitchFrame > 0.5f)
+		{
+			lastFaceCullSwitchFrame = lastFrame;
+			if (backFaceCulling) { glCullFace(GL_FRONT); backFaceCulling = false; }
+			else				  { glCullFace(GL_BACK); backFaceCulling = true; }
+		}
+	}
 }
 
 // calculate frame difference
@@ -432,8 +459,11 @@ void setLighting(Shader & shader)
 
 void drawWindowPanels(SimpleModel smObject, Shader shader)
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Save face-culling option
+	bool previousFaceCullingState = false | glIsEnabled(GL_CULL_FACE);
+	// Disable face-culling
+	glDisable(GL_CULL_FACE);
+	// Draw
 	shader.use();
 	shader.setMat4("view", view);
 	shader.setMat4("projection", projection);
@@ -452,7 +482,8 @@ void drawWindowPanels(SimpleModel smObject, Shader shader)
 		shader.setMat4("model", model);
 		smObject.draw(shader);
 	}
-	glDisable(GL_BLEND);
+	// Reset face culling to previous state
+	if (previousFaceCullingState) glEnable(GL_CULL_FACE);
 }
 
 void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)

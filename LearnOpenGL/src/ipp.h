@@ -105,11 +105,18 @@ public:
 	void draw() {
 		if (!mEnabled && mBindedShader != nullptr)
 		{
+			// Save face-culling option
+			bool previousFaceCullingState = false | glIsEnabled(GL_CULL_FACE);
+			// Disable face-culling
+			glDisable(GL_CULL_FACE);
+			// Draw
 			mBindedShader->use();
 			glBindVertexArray(mQuadVAO);
 			glBindTexture(GL_TEXTURE_2D, mTextureColorbuffer);	// use the color attachment texture as the texture of the quad plane
 			mBindedShader->setInt("screenTexture", 0);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
+			// Reset face culling to previous state
+			if (previousFaceCullingState) glEnable(GL_CULL_FACE);
 		}
 		// error checking
 		else {
