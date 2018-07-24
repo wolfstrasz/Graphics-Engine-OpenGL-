@@ -83,6 +83,7 @@ private:
 	std::vector<unsigned int> mIndices;
 	std::vector<unsigned int> mDiffuseTextures;
 	std::vector<unsigned int> mSpecularTextures;
+	SM_Attrib mAttribs;
 	// private buffers
 	unsigned int VAO, VBO, EBO;
 
@@ -91,32 +92,32 @@ public:
 	// -----------
 	SimpleModel(const float vertices[], int indicesCount, const unsigned int indices[], SM_Attrib attribs)
 	{
-		std::cout << (unsigned char)attribs<< std::endl;
+		mAttribs = attribs;
 		unsigned int attribOffset = 0;
-		calculateAttribOffset(attribOffset, attribs);
+		calculateAttribOffset(attribOffset, mAttribs);
 
 		for (int i = 0; i < indicesCount; i++)
 		{
 			int offset = i * attribOffset;
 			Vertex curVertex;
-			if ((attribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION)
+			if ((mAttribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION)
 			{
 				curVertex.Position = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
 				offset += SM_POSITION_VECTOR_SIZE;
 			}
-			if ((attribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL) {
+			if ((mAttribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL) {
 				curVertex.Normal = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
 				offset += SM_NORMAL_VECTOR_SIZE;
 			}
-			if ((attribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD) {
+			if ((mAttribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD) {
 				curVertex.TexCoords = glm::vec2(vertices[offset], vertices[offset + 1]);
 				offset += SM_TEXCOORD_VECTOR_SIZE;
 			}
-			if ((attribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT) {
+			if ((mAttribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT) {
 				curVertex.Tangent = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
 				offset += SM_TANGENT_VECTOR_SIZE;
 			}
-			if ((attribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT) {
+			if ((mAttribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT) {
 				curVertex.Bitangent = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
 				offset += SM_BITANGENT_VECTOR_SIZE;
 			}
@@ -189,21 +190,27 @@ private:
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * sizeof(unsigned int), &mIndices[0], GL_STATIC_DRAW);
 
 		// set the vertex attribute pointers
+		int attribPointerLocation = 0;
 		// vertex Positions
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
+		glEnableVertexAttribArray(attribPointerLocation);
+		glVertexAttribPointer(attribPointerLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
+		if ((mAttribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION) attribPointerLocation++;
 		// vertex normals
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		glEnableVertexAttribArray(attribPointerLocation);
+		glVertexAttribPointer(attribPointerLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		if ((mAttribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL) attribPointerLocation++;
 		// vertex texture coords
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+		glEnableVertexAttribArray(attribPointerLocation);
+		glVertexAttribPointer(attribPointerLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+		if ((mAttribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD) attribPointerLocation++;
 		// vertex tangents
-		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
+		glEnableVertexAttribArray(attribPointerLocation);
+		glVertexAttribPointer(attribPointerLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
+		if ((mAttribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT) attribPointerLocation++;
 		// vertex bitangents
-		glEnableVertexAttribArray(4);
-		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
+		glEnableVertexAttribArray(attribPointerLocation);
+		glVertexAttribPointer(attribPointerLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
+		if ((mAttribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT) attribPointerLocation++;
 
 		// Reset to defaults
 		glBindVertexArray(0);
@@ -316,6 +323,7 @@ class SimplePlane : public SimpleModel
 		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
 		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
 		 5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  4.0f,
+
 		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
 		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
 		-5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f
@@ -332,20 +340,20 @@ public:
 // initialise child class: simple model of a window
 #pragma region _SIMPLE_MODEL::Window
 #define SM_WINDOW_NR_INDICES 6
-#define SM_WINDOW_VERTEX_SIZE 8
-#define SM_WINDOW_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD)
+#define SM_WINDOW_VERTEX_SIZE 5
+#define SM_WINDOW_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_TEXCOORD)
 
 class SimpleWindow : public SimpleModel
 {
 	static constexpr float sm_vertices[SM_WINDOW_VERTEX_SIZE * SM_WINDOW_NR_INDICES] = {
-		// positions		  normals				texCoords       
-		0.0f,  0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f,
-		0.0f, -0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   0.0f,  1.0f,
-		1.0f, -0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f,
+		// positions		  texCoords       
+		0.0f,  0.5f,  0.0f,   0.0f,  0.0f,
+		0.0f, -0.5f,  0.0f,   0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,   1.0f,  1.0f,
 
-		0.0f,  0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f,
-		1.0f, -0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f,
-		1.0f,  0.5f,  0.0f,   0.0f,  0.0f, -1.0f,   1.0f,  0.0f
+		0.0f,  0.5f,  0.0f,   0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,   1.0f,  1.0f,
+		1.0f,  0.5f,  0.0f,   1.0f,  0.0f
 	};
 	static constexpr unsigned int sm_indices[SM_WINDOW_NR_INDICES] = {
 		0,  1,  2,
@@ -355,4 +363,5 @@ public:
 	SimpleWindow() : SimpleModel(sm_vertices, SM_WINDOW_NR_INDICES, sm_indices, SM_WINDOW_FLAGS) {}
 };
 #pragma endregion
+
 #endif // !_SIMPLE_MODEL_H

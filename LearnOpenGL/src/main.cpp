@@ -31,6 +31,7 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode);
 
 void setLighting(Shader &shader);
 #pragma region _DRAW_INIT
+void drawWindowPanels(SimpleModel smObject, Shader shader);
 void drawModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 void drawModels(Model smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 #pragma endregion
@@ -82,6 +83,16 @@ glm::vec3 floorPositions[NR_FLOORS] = {
 #define NR_NANOSUITS 1
 glm::vec3 nanosuitPositions[NR_NANOSUITS] = {
 	glm::vec3(0.0f, 0.0f, 1.0f)
+};
+
+// WINDOW PANELS
+#define NR_WINDOW_PANELS 5
+glm::vec3 windowPanelsPositions[NR_WINDOW_PANELS] = {
+	glm::vec3(-1.5f, 0.0f, -0.48f),
+	glm::vec3(1.5f, 0.0f,  0.51f),
+	glm::vec3(0.0f, 0.0f,  0.7f),
+	glm::vec3(-0.3f, 0.0f, -2.3f),
+	glm::vec3(0.5f, 0.0f, -0.6f)
 };
 
 #pragma endregion
@@ -152,8 +163,8 @@ int main(void)
 	glfwSetCursorPosCallback(curWindow->getWindow(), mouse_callback);
 	glfwSetScrollCallback(curWindow->getWindow(), scroll_callback);
 
-#pragma endregion _SET_UP
-
+#pragma endregion
+#pragma region _TEXTURES
 	// Load textures (we now use a utility function to keep the code more organized)
 	// -----------------------------------------------------------------------------
 	unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
@@ -161,13 +172,16 @@ int main(void)
 	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
 	unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
 	unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
-
+	unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
+#pragma endregion
+#pragma region _SHADERS
 	// compile shader programs
 	// -----------------------
 	Shader lampShader("lamp", "lamp");
 	Shader modelShader("model_loading.3", "model_loading.4");
 	Shader blendingShader2("blending.2", "blending.2");
-
+#pragma endregion
+#pragma region _LOAD_MODELS
 	// load models
 	// -----------
 	// Nanosuit
@@ -187,51 +201,15 @@ int main(void)
 	SimpleCube marbleCube = SimpleCube();
 	marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
 	//marbleCube.addTexture(SM_SPECULAR, marbleDiffuseMap);
+	
+	// Window panels
+	SimpleWindow windowPanel = SimpleWindow();
+	windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
 
 	// create lights
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
-
-#pragma region PANELS
-	// ---------------------------------------------------
-	// ---------------------------------------------------
-	float windowPanelVertices[] = {
-		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
-		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-		0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-
-		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
-	};
-	// Window VAO
-	unsigned int windowPanelsVAO, windowPanelsVBO;
-	glGenVertexArrays(1, &windowPanelsVAO);
-	glGenBuffers(1, &windowPanelsVBO);
-	glBindVertexArray(windowPanelsVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, windowPanelsVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(windowPanelVertices), windowPanelVertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glBindVertexArray(0);
-
-	unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
-
-	
-	// create windows
-	std::vector<glm::vec3> windowPanelsPositions;
-	windowPanelsPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-	windowPanelsPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-	windowPanelsPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-	windowPanelsPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-	windowPanelsPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
 
 #pragma region FBO_and_RBO_vertex_data
@@ -374,6 +352,7 @@ int main(void)
 		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #pragma endregion
+
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_FRONT);
 	while(!curWindow->shouldClose())
@@ -434,6 +413,8 @@ int main(void)
 		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		// draw nanosuit model
 		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+		// draw window panels
+		drawWindowPanels(windowPanel, blendingShader2);
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -460,39 +441,6 @@ int main(void)
 		//drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		//// draw nanosuit model
 		//drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
-#pragma region DRAW_WINDOW_PANELS
-		////--------------------------------------------------------------------------------------------------
-		//blendingShader2.use();
-		//blendingShader2.setMat4("view", view);
-		//blendingShader2.setMat4("projection", projection);
-		//// Window Panels
-		//
-		//// Sort them
-		//std::map<float, glm::vec3> sorted;
-		//for (unsigned int i = 0; i < windowPanelsPositions.size(); i++)
-		//{
-		//	float distance = glm::length(curCamera->getPosition() - windowPanelsPositions[i]);
-		//	sorted[distance] = windowPanelsPositions[i];
-		//}
-		//
-		//glBindVertexArray(windowPanelsVAO);
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, windowPanelTexture);
-		//
-		//blendingShader2.use();
-		//blendingShader2.setInt("texture1", 0);
-		//glDisable(GL_CULL_FACE);
-		//for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-		//{
-		//	model = glm::mat4(1.0f);
-		//	model = glm::translate(model, it->second);
-		//	blendingShader2.setMat4("model", model);
-		//	glDrawArrays(GL_TRIANGLES, 0, 6);
-		//}
-		//glBindVertexArray(0);
-		//glEnable(GL_CULL_FACE);
-		//-------------------------------------------------------------------------------------
-#pragma endregion
 
 	}
 	// optional: de-allocate all resources once they've outlived their purpose:
@@ -655,6 +603,31 @@ void setLighting(Shader & shader)
 	}
 }
 #pragma region _DRAW_SCENES
+
+void drawWindowPanels(SimpleModel smObject, Shader shader)
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	shader.use();
+	shader.setMat4("view", view);
+	shader.setMat4("projection", projection);
+	// Sort them
+	std::map<float, glm::vec3> sorted;
+	for (unsigned int i = 0; i < NR_WINDOW_PANELS; i++)
+	{
+		float distance = glm::length(curCamera->getPosition() - windowPanelsPositions[i]);
+		sorted[distance] = windowPanelsPositions[i];
+	}
+	// Render them
+	for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+	{
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, it->second);
+		shader.setMat4("model", model);
+		smObject.draw(shader);
+	}
+	glDisable(GL_BLEND);
+}
 
 void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
