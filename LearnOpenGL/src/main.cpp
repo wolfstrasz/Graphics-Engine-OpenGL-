@@ -28,6 +28,7 @@ void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
 unsigned int loadTexture(char const * path, GLint wrapping_mode);
+unsigned int loadCubemap(vector<std::string> faces);
 #pragma endregion
 #pragma region _DRAW_INIT
 void drawWindowPanels(SimpleModel smObject, Shader shader);
@@ -48,6 +49,9 @@ IPP*	curIPP = nullptr;
 bool backFaceCulling = false;
 bool faceCulling = false;
 float lastFaceCullSwitchFrame = 0.0f;
+
+// Skybox
+
 #pragma region _OBJECTS
 // CONTAINER OBJECTS
 #define NR_CONTAINERS 10
@@ -183,6 +187,8 @@ int main(void)
 	Shader modelShader("model_loading.3", "model_loading.4");
 	Shader blendingShader2("blending.2", "blending.2");
 	Shader postProcessingShader("post_processing", "post_processing");
+	Shader skyboxShader("cubemap.1", "cubemap.1");
+
 #pragma endregion
 #pragma region _LOAD_MODELS
 	// load models
@@ -224,6 +230,73 @@ int main(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		1.0f, -1.0f,  1.0f
+	};
+	vector<std::string> faces
+	{
+		"res/textures/skybox/right.jpg",
+		"res/textures/skybox/left.jpg",
+		"res/textures/skybox/top.jpg",
+		"res/textures/skybox/bottom.jpg",
+		"res/textures/skybox/front.jpg",
+		"res/textures/skybox/back.jpg"
+	};
+	unsigned int cubemapTexture = loadCubemap(faces);
+	skyboxShader.use();
+	skyboxShader.setInt("skybox", 0);
+
+	// skybox VAO
+	unsigned int skyboxVAO, skyboxVBO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
 	while(!curWindow->shouldClose())
 	{
 		// Get frame difference
@@ -238,7 +311,7 @@ int main(void)
 
 		// Enable Image Post-Processor
 		curIPP->enable();
-
+		
 		// Draw Scenery
 		// ------------
 		setLighting(modelShader);
@@ -252,9 +325,29 @@ int main(void)
 		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		// draw nanosuit model
 		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+	
+		
+
+		// Draw skybox last
+
+		glDepthFunc(GL_LEQUAL);
+		skyboxShader.use();
+		// ... set view and projection matrix
+		glm::mat4 view = glm::mat4(glm::mat3(curCamera->getView()));
+		skyboxShader.setMat4("view", view);
+		skyboxShader.setMat4("projection", projection);
+
+		// Skybox cube
+		glBindVertexArray(skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+		glDepthFunc(GL_LESS);
+
 		// draw window panels
 		drawWindowPanels(windowPanel, blendingShader2);
-		
+
 		// Disable Image Post-Processor
 		curIPP->disable();
 		// Draw the processed quad
@@ -426,7 +519,37 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode)
 
 	return textureID;
 }
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
 #pragma endregion
 
 void setLighting(Shader & shader)
