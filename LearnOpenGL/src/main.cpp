@@ -20,6 +20,8 @@
 #include "simple_model.h"
 #include "ipp.h"
 #include "skybox.h"
+#include "particle_effects.h"
+
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -185,6 +187,7 @@ int main(void)
 	Shader blendingShader2("blending.2", "blending.2");
 	Shader postProcessingShader("post_processing", "post_processing");
 	Shader skyboxShader("cubemap.1", "cubemap.1");
+	Shader particleShader("particle.1", "particle.1");
 
 #pragma endregion
 #pragma region _LOAD_MODELS
@@ -219,6 +222,10 @@ int main(void)
 
 	// Skybox 
 	Skybox newSkybox("SeaMountainsSky");
+
+	// Particles
+	ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
 #pragma endregion
 #pragma region _POST_PROCESSOR
 	IPP postProcessor(curWindow);
@@ -261,6 +268,14 @@ int main(void)
 		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		// draw nanosuit model
 		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+#pragma endregion
+#pragma region _DRAW_PARTICLES
+		// draw particles
+		particleShader.use();
+		particleShader.setMat4("view", view);
+		particleShader.setMat4("projection", projection);
+		particleShader.setMat4("model", glm::mat4(5.0f));
+		particleEffect.draw(particleShader);
 #pragma endregion
 #pragma region _DRAW_SKYBOX
 		// Draw skybox before transparent objects

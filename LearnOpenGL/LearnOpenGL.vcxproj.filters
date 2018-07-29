@@ -92,5 +92,8 @@
     <ClInclude Include="src\skybox.h">
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\particle_effects.h">
+      <Filter>Source Files\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
