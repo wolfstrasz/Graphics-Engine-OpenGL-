@@ -89,5 +89,8 @@
     <ClInclude Include="src\ipp.h">
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\skybox.h">
+      <Filter>Source Files\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

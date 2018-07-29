@@ -19,7 +19,7 @@
 #include "model.h"
 #include "simple_model.h"
 #include "ipp.h"
-
+#include "skybox.h"
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -28,14 +28,13 @@ void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
 unsigned int loadTexture(char const * path, GLint wrapping_mode);
-unsigned int loadCubemap(vector<std::string> faces);
+void setLighting(Shader &shader);
 #pragma endregion
 #pragma region _DRAW_INIT
 void drawWindowPanels(SimpleModel smObject, Shader shader);
 void drawModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 void drawModels(Model smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 #pragma endregion
-void setLighting(Shader &shader);
 
 // SPACE MATRICES:
 glm::mat4 projection = glm::mat4(1.0f);
@@ -49,8 +48,6 @@ IPP*	curIPP = nullptr;
 bool backFaceCulling = false;
 bool faceCulling = false;
 float lastFaceCullSwitchFrame = 0.0f;
-
-// Skybox
 
 #pragma region _OBJECTS
 // CONTAINER OBJECTS
@@ -215,10 +212,13 @@ int main(void)
 	SimpleWindow windowPanel = SimpleWindow();
 	windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
 
-	// create lights
+	// Create lights
 	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
 	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
+
+	// Skybox 
+	Skybox newSkybox("SeaMountainsSky");
 #pragma endregion
 #pragma region _POST_PROCESSOR
 	IPP postProcessor(curWindow);
@@ -230,75 +230,9 @@ int main(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	float skyboxVertices[] = {
-		// positions          
-		-1.0f,  1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-
-		-1.0f, -1.0f,  1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f,  1.0f,
-		-1.0f, -1.0f,  1.0f,
-
-		1.0f, -1.0f, -1.0f,
-		1.0f, -1.0f,  1.0f,
-		1.0f,  1.0f,  1.0f,
-		1.0f,  1.0f,  1.0f,
-		1.0f,  1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-
-		-1.0f, -1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
-		1.0f,  1.0f,  1.0f,
-		1.0f,  1.0f,  1.0f,
-		1.0f, -1.0f,  1.0f,
-		-1.0f, -1.0f,  1.0f,
-
-		-1.0f,  1.0f, -1.0f,
-		1.0f,  1.0f, -1.0f,
-		1.0f,  1.0f,  1.0f,
-		1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f, -1.0f,
-
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		1.0f, -1.0f, -1.0f,
-		1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		1.0f, -1.0f,  1.0f
-	};
-	vector<std::string> faces
-	{
-		"res/textures/skybox/right.jpg",
-		"res/textures/skybox/left.jpg",
-		"res/textures/skybox/top.jpg",
-		"res/textures/skybox/bottom.jpg",
-		"res/textures/skybox/front.jpg",
-		"res/textures/skybox/back.jpg"
-	};
-	unsigned int cubemapTexture = loadCubemap(faces);
-	skyboxShader.use();
-	skyboxShader.setInt("skybox", 0);
-
-	// skybox VAO
-	unsigned int skyboxVAO, skyboxVBO;
-	glGenVertexArrays(1, &skyboxVAO);
-	glGenBuffers(1, &skyboxVBO);
-	glBindVertexArray(skyboxVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
 	while(!curWindow->shouldClose())
 	{
+#pragma region _GENERAL_SETUPS
 		// Get frame difference
 		calculateDelta();
 		// Check for keyboard input and update the window
@@ -308,10 +242,12 @@ int main(void)
 		//Get view and projection matrices
 		view = curCamera->getView();
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
+#pragma endregion
 
 		// Enable Image Post-Processor
 		curIPP->enable();
 		
+#pragma region _DRAW_MODELS
 		// Draw Scenery
 		// ------------
 		setLighting(modelShader);
@@ -325,28 +261,22 @@ int main(void)
 		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		// draw nanosuit model
 		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
-	
-		
-
-		// Draw skybox last
-
-		glDepthFunc(GL_LEQUAL);
+#pragma endregion
+#pragma region _DRAW_SKYBOX
+		// Draw skybox before transparent objects
 		skyboxShader.use();
+
 		// ... set view and projection matrix
-		glm::mat4 view = glm::mat4(glm::mat3(curCamera->getView()));
 		skyboxShader.setMat4("view", view);
 		skyboxShader.setMat4("projection", projection);
 
-		// Skybox cube
-		glBindVertexArray(skyboxVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-		glDepthFunc(GL_LESS);
-
+		// Draw skybox
+		newSkybox.draw(skyboxShader);
+#pragma endregion
+#pragma region _DRAW_TRANSPARENTS
 		// draw window panels
 		drawWindowPanels(windowPanel, blendingShader2);
+#pragma endregion
 
 		// Disable Image Post-Processor
 		curIPP->disable();
@@ -519,39 +449,9 @@ unsigned int loadTexture(char const * path, GLint wrapping_mode)
 
 	return textureID;
 }
-unsigned int loadCubemap(vector<std::string> faces)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < faces.size(); i++)
-	{
-		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-			);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-			stbi_image_free(data);
-		}
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	return textureID;
-}
-#pragma endregion
-
+// utility function to set lighting to a lighting shader
+// -----------------------------------------------------
 void setLighting(Shader & shader)
 {
 	shader.use();
@@ -578,8 +478,9 @@ void setLighting(Shader & shader)
 		spotLights[i].setLight(shader, i);
 	}
 }
-#pragma region _DRAW_SCENES
 
+#pragma endregion
+#pragma region _DRAW_SCENES
 void drawWindowPanels(SimpleModel smObject, Shader shader)
 {
 	// Save face-culling option
@@ -608,7 +509,6 @@ void drawWindowPanels(SimpleModel smObject, Shader shader)
 	// Reset face culling to previous state
 	if (previousFaceCullingState) glEnable(GL_CULL_FACE);
 }
-
 void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
 	// be sure to activate shader when setting uniforms/drawing objects
@@ -617,7 +517,6 @@ void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm
 	// Set the matrices in the lighting shader
 	shader.setMat4("projection", projection);
 	shader.setMat4("view", view);
-
 	for (int i = 0; i < objectCount; i++)
 	{
 		// calculate the model matrix for each object and pass it to shader before drawing
@@ -636,7 +535,6 @@ void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm
 		modelObject.draw(shader);
 	}
 }
-
 void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
 {
 	// be sure to activate shader when setting uniforms/drawing objects
@@ -645,7 +543,6 @@ void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3
 	// Set the matrices in the lighting shader
 	shader.setMat4("projection", projection);
 	shader.setMat4("view", view);
-
 	for (int i = 0; i < objectCount; i++)
 	{
 		// calculate the model matrix for each object and pass it to shader before drawing
@@ -664,5 +561,4 @@ void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3
 		modelObject.Draw(shader);
 	}
 }
-
 #pragma endregion

@@ -143,6 +143,7 @@
     <ClInclude Include="src\point_light.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\simple_model.h" />
+    <ClInclude Include="src\skybox.h" />
     <ClInclude Include="src\spot_light.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\window.h" />
