@@ -7,9 +7,14 @@ layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
 
 // Global
+layout(std140, binding = 0) uniform Matrices 
+{ 
+    mat4 projection;
+    mat4 view;
+};
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+//uniform mat4 view;
+//uniform mat4 projection;
 uniform mat3 tiModel;
 // Exit with interface 
 out VERT_OUT

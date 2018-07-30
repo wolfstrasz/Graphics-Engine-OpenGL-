@@ -232,6 +232,16 @@ int main(void)
 	postProcessor.bindShader(&postProcessingShader);
 	curIPP = &postProcessor;
 #pragma endregion
+#pragma region _UBO_BLOCK_MATRICES
+	// Create a uniform buffer object BLOCK for view and projection matrices
+	unsigned int uboMatrixViewProjection;
+	glGenBuffers(1, &uboMatrixViewProjection);
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW); // allocate 152 bytes of memory
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	// Bind to a location
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
+#pragma endregion
 
 	// Enable blending
 	glEnable(GL_BLEND);
@@ -249,12 +259,16 @@ int main(void)
 		//Get view and projection matrices
 		view = curCamera->getView();
 		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
+		// Set uniform buffer object block for matrices
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));				// (buffer, offset, size, data pointer)
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 #pragma endregion
 
 		// Enable Image Post-Processor
 		curIPP->enable();
-		
-#pragma region _DRAW_MODELS
+#pragma region _DRAW
 		// Draw Scenery
 		// ------------
 		setLighting(modelShader);
@@ -268,30 +282,15 @@ int main(void)
 		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
 		// draw nanosuit model
 		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
-#pragma endregion
-#pragma region _DRAW_PARTICLES
 		// draw particles
 		particleShader.use();
-		particleShader.setMat4("view", view);
-		particleShader.setMat4("projection", projection);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
 		particleShader.setMat4("model", model);
 		particleEffect.draw(particleShader);
-#pragma endregion
-#pragma region _DRAW_SKYBOX
-		// Draw skybox before transparent objects
-		skyboxShader.use();
-
-		// ... set view and projection matrix
-		skyboxShader.setMat4("view", view);
-		skyboxShader.setMat4("projection", projection);
-
 		// Draw skybox
 		newSkybox.draw(skyboxShader);
-#pragma endregion
-#pragma region _DRAW_TRANSPARENTS
-		// draw window panels
+		// Draw window panels (TRANSPARENTS)
 		drawWindowPanels(windowPanel, blendingShader2);
 #pragma endregion
 
@@ -504,10 +503,7 @@ void drawWindowPanels(SimpleModel smObject, Shader shader)
 	bool previousFaceCullingState = false | glIsEnabled(GL_CULL_FACE);
 	// Disable face-culling
 	glDisable(GL_CULL_FACE);
-	// Draw
-	shader.use();
-	shader.setMat4("view", view);
-	shader.setMat4("projection", projection);
+	
 	// Sort them
 	std::map<float, glm::vec3> sorted;
 	for (unsigned int i = 0; i < NR_WINDOW_PANELS; i++)
@@ -516,6 +512,7 @@ void drawWindowPanels(SimpleModel smObject, Shader shader)
 		sorted[distance] = windowPanelsPositions[i];
 	}
 	// Render them
+	shader.use();
 	for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
 	{
 		model = glm::mat4(1.0f);
@@ -530,10 +527,6 @@ void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm
 {
 	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
-
-	// Set the matrices in the lighting shader
-	shader.setMat4("projection", projection);
-	shader.setMat4("view", view);
 	for (int i = 0; i < objectCount; i++)
 	{
 		// calculate the model matrix for each object and pass it to shader before drawing
@@ -556,10 +549,6 @@ void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3
 {
 	// be sure to activate shader when setting uniforms/drawing objects
 	shader.use();
-
-	// Set the matrices in the lighting shader
-	shader.setMat4("projection", projection);
-	shader.setMat4("view", view);
 	for (int i = 0; i < objectCount; i++)
 	{
 		// calculate the model matrix for each object and pass it to shader before drawing
