@@ -11,24 +11,28 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat3 tiModel;
-// Exit
-out vec3 FragmentPos;
-out vec3 Normal;
-out vec2 TexCoords;
-out vec3 Tangent;
-out vec3 Bitangent;
+// Exit with interface 
+out VERT_OUT
+{
+vec3 FragmentPos;
+vec3 Normal;
+vec2 TexCoords;
+vec3 Tangent;
+vec3 Bitangent;
+} vert_out;
+
 
 void main()
 {
     // Get fragment position
-    FragmentPos = vec3(model * vec4(aPos, 1.0));
+    vert_out.FragmentPos = vec3(model * vec4(aPos, 1.0));
     // Get the fragment normal in world space
-    Normal = tiModel * aNormal; 
+    vert_out.Normal = tiModel * aNormal; 
     // Forward Texture Coordinates 
-    TexCoords = aTexCoords;
+    vert_out.TexCoords = aTexCoords;
     // Get clip position of vector
-    gl_Position = projection * view * vec4(FragmentPos, 1.0);
+    gl_Position = projection * view * vec4(vert_out.FragmentPos, 1.0);
 
-    Tangent = aTangent;
-    Bitangent = aBitangent;
+    vert_out.Tangent = aTangent;
+    vert_out.Bitangent = aBitangent;
 }

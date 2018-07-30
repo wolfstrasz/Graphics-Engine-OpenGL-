@@ -42,13 +42,17 @@ struct SpotLight {
 #define NR_TEX_DIFF 10
 #define NR_TEX_SPEC 10
 
-// ENTERING
+// ENTERING via Interface
 // --------
-in vec3 FragmentPos;
-in vec3 Normal;
-in vec2 TexCoords;
-in vec3 Tangent;
-in vec3 Bitangent;
+in VERT_OUT
+{
+vec3 FragmentPos;
+vec3 Normal;
+vec2 TexCoords;
+vec3 Tangent;
+vec3 Bitangent;
+} frag_in;
+
 
 // UNIFORM SIZE COUNTERS
 uniform int DIR_LIGHT_COUNT;
@@ -79,19 +83,23 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 // -----------------
 void main()
 {
+    
     // Properties
-     vec3 norm = normalize(Normal);
-     vec3 viewDir = normalize(viewPos - FragmentPos);
-     vec3 result = vec3(0.0f, 0.0f, 0.0f);
+    vec3 norm = normalize(frag_in.Normal);
+    // If back face then invert normal;
+    if (!gl_FrontFacing) 
+        norm = -norm;
+    vec3 viewDir = normalize(viewPos - frag_in.FragmentPos);
+    vec3 result = vec3(0.0f, 0.0f, 0.0f);
     // phase 1: Directional lighting
     for(int i =0; i< DIR_LIGHT_COUNT; i++)
         result +=CalcDirLight(dirLights[i], norm, viewDir);
     // phase 2: Point lights
     for(int i = 0; i < POINT_LIGHT_COUNT; i++)
-        result += CalcPointLight(pointLights[i], norm, FragmentPos, viewDir);    
+        result += CalcPointLight(pointLights[i], norm, frag_in.FragmentPos, viewDir);    
     // phase 3: Spot light
     for(int i = 0; i < SPOT_LIGHT_COUNT; i++)
-        result += CalcSpotLight(spotLights[i], norm, FragmentPos, viewDir);    
+        result += CalcSpotLight(spotLights[i], norm, frag_in.FragmentPos, viewDir);    
     //FragColor = texture(texture_diffuse1, TexCoords);
     FragColor = vec4(result, 1.0);
 }
@@ -112,11 +120,11 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDirection)
     // Combine result
     for (int i = 0; i < TEX_DIFF_COUNT; i++)
     {
-        ambientLight  += light.ambient * vec3(texture(texture_diffuse[i],TexCoords));
-        diffuseLight  += light.diffuse * diffuse * vec3(texture(texture_diffuse[i], TexCoords));
+        ambientLight  += light.ambient * vec3(texture(texture_diffuse[i],frag_in.TexCoords));
+        diffuseLight  += light.diffuse * diffuse * vec3(texture(texture_diffuse[i], frag_in.TexCoords));
     }
     for (int i = 0; i < TEX_SPEC_COUNT; i++)
-        specularLight += light.specular * specular * vec3(texture(texture_specular[i], TexCoords));
+        specularLight += light.specular * specular * vec3(texture(texture_specular[i], frag_in.TexCoords));
     return (ambientLight + diffuseLight + specularLight);
 }
 
@@ -140,11 +148,11 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDirect
     // Combine results
     for (int i = 0; i < TEX_DIFF_COUNT; i++)
     {
-        ambientLight  += light.ambient  * vec3(texture(texture_diffuse[i], TexCoords));
-        diffuseLight  += light.diffuse  * diffuse * vec3(texture(texture_diffuse[i], TexCoords));
+        ambientLight  += light.ambient  * vec3(texture(texture_diffuse[i], frag_in.TexCoords));
+        diffuseLight  += light.diffuse  * diffuse * vec3(texture(texture_diffuse[i], frag_in.TexCoords));
     }
     for (int i = 0; i < TEX_SPEC_COUNT; i++)
-        specularLight += light.specular * specular * vec3(texture(texture_specular[i], TexCoords));
+        specularLight += light.specular * specular * vec3(texture(texture_specular[i], frag_in.TexCoords));
     ambientLight  *= attenuation;
     diffuseLight  *= attenuation;
     specularLight *= attenuation;   
@@ -175,11 +183,11 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     // Combine results
     for (int i = 0; i < TEX_DIFF_COUNT; i++)
     {
-        ambientLight += light.ambient * vec3(texture(texture_diffuse[i], TexCoords));
-        diffuseLight += light.diffuse * diffuse * vec3(texture(texture_diffuse[i], TexCoords));
+        ambientLight += light.ambient * vec3(texture(texture_diffuse[i], frag_in.TexCoords));
+        diffuseLight += light.diffuse * diffuse * vec3(texture(texture_diffuse[i], frag_in.TexCoords));
     }
     for (int i = 0; i < TEX_SPEC_COUNT; i++)
-        specularLight += light.specular * specular * vec3(texture(texture_specular[i], TexCoords));
+        specularLight += light.specular * specular * vec3(texture(texture_specular[i], frag_in.TexCoords));
     ambientLight  *= attenuation * intensity;
     diffuseLight  *= attenuation * intensity;
     specularLight *= attenuation * intensity;

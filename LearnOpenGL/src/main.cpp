@@ -274,7 +274,9 @@ int main(void)
 		particleShader.use();
 		particleShader.setMat4("view", view);
 		particleShader.setMat4("projection", projection);
-		particleShader.setMat4("model", glm::mat4(5.0f));
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
+		particleShader.setMat4("model", model);
 		particleEffect.draw(particleShader);
 #pragma endregion
 #pragma region _DRAW_SKYBOX

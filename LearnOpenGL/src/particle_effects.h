@@ -43,7 +43,7 @@ public:
 		// Bind skybox and textures
 		glBindVertexArray(mVAO);
 		shader.setVec3("colour", mColour);
-		shader.setInt("pointsCount", mParticleCoordinates.size());
+		shader.setInt("pointsCount", (int)mParticleCoordinates.size());
 		// Draw skybox
 		glDrawArrays(GL_POINTS, 0, 3 * (GLsizei)mParticleCoordinates.size());
 
