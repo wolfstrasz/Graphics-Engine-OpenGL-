@@ -187,15 +187,19 @@ int main(void)
 	Shader blendingShader2("blending.2", "blending.2");
 	Shader postProcessingShader("post_processing", "post_processing");
 	Shader skyboxShader("cubemap.1", "cubemap.1");
-	Shader particleShader("particle.1", "particle.1", "particle.1");
+	Shader particleShader("particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
+	Shader instancingShader("instancing.1", "instancing.1");
 
 #pragma endregion
 #pragma region _LOAD_MODELS
 	// load models
 	// -----------
 	// Nanosuit
-	Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
-
+	//Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
+	// Planet
+	Model planetModel("res/models/planet/planet.obj");
+	// Rock
+	Model rockModel("res/models/rock/rock.obj");
 	// Wooden Containers
 	SimpleCube woodContainer = SimpleCube();
 	woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
@@ -246,6 +250,70 @@ int main(void)
 	// Enable blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	unsigned int amount = 10000;
+	glm::mat4* modelMatrices;
+	modelMatrices = new glm::mat4[amount];
+	srand(glfwGetTime()); // initialize random seed	
+	float radius = 50.0;
+	float offset = 25.0f;
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
+		// 1. translation: displace along circle with 'radius' in range [-offset, offset]
+		float angle = (float)i / (float)amount * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+		model = glm::translate(model, glm::vec3(x, y, z));
+		model = glm::translate(model, glm::vec3(0.0f, -10.0f, 0.0f));
+
+		// 2. scale: Scale between 0.05 and 0.25f
+		float scale = (rand() % 20) / 100.0f + 0.05;
+		model = glm::scale(model, glm::vec3(scale));
+
+		// 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+		float rotAngle = (rand() % 360);
+		model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		// 4. now add to list of matrices
+		modelMatrices[i] = model;
+	}
+
+	// configure instanced array
+	// -------------------------
+	unsigned int meteoriteBuffer;
+	glGenBuffers(1, &meteoriteBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, meteoriteBuffer);
+	glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+	// set transformation matrices as an instance vertex attribute (with divisor 1)
+	// note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
+	// normally you'd want to do this in a more organized fashion, but for learning purposes this will do.
+	// -----------------------------------------------------------------------------------------------------------------------------------
+	for (unsigned int i = 0; i < rockModel.meshes.size(); i++)
+	{
+		unsigned int meteorVAO = rockModel.meshes[i].VAO;
+		glBindVertexArray(meteorVAO);
+		// set attribute pointers for matrix (4 times vec4)
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+		glEnableVertexAttribArray(6);
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+		glVertexAttribDivisor(3, 1);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
+
+		glBindVertexArray(0);
+	}
 
 	while(!curWindow->shouldClose())
 	{
@@ -268,30 +336,51 @@ int main(void)
 
 		// Enable Image Post-Processor
 		curIPP->enable();
+		setLighting(modelShader);
+
+		// draw planet
+		modelShader.use();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -10.0f, 0.0f));
+		//model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		modelShader.setMat4("model", model);
+		planetModel.Draw(modelShader);
+
+		// draw meteorites
+		instancingShader.use();
+		instancingShader.setInt("texture_diffuse1", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, rockModel.textures_loaded[0].id); // note: we also made the textures_loaded vector public (instead of private) from the model class.
+		for (unsigned int i = 0; i < rockModel.meshes.size(); i++)
+		{
+			glBindVertexArray(rockModel.meshes[i].VAO);
+			glDrawElementsInstanced(GL_TRIANGLES, rockModel.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
+			glBindVertexArray(0);
+		}
+		
 #pragma region _DRAW
 		// Draw Scenery
 		// ------------
-		setLighting(modelShader);
 		// draw containers
 		drawModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
-		// draw marble cubes
-		drawModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
-		// draw lamps
-		drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
-		// draw floor
-		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
-		// draw nanosuit model
-		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
-		// draw particles
-		particleShader.use();
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
-		particleShader.setMat4("model", model);
-		particleEffect.draw(particleShader);
-		// Draw skybox
-		newSkybox.draw(skyboxShader);
-		// Draw window panels (TRANSPARENTS)
-		drawWindowPanels(windowPanel, blendingShader2);
+		//// draw marble cubes
+		//drawModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
+		//// draw lamps
+		//drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		//// draw floor
+		//drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
+		//// draw nanosuit model
+		//drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+		//// draw particles
+		//particleShader.use();
+		//model = glm::mat4(1.0f);
+		//model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
+		//particleShader.setMat4("model", model);
+		//particleEffect.draw(particleShader);
+		//// Draw skybox
+		//newSkybox.draw(skyboxShader);
+		//// Draw window panels (TRANSPARENTS)
+		//drawWindowPanels(windowPanel, blendingShader2);
 #pragma endregion
 
 		// Disable Image Post-Processor
