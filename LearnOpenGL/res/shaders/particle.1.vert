@@ -8,11 +8,12 @@ layout(std140, binding = 0) uniform Matrices
 uniform mat4 model;
 //uniform mat4 projection;
 //uniform mat4 view;
-
-flat out int vertID;
+out VS_OUT {
+    int vertID;
+} vs_out;
 void main()
 {
     gl_Position = projection * view * model * vec4(aPos, 1.0);    
     gl_PointSize = 5.0f;
-    vertID = gl_VertexID;
+    vs_out.vertID = gl_VertexID;
 }  

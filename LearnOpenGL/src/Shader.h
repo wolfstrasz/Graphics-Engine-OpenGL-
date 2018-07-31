@@ -14,7 +14,7 @@ class Shader
 {
 public:
 	unsigned int ID;
-	Shader(std::string vertexKey, std::string fragmentKey);
+	Shader(std::string vertexKey, std::string fragmentKey, std::string geometryKey = "");
 
 private:
 	static std::string SHADERS_PATH;

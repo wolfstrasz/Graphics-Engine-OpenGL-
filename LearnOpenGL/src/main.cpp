@@ -187,7 +187,7 @@ int main(void)
 	Shader blendingShader2("blending.2", "blending.2");
 	Shader postProcessingShader("post_processing", "post_processing");
 	Shader skyboxShader("cubemap.1", "cubemap.1");
-	Shader particleShader("particle.1", "particle.1");
+	Shader particleShader("particle.1", "particle.1", "particle.1");
 
 #pragma endregion
 #pragma region _LOAD_MODELS
