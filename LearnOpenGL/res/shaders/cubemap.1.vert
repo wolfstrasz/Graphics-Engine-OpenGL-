@@ -8,12 +8,12 @@ layout(std140, binding = 0) uniform Matrices
     mat4 view;
 };
 //uniform mat4 projection;
-//uniform mat4 view;
-
+//uniform mat4 newView;
+uniform mat4 model;
 void main()
 {
     TexCoords = aPos;
     mat4 myView = mat4(mat3(view));
-    vec4 pos = projection * myView * vec4(aPos, 1.0);
+    vec4 pos = projection * myView * model * vec4(aPos, 1.0);
     gl_Position = pos.xyww;
 }  

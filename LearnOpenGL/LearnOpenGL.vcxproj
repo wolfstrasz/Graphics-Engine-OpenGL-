@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\dir_light.h" />
+    <ClInclude Include="src\meteor_orbit.h" />
     <ClInclude Include="src\particle_effects.h" />
     <ClInclude Include="src\ipp.h" />
     <ClInclude Include="src\mesh.h" />

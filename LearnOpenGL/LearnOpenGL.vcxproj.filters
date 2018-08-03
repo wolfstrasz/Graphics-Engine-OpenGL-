@@ -95,5 +95,8 @@
     <ClInclude Include="src\particle_effects.h">
       <Filter>Source Files\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\meteor_orbit.h">
+      <Filter>Source Files\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
