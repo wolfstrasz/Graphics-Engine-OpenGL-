@@ -62,6 +62,7 @@ uniform int TEX_DIFF_COUNT;
 uniform int TEX_SPEC_COUNT;
 // UNIFORMS
 // --------
+uniform bool blinn;
 uniform vec3 viewPos;
 uniform DirLight dirLights[NR_DIR_LIGHTS];
 uniform PointLight pointLights[NR_POINT_LIGHTS];
@@ -106,17 +107,29 @@ void main()
 
 // calculates the color when using a directional light.
 // ----------------------------------------------------
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDirection)
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 ambientLight = vec3(0.0f, 0.0f, 0.0f);
     vec3 diffuseLight = vec3(0.0f, 0.0f, 0.0f);
     vec3 specularLight = vec3(0.0f, 0.0f, 0.0f);
-    vec3 lightDirection = normalize(-light.direction);
+    // Get light direction
+    vec3 lightDir = normalize(-light.direction);
     // Diffuse shading
-    float diffuse = max(dot(normal, lightDirection), 0.0);
+    float diffuse = max(dot(normal, lightDir), 0.0);
+
     // Specular shading
-    vec3 reflectDirection = reflect (-lightDirection, normal);
-    float specular = pow(max(dot(viewDirection,reflectDirection), 0.0), texture_shininess);
+    float specular;
+    if (blinn)  // Use blinn-phong (angle between halfway vector and normal)
+    {
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        specular = pow(max(dot(normal, halfwayDir), 0.0), texture_shininess);
+    }
+    else        // Use phong (angle between reflection vector and view vector)
+    {
+        vec3 reflectDir = reflect(-lightDir, normal);
+        specular = pow(max(dot(viewDir, reflectDir), 0.0), texture_shininess);
+    }
+
     // Combine result
     for (int i = 0; i < TEX_DIFF_COUNT; i++)
     {
@@ -130,18 +143,31 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDirection)
 
 // calculates the color when using a point light.
 // ----------------------------------------------
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDirection)
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
+    
     vec3 ambientLight = vec3(0.0f, 0.0f, 0.0f);
     vec3 diffuseLight = vec3(0.0f, 0.0f, 0.0f);
     vec3 specularLight = vec3(0.0f, 0.0f, 0.0f);
+    // Get light direction
+    vec3 lightDir = normalize(light.position - fragPos);
 
-    vec3 lightDirection = normalize(light.position - fragPos);
-    // Difuse shading
-    float diffuse = max(dot(normal, lightDirection), 0.0);
-    // Specular Shading
-    vec3 reflectDirection = reflect(-lightDirection, normal);
-    float specular = pow(max(dot(viewDirection,reflectDirection), 0.0), texture_shininess);
+     // Difuse shading
+    float diffuse = max(dot(normal, lightDir), 0.0);
+
+   // Specular shading
+    float specular;
+    if (blinn)  // Use blinn-phong (angle between halfway vector and normal)
+    {
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        specular = pow(max(dot(normal, halfwayDir), 0.0), texture_shininess);
+    }
+    else        // Use phong (angle between reflection vector and view vector)
+    {
+        vec3 reflectDir = reflect(-lightDir, normal);
+        specular = pow(max(dot(viewDir, reflectDir), 0.0), texture_shininess);
+    }
+
     // Calculate Attenuation
     float distance    = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance)); 
@@ -166,13 +192,24 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     vec3 ambientLight = vec3(0.0f, 0.0f, 0.0f);
     vec3 diffuseLight = vec3(0.0f, 0.0f, 0.0f);
     vec3 specularLight = vec3(0.0f, 0.0f, 0.0f);
-
+    // Get light direction
     vec3 lightDir = normalize(light.position - fragPos);
     // Diffuse shading
     float diffuse = max(dot(normal, lightDir), 0.0);
+
     // Specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float specular = pow(max(dot(viewDir, reflectDir), 0.0), texture_shininess);
+    float specular;
+    if (blinn)  // Use blinn-phong (angle between halfway vector and normal)
+    {
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        specular = pow(max(dot(normal, halfwayDir), 0.0), texture_shininess);
+    }
+    else        // Use phong (angle between reflection vector and view vector)
+    {
+        vec3 reflectDir = reflect(-lightDir, normal);
+        specular = pow(max(dot(viewDir, reflectDir), 0.0), texture_shininess);
+    }
+    
     // Attenuation
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    

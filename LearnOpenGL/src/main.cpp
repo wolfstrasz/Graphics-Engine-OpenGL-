@@ -52,6 +52,7 @@ bool backFaceCulling = false;
 bool faceCulling = false;
 float lastFaceCullSwitchFrame = 0.0f;
 bool blinnPhongOn = false;
+bool spotlightOn = false;
 #pragma region _OBJECTS
 // CONTAINER OBJECTS
 #define NR_CONTAINERS 10
@@ -281,6 +282,9 @@ int main(void)
 
 		// Enable Image Post-Processor
 		curIPP->enable();
+		// Set use of spotlight
+//		spotlightOn = true;
+		// Set lighting
 		setLighting(modelShader);
 		modelShader.setBool("blinn", blinnPhongOn);
 
@@ -516,7 +520,8 @@ void setLighting(Shader & shader)
 		pointLights[i].setLight(shader, i);
 	}
 	// spot lights
-	//shader.setInt("SPOT_LIGHT_COUNT", NR_SPOT_LIGHTS);
+	if(spotlightOn)
+		shader.setInt("SPOT_LIGHT_COUNT", NR_SPOT_LIGHTS);
 	for (int i = 0; i < NR_SPOT_LIGHTS; i++)
 	{
 		spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
