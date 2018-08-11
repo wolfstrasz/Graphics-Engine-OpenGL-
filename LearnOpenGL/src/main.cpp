@@ -23,6 +23,10 @@
 #include "particle_effects.h"
 #include "meteor_orbit.h"
 
+void renderScene(const Shader &shader);
+void renderCube();
+void renderQuad();
+
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -43,16 +47,20 @@ void drawModels(Model smObject, int objectCount, float objectScale, glm::vec3 po
 glm::mat4 projection = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 glm::mat4 model = glm::mat4(1.0f);
+
 // Pointers to currents
 Window* curWindow = nullptr;
 Camera* curCamera = nullptr;
 IPP*	curIPP = nullptr;
+
 // Utilities
 bool backFaceCulling = false;
 bool faceCulling = false;
 float lastFaceCullSwitchFrame = 0.0f;
 bool blinnPhongOn = false;
 bool spotlightOn = false;
+bool gammaCorrection = false;
+
 #pragma region _OBJECTS
 // CONTAINER OBJECTS
 #define NR_CONTAINERS 10
@@ -113,6 +121,11 @@ glm::vec3 planetPositions[NR_PLANETS] = {
 	glm::vec3(20.0f, +70.0f, 20.0f)
 };
 
+// ORBITAL RINGS
+#define NR_ORBITAL_RINGS 1
+glm::vec3 ringPositions[NR_ORBITAL_RINGS] = {
+	glm::vec3(20.0f, +70.0f, 20.0f)
+};
 #pragma endregion
 #pragma region _LIGHTS
 // POINT LIGHTS
@@ -147,6 +160,9 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 #pragma endregion
 
+// meshes
+unsigned int planeVAO;
+
 int main(void)
 {
 #pragma region _SET_UP
@@ -178,26 +194,27 @@ int main(void)
 
 #pragma endregion
 #pragma region _TEXTURES
-	// Load textures (we now use a utility function to keep the code more organized)
-	// -----------------------------------------------------------------------------
-	unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
-	unsigned int woodBoxSpecularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
-	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
-	unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
-	unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
-	unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
+	//// Load textures (we now use a utility function to keep the code more organized)
+	//// -----------------------------------------------------------------------------
+	//unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
+	//unsigned int woodBoxSpecularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
+	//unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
+	//unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+	//unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
+	//unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
+
 #pragma endregion
 #pragma region _SHADERS
-	// compile shader programs
-	// -----------------------
-	Shader lampShader("lamp", "lamp");
-	Shader modelShader("model_loading.3", "model_loading.4");
-	Shader blendingShader2("blending.2", "blending.2");
-	Shader postProcessingShader("post_processing", "post_processing");
-	Shader skyboxShader("cubemap.1", "cubemap.1");
-	Shader particleShader("particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
-	Shader instancingShader("instancing.1", "instancing.1");
-	Shader planetShader("planet", "planet");
+	//// compile shader programs
+	//// -----------------------
+	//Shader lampShader("lamp", "lamp");
+	//Shader modelShader("model_loading.3", "model_loading.4");
+	//Shader blendingShader2("blending.2", "blending.2");
+	//Shader postProcessingShader("post_processing", "post_processing");
+	//Shader skyboxShader("cubemap.1", "cubemap.1");
+	//Shader particleShader("particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
+	//Shader instancingShader("instancing.1", "instancing.1");
+	//Shader planetShader("planet", "planet");
 
 #pragma endregion
 #pragma region _LOAD_MODELS
@@ -209,92 +226,205 @@ int main(void)
 	//Model planetModel("res/models/planet/planet.obj");
 	// Rock
 	//Model rockModel("res/models/rock/rock.obj");
+	// Meteor Orbit
+	//MeteorOrbit meteorOrbit(&rockModel, ringPositions[0]);
 	// Wooden Containers
-	SimpleCube woodContainer = SimpleCube();
-	woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
-	woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
+	//SimpleCube woodContainer = SimpleCube();
+	//woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
+	//woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
+	////Plane
+	//SimplePlane woodFloor = SimplePlane();
+	//woodFloor.addTexture(SM_DIFFUSE, floorDiffuseMap);
+	//woodFloor.addTexture(SM_SPECULAR, floorDiffuseMap);
+	//// Marble Cubes
+	//SimpleCube marbleCube = SimpleCube();
+	//marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
+	//// Window panels
+	//SimpleWindow windowPanel = SimpleWindow();
+	//windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
+	//// Create lights
+	//for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
+	//for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
+	//for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
+	//// Skybox 
+	////Skybox newSkybox("SeaMountainsSky");
+	//Skybox newSkybox("NightSky");
+	//// Particles
+	//ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
-	//Plane
-	SimplePlane woodFloor = SimplePlane();
-	woodFloor.addTexture(SM_DIFFUSE, floorDiffuseMap);
-	woodFloor.addTexture(SM_SPECULAR, floorDiffuseMap);
-
-	// Marble Cubes
-	SimpleCube marbleCube = SimpleCube();
-	marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
-	//marbleCube.addTexture(SM_SPECULAR, marbleDiffuseMap);
-	
-	// Window panels
-	SimpleWindow windowPanel = SimpleWindow();
-	windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
-
-	// Create lights
-	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
-	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
-	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
-
-	// Skybox 
-	//Skybox newSkybox("SeaMountainsSky");
-	Skybox newSkybox("NightSky");
-	// Particles
-	ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 #pragma endregion
 #pragma region _POST_PROCESSOR
-	IPP postProcessor(curWindow);
-	postProcessor.bindShader(&postProcessingShader);
-	curIPP = &postProcessor;
+	//IPP postProcessor(curWindow);
+	//postProcessor.bindShader(&postProcessingShader);
+	//curIPP = &postProcessor;
 #pragma endregion
 #pragma region _UBO_BLOCK_MATRICES
-	// Create a uniform buffer object BLOCK for view and projection matrices
-	unsigned int uboMatrixViewProjection;
-	glGenBuffers(1, &uboMatrixViewProjection);
-	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
-	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW); // allocate 152 bytes of memory
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	// Bind to a location
-	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
+	//// Create a uniform buffer object BLOCK for view and projection matrices
+	//unsigned int uboMatrixViewProjection;
+	//glGenBuffers(1, &uboMatrixViewProjection);
+	//glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
+	//glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW); // allocate 152 bytes of memory
+	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	//// Bind to a location
+	//glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
 #pragma endregion
 
 	// Enable blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//MeteorOrbit meteorOrbit(&rockModel, planetPositions[0]);
+	// -------------------------------------------------------------
+	// -------------------------------------------------------------
+
+	Shader simpleDepthShader("depthmapping", "depthmapping");
+	Shader debugDepthQuad("debugquad", "debugquad");
+	// set up vertex data (and buffer(s)) and configure vertex attributes
+	// ------------------------------------------------------------------
+	float planeVertices[] = {
+		// positions            // normals         // texcoords
+		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+
+		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+		25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 10.0f
+	};
+	// plane VAO
+	unsigned int planeVBO;
+	glGenVertexArrays(1, &planeVAO);
+	glGenBuffers(1, &planeVBO);
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glBindVertexArray(0);
+
+	// load textures
+	// -------------
+	unsigned int woodTexture = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+
+	// configure depth map FBO
+	// -----------------------
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	unsigned int depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+	// create depth texture
+	unsigned int depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// attach depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	// no need for colors rendering so se no buffer to draw and read buffer
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	// return to default
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// shader configuration
+	// --------------------
+	debugDepthQuad.use();
+	debugDepthQuad.setInt("depthMap", 0);
+
+	// lighting info
+	// -------------
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+
 	while(!curWindow->shouldClose())
 	{
 #pragma region _GENERAL_SETUPS
-		// Get frame difference
-		calculateDelta();
-		// Check for keyboard input and update the window
-		processInput(curWindow->getWindow());
-		curWindow->update();
-		curWindow->clearScreen();
-		//Get view and projection matrices
-		view = curCamera->getView();
-		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
-		// Set uniform buffer object block for matrices
-		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));				// (buffer, offset, size, data pointer)
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		//// Get frame difference
+		//calculateDelta();
+		//// Check for keyboard input and update the window
+		//processInput(curWindow->getWindow());
+		//curWindow->update();
+		//curWindow->clearScreen();
+		////Get view and projection matrices
+		//view = curCamera->getView();
+		//projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
+		//// Set uniform buffer object block for matrices
+		//glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
+		//glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));				// (buffer, offset, size, data pointer)
+		//glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+		//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 #pragma endregion
 
-		// Enable Image Post-Processor
-		curIPP->enable();
-		// Set use of spotlight
-//		spotlightOn = true;
-		// Set lighting
-		setLighting(modelShader);
-		modelShader.setBool("blinn", blinnPhongOn);
+		//// Enable Image Post-Processor
+		//curIPP->enable();
+		//// Set use of spotlight
+		//spotlightOn = true;
+		//// Set lighting
+		//setLighting(modelShader);
+		//modelShader.setBool("blinn", blinnPhongOn);
 
+		// START
+		calculateDelta();
+		processInput(curWindow->getWindow());
+		curWindow->clearScreen();
+		// 1. render depth of scene to texture (from light's perspective)
+		// --------------------------------------------------------------
+		glm::mat4 lightProjection = glm::mat4(1.0f);
+		glm::mat4 lightView = glm::mat4(1.0f);
+		glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
+
+		float near_plane = 1.0f, far_plane = 7.5f;
+		// because light is directional we need to use orthographic projection for the projection matrix
+		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+		// get the light's view in order to render the depth mapping
+		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		lightSpaceMatrix = lightProjection * lightView;
+		// render scene from light's point of view
+		simpleDepthShader.use();
+		simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+		// Set the new viewport and framebuffer for the depth mapping
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		// Render the scene
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, woodTexture);
+		renderScene(simpleDepthShader);
+
+		// return to defaulth framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// reset viewport
+		glViewport(0, 0, curWindow->getWidth(), curWindow->getHeight());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// render Depth map to quad for visual debugging
+		// ---------------------------------------------
+		debugDepthQuad.use();
+		debugDepthQuad.setFloat("near_plane", near_plane);
+		debugDepthQuad.setFloat("far_plane", far_plane);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		renderQuad();
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(curWindow->getWindow());
+		glfwPollEvents();
 #pragma region _DRAW
-		// Draw Scenery
-		// ------------
-		// draw floor
-		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
-		// draw lamps
-		drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		//// Draw Scenery
+		//// ------------
+		//// draw floor
+		//drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
+		//// draw lamps
+		//drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
 		//// draw containers
 		//drawModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
 		//// draw marble cubes
@@ -322,15 +452,153 @@ int main(void)
 		//drawWindowPanels(windowPanel, blendingShader2);
 #pragma endregion
 
-		// Disable Image Post-Processor
-		curIPP->disable();
-		// Draw the processed quad
-		curIPP->draw();
+		//// Disable Image Post-Processor
+		//curIPP->disable();
+		//// Draw the processed quad
+		//if (gammaCorrection) glEnable(GL_FRAMEBUFFER_SRGB);
+		//else glDisable(GL_FRAMEBUFFER_SRGB);
+		//curIPP->draw();
 	}
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
+	glDeleteVertexArrays(1, &planeVAO);
+	glDeleteBuffers(1, &planeVBO);
 	glfwTerminate();
 	return 0;
+}
+// renders the 3D scene
+// --------------------
+void renderScene(const Shader &shader)
+{
+	// floor
+	glm::mat4 model = glm::mat4(1.0f);
+	shader.setMat4("model", model);
+	glBindVertexArray(planeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	// cubes
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader.setMat4("model", model);
+	renderCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+	model = glm::scale(model, glm::vec3(0.5f));
+	shader.setMat4("model", model);
+	renderCube();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+	model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+	model = glm::scale(model, glm::vec3(0.25));
+	shader.setMat4("model", model);
+	renderCube();
+}
+
+
+// renderCube() renders a 1x1 3D cube in NDC.
+// -------------------------------------------------
+unsigned int cubeVAO = 0;
+unsigned int cubeVBO = 0;
+void renderCube()
+{
+	// initialize (if necessary)
+	if (cubeVAO == 0)
+	{
+		float vertices[] = {
+			// back face
+			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+			1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+			-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+			// front face
+			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			// left face
+			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+			-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+			-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+			// right face
+			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+			// bottom face
+			-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+			 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			// top face
+			-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+			 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+			 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+			 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+			-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+			-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+		};
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &cubeVBO);
+		// fill buffer
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		// link vertex attributes
+		glBindVertexArray(cubeVAO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+	// render Cube
+	glBindVertexArray(cubeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+}
+
+// renderQuad() renders a 1x1 XY quad in NDC
+// -----------------------------------------
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }
 #pragma region _UTILITY_FUNCTIONS
 void framebuffer_size_callback(GLFWwindow * window, int width, int height)
@@ -419,6 +687,12 @@ void processInput(GLFWwindow* window)
 		blinnPhongOn = true;
 	if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)
 		blinnPhongOn = false;
+
+	// Gamma Correction (2.2 rooting)
+	if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS)
+		gammaCorrection = true;
+	if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)
+		gammaCorrection = false;
 
 	// Face-culling
 	if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS)
