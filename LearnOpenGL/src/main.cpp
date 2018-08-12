@@ -279,6 +279,7 @@ int main(void)
 
 	Shader simpleDepthShader("depthmapping", "depthmapping");
 	Shader debugDepthQuad("debugquad", "debugquad");
+	Shader shadowShader("shadowmapping", "shadowmapping");
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 	float planeVertices[] = {
@@ -322,8 +323,13 @@ int main(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// To remove oversampling in depth map (when above 1.0 depth value), however non of the objects can have above 1.0 depth value
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	// attach depth texture as FBO's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
@@ -335,6 +341,9 @@ int main(void)
 
 	// shader configuration
 	// --------------------
+	shadowShader.use();
+	shadowShader.setInt("diffuseTexture", 0);
+	shadowShader.setInt("shadowMap", 1);
 	debugDepthQuad.use();
 	debugDepthQuad.setInt("depthMap", 0);
 
@@ -397,7 +406,15 @@ int main(void)
 		// Render the scene
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, woodTexture);
+
+		// Cull front-face for depth mapping to remove peter-panning
+		// bool lastCullFace = glIsEnabled(GL_CULL_FACE);
+		// glEnable(GL_CULL_FACE);
+		// glCullFace(GL_FRONT);
 		renderScene(simpleDepthShader);
+		// if(lastCullFace) glEnable(GL_CULL_FACE);
+		// else glDisable(GL_CULL_FACE);
+		// glCullFace(GL_BACK); // don't forget to reset original culling face
 
 		// return to defaulth framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -406,6 +423,25 @@ int main(void)
 		glViewport(0, 0, curWindow->getWidth(), curWindow->getHeight());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// 2. render scene as normal using the generated depth/shadow map  
+		// --------------------------------------------------------------
+		glViewport(0, 0, curWindow->getWidth(), curWindow->getHeight());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shadowShader.use();
+		glm::mat4 projection = glm::perspective(glm::radians(curCamera->getZoom()), (float)curWindow->getWidth() / (float)curWindow->getHeight(), 0.1f, 100.0f);
+		glm::mat4 view = curCamera->getView();
+		shadowShader.setMat4("projection", projection);
+		shadowShader.setMat4("view", view);
+		// set light uniforms
+		shadowShader.setVec3("viewPos", curCamera->getPosition());
+		shadowShader.setVec3("lightPos", lightPos);
+		shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, woodTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		renderScene(shadowShader);
+
 		// render Depth map to quad for visual debugging
 		// ---------------------------------------------
 		debugDepthQuad.use();
@@ -413,7 +449,7 @@ int main(void)
 		debugDepthQuad.setFloat("far_plane", far_plane);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, depthMap);
-		renderQuad();
+		//renderQuad();
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(curWindow->getWindow());
