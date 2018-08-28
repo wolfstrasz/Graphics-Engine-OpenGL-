@@ -32,7 +32,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
         // Simple shadow edges
         //shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
 
-        // Softer shadow edges
+        // Softer shadow edges wiht Percentage-closer Filtering (PCF)
         vec2 texelSize = 0.5 / textureSize(shadowMap, 0);
         for(int x = -1; x <= 1; ++x)
             for(int y = -1; y <= 1; ++y)

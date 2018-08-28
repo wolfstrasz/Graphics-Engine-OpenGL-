@@ -23,6 +23,7 @@
 #include "particle_effects.h"
 #include "meteor_orbit.h"
 
+#define USE_NEW_CODE 1
 void renderScene(const Shader &shader);
 void renderCube();
 void renderQuad();
@@ -42,7 +43,7 @@ void drawWindowPanels(SimpleModel smObject, Shader shader);
 void drawModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 void drawModels(Model smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
 #pragma endregion
-
+#pragma region _MATRICES_POINTERS_BOOLEANS
 // SPACE MATRICES:
 glm::mat4 projection = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
@@ -60,7 +61,7 @@ float lastFaceCullSwitchFrame = 0.0f;
 bool blinnPhongOn = false;
 bool spotlightOn = false;
 bool gammaCorrection = false;
-
+#pragma endregion
 #pragma region _OBJECTS
 // CONTAINER OBJECTS
 #define NR_CONTAINERS 10
@@ -193,90 +194,87 @@ int main(void)
 	glfwSetScrollCallback(curWindow->getWindow(), scroll_callback);
 
 #pragma endregion
+#if !USE_NEW_CODE
+
 #pragma region _TEXTURES
-	//// Load textures (we now use a utility function to keep the code more organized)
-	//// -----------------------------------------------------------------------------
-	//unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
-	//unsigned int woodBoxSpecularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
-	//unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
-	//unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
-	//unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
-	//unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
+		// Load textures (we now use a utility function to keep the code more organized)
+		// -----------------------------------------------------------------------------
+		unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
+		unsigned int woodBoxSpecularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
+		unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
+		unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+		unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
+		unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
 
 #pragma endregion
 #pragma region _SHADERS
-	//// compile shader programs
-	//// -----------------------
-	//Shader lampShader("lamp", "lamp");
-	//Shader modelShader("model_loading.3", "model_loading.4");
-	//Shader blendingShader2("blending.2", "blending.2");
-	//Shader postProcessingShader("post_processing", "post_processing");
-	//Shader skyboxShader("cubemap.1", "cubemap.1");
-	//Shader particleShader("particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
-	//Shader instancingShader("instancing.1", "instancing.1");
-	//Shader planetShader("planet", "planet");
+		// compile shader programs
+		// -----------------------
+		Shader lampShader("lamp", "lamp");
+		Shader modelShader("model_loading.3", "model_loading.4");
+		Shader blendingShader2("blending.2", "blending.2");
+		Shader postProcessingShader("post_processing", "post_processing");
+		Shader skyboxShader("cubemap.1", "cubemap.1");
+		Shader particleShader("particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
+		Shader instancingShader("instancing.1", "instancing.1");
+		Shader planetShader("planet", "planet");
 
 #pragma endregion
 #pragma region _LOAD_MODELS
 	// load models
 	// -----------
-	// Nanosuit
-	//Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
-	// Planet
-	//Model planetModel("res/models/planet/planet.obj");
-	// Rock
-	//Model rockModel("res/models/rock/rock.obj");
-	// Meteor Orbit
-	//MeteorOrbit meteorOrbit(&rockModel, ringPositions[0]);
-	// Wooden Containers
-	//SimpleCube woodContainer = SimpleCube();
-	//woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
-	//woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
-	////Plane
-	//SimplePlane woodFloor = SimplePlane();
-	//woodFloor.addTexture(SM_DIFFUSE, floorDiffuseMap);
-	//woodFloor.addTexture(SM_SPECULAR, floorDiffuseMap);
-	//// Marble Cubes
-	//SimpleCube marbleCube = SimpleCube();
-	//marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
-	//// Window panels
-	//SimpleWindow windowPanel = SimpleWindow();
-	//windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
-	//// Create lights
-	//for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
-	//for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
-	//for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
-	//// Skybox 
-	////Skybox newSkybox("SeaMountainsSky");
-	//Skybox newSkybox("NightSky");
-	//// Particles
-	//ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+	//Nanosuit
+	Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
+	//Planet
+	Model planetModel("res/models/planet/planet.obj");
+	//Rock
+	Model rockModel("res/models/rock/rock.obj");
+	//Meteor Orbit
+	MeteorOrbit meteorOrbit(&rockModel, ringPositions[0]);
+	//Wooden Containers
+	SimpleCube woodContainer = SimpleCube();
+	woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
+	woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
+	//Plane
+	SimplePlane woodFloor = SimplePlane();
+	woodFloor.addTexture(SM_DIFFUSE, floorDiffuseMap);
+	woodFloor.addTexture(SM_SPECULAR, floorDiffuseMap);
+	// Marble Cubes
+	SimpleCube marbleCube = SimpleCube();
+	marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
+	// Window panels
+	SimpleWindow windowPanel = SimpleWindow();
+	windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
+	// Create lights
+	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
+	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
+	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
+	// Skybox 
+	//Skybox newSkybox("SeaMountainsSky");
+	Skybox newSkybox("NightSky");
+	// Particles
+	ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 
 #pragma endregion
 #pragma region _POST_PROCESSOR
-	//IPP postProcessor(curWindow);
-	//postProcessor.bindShader(&postProcessingShader);
-	//curIPP = &postProcessor;
+	IPP postProcessor(curWindow);
+	postProcessor.bindShader(&postProcessingShader);
+	curIPP = &postProcessor;
 #pragma endregion
 #pragma region _UBO_BLOCK_MATRICES
-	//// Create a uniform buffer object BLOCK for view and projection matrices
-	//unsigned int uboMatrixViewProjection;
-	//glGenBuffers(1, &uboMatrixViewProjection);
-	//glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
-	//glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW); // allocate 152 bytes of memory
-	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	//// Bind to a location
-	//glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
+	// Create a uniform buffer object BLOCK for view and projection matrices
+	unsigned int uboMatrixViewProjection;
+	glGenBuffers(1, &uboMatrixViewProjection);
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW); // allocate 152 bytes of memory
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	// Bind to a location
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
 #pragma endregion
-
-	// Enable blending
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+#endif
+#if USE_NEW_CODE
 	// -------------------------------------------------------------
-	// -------------------------------------------------------------
-
 	Shader simpleDepthShader("depthmapping", "depthmapping");
 	Shader debugDepthQuad("debugquad", "debugquad");
 	Shader shadowShader("shadowmapping", "shadowmapping");
@@ -350,34 +348,81 @@ int main(void)
 	// lighting info
 	// -------------
 	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+#endif
+
+	// Enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	while(!curWindow->shouldClose())
 	{
+#if !USE_NEW_CODE
 #pragma region _GENERAL_SETUPS
-		//// Get frame difference
-		//calculateDelta();
-		//// Check for keyboard input and update the window
-		//processInput(curWindow->getWindow());
-		//curWindow->update();
-		//curWindow->clearScreen();
-		////Get view and projection matrices
-		//view = curCamera->getView();
-		//projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
-		//// Set uniform buffer object block for matrices
-		//glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
-		//glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));				// (buffer, offset, size, data pointer)
-		//glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-		//glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		// Get frame difference
+		calculateDelta();
+		// Check for keyboard input and update the window
+		processInput(curWindow->getWindow());
+		curWindow->update();
+		curWindow->clearScreen();
+		//Get view and projection matrices
+		view = curCamera->getView();
+		projection = glm::perspective(glm::radians(curCamera->getZoom()), curWindow->getRatio(), 0.1f, 100.0f);
+		// Set uniform buffer object block for matrices
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));				// (buffer, offset, size, data pointer)
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+#pragma endregion
+		// Enable Image Post-Processor
+		curIPP->enable();
+		// Set use of spotlight
+		spotlightOn = true;
+		// Set lighting
+		setLighting(modelShader);
+		modelShader.setBool("blinn", blinnPhongOn);
+
+#pragma region _DRAW
+		// Draw Scenery
+		// ------------
+		// draw floor
+		drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
+		// draw lamps
+		drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
+		// draw containers
+		drawModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
+		// draw marble cubes
+		drawModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
+		// draw nanosuit model
+		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+		// draw particles
+		particleShader.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
+		particleShader.setMat4("model", model);
+		particleEffect.draw(particleShader);
+		// draw planet
+		drawModels(planetModel, NR_PLANETS, 4.0f, planetPositions, planetShader, false);
+		// draw meteors
+		meteorOrbit.draw(instancingShader);
+		// Draw skybox
+		skyboxShader.use();
+		model = glm::mat4(1.0f);
+		model = glm::rotate(model, -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		skyboxShader.setMat4("model", model);
+		//glm::mat4 newView = glm::rotate(view, 90.f, glm::vec3(1.0f, 0.0f, 0.0f));
+		newSkybox.draw(skyboxShader);
+		// Draw window panels (TRANSPARENTS)
+		drawWindowPanels(windowPanel, blendingShader2);
 #pragma endregion
 
-		//// Enable Image Post-Processor
-		//curIPP->enable();
-		//// Set use of spotlight
-		//spotlightOn = true;
-		//// Set lighting
-		//setLighting(modelShader);
-		//modelShader.setBool("blinn", blinnPhongOn);
-
+		// Disable Image Post-Processor
+		curIPP->disable();
+		// Draw the processed quad
+		if (gammaCorrection) glEnable(GL_FRAMEBUFFER_SRGB);
+		else glDisable(GL_FRAMEBUFFER_SRGB);
+		curIPP->draw();
+#endif
+#if USE_NEW_CODE
 		// START
 		calculateDelta();
 		processInput(curWindow->getWindow());
@@ -454,54 +499,20 @@ int main(void)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(curWindow->getWindow());
 		glfwPollEvents();
-#pragma region _DRAW
-		//// Draw Scenery
-		//// ------------
-		//// draw floor
-		//drawModels(woodFloor, NR_FLOORS, 1.0f, floorPositions, modelShader);
-		//// draw lamps
-		//drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
-		//// draw containers
-		//drawModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
-		//// draw marble cubes
-		//drawModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
-		//// draw nanosuit model
-		//drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
-		//// draw particles
-		//particleShader.use();
-		//model = glm::mat4(1.0f);
-		//model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
-		//particleShader.setMat4("model", model);
-		//particleEffect.draw(particleShader);
-		//// draw planet
-		//drawModels(planetModel, NR_PLANETS, 4.0f, planetPositions, planetShader, false);
-		//// draw meteors
-		//meteorOrbit.draw(instancingShader);
-		//// Draw skybox
-		//skyboxShader.use();
-		//model = glm::mat4(1.0f);
-		//model = glm::rotate(model, -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		//skyboxShader.setMat4("model", model);
-		////glm::mat4 newView = glm::rotate(view, 90.f, glm::vec3(1.0f, 0.0f, 0.0f));
-		//newSkybox.draw(skyboxShader);
-		//// Draw window panels (TRANSPARENTS)
-		//drawWindowPanels(windowPanel, blendingShader2);
-#pragma endregion
 
-		//// Disable Image Post-Processor
-		//curIPP->disable();
-		//// Draw the processed quad
-		//if (gammaCorrection) glEnable(GL_FRAMEBUFFER_SRGB);
-		//else glDisable(GL_FRAMEBUFFER_SRGB);
-		//curIPP->draw();
+#endif
+
 	}
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(1, &planeVAO);
-	glDeleteBuffers(1, &planeVBO);
+	//glDeleteVertexArrays(1, &planeVAO);
+	//glDeleteBuffers(1, &planeVBO);
 	glfwTerminate();
 	return 0;
 }
+
+
+
 // renders the 3D scene
 // --------------------
 void renderScene(const Shader &shader)
@@ -529,7 +540,6 @@ void renderScene(const Shader &shader)
 	shader.setMat4("model", model);
 	renderCube();
 }
-
 
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
@@ -636,6 +646,7 @@ void renderQuad()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
 }
+
 #pragma region _UTILITY_FUNCTIONS
 void framebuffer_size_callback(GLFWwindow * window, int width, int height)
 {
