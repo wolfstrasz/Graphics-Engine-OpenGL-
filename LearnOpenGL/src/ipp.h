@@ -1,6 +1,7 @@
 #pragma once
 #ifndef _IPP_H
 #define _IPP_H
+#include <glad\glad.h>
 #include "shader.h"
 #include "window.h"
 
@@ -14,7 +15,7 @@ public:
 	}
 private:
 	// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-	float mQuadVertices[24] = { 
+	static constexpr float mQuadVertices[] = { 
 		// positions   // texCoords
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,
@@ -27,9 +28,9 @@ private:
 	unsigned int mFramebuffer;
 	unsigned int mTextureColorbuffer;
 	unsigned int mRenderbufferObject;
-	float mComplete;
-	float mEnabled;
-	int mFunction;
+	unsigned int mFunction;
+	bool mComplete;
+	bool mEnabled;
 	Window * mBindedWindow;
 	Shader * mBindedShader;
 	// Functions

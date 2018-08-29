@@ -199,7 +199,6 @@ int main(void)
 
 #pragma endregion
 #if !USE_NEW_CODE
-
 #pragma region _TEXTURES
 		// Load textures (we now use a utility function to keep the code more organized)
 		// -----------------------------------------------------------------------------
@@ -258,8 +257,6 @@ int main(void)
 	Skybox newSkybox("NightSky");
 	// Particles
 	ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-
 #pragma endregion
 #pragma region _POST_PROCESSOR
 	IPP postProcessor(curWindow);
