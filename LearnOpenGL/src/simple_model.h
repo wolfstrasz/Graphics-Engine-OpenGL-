@@ -2,18 +2,10 @@
 #ifndef _SIMPLE_MODEL_H
 #define _SIMPLE_MODEL_H
 #include <glad/glad.h> // holds all OpenGL type declarations
-
 #include <string>
 #include <vector>
 #include <type_traits>
-
 #include "shader.h"
-
-#define SM_POSITION_VECTOR_SIZE		3
-#define SM_NORMAL_VECTOR_SIZE		3
-#define SM_TEXCOORD_VECTOR_SIZE		2
-#define SM_TANGENT_VECTOR_SIZE		3
-#define SM_BITANGENT_VECTOR_SIZE	3
 
 // define the atttribute enumerator
 // --------------------------------
@@ -70,6 +62,14 @@ enum SM_Maps : int {
 class SimpleModel
 {
 private:
+	// struct holding info for vector sizes
+	struct SM_Vector_Sizes {
+		static constexpr short POSITION = 3;
+		static constexpr short NORMAL = 3;
+		static constexpr short TEXCOORD = 2;
+		static constexpr short TANGENT = 3;
+		static constexpr short BITANGENT = 3;
+	};
 	// struct representing each vertex data
 	struct Vertex {
 		glm::vec3 Position;
@@ -93,33 +93,31 @@ public:
 	SimpleModel(const float vertices[], int indicesCount, const unsigned int indices[], SM_Attrib attribs)
 	{
 		mAttribs = attribs;
-		unsigned int attribOffset = 0;
-		calculateAttribOffset(attribOffset, mAttribs);
-
+		int offset = 0;
 		for (int i = 0; i < indicesCount; i++)
 		{
-			int offset = i * attribOffset;
+			//int offset = i * attribOffset;
 			Vertex curVertex;
 			if ((mAttribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION)
 			{
 				curVertex.Position = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += SM_POSITION_VECTOR_SIZE;
+				offset += SM_Vector_Sizes::POSITION;
 			}
 			if ((mAttribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL) {
 				curVertex.Normal = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += SM_NORMAL_VECTOR_SIZE;
+				offset += SM_Vector_Sizes::NORMAL;
 			}
 			if ((mAttribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD) {
 				curVertex.TexCoords = glm::vec2(vertices[offset], vertices[offset + 1]);
-				offset += SM_TEXCOORD_VECTOR_SIZE;
+				offset += SM_Vector_Sizes::TEXCOORD;
 			}
 			if ((mAttribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT) {
 				curVertex.Tangent = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += SM_TANGENT_VECTOR_SIZE;
+				offset += SM_Vector_Sizes::TANGENT;
 			}
 			if ((mAttribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT) {
 				curVertex.Bitangent = glm::vec3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-				offset += SM_BITANGENT_VECTOR_SIZE;
+				offset += SM_Vector_Sizes::BITANGENT;
 			}
 			mVertices.push_back(curVertex);
 			mIndices.push_back(indices[i]);
@@ -215,33 +213,16 @@ private:
 		// Reset to defaults
 		glBindVertexArray(0);
 	}
-	// utility function to calculate offset in vertices translation
-	// ------------------------------------------------------------
-	void calculateAttribOffset(unsigned int & offset, SM_Attrib attribs) {
-		if ((attribs & SM_Attrib::SM_POSITION) == SM_Attrib::SM_POSITION)
-			offset += SM_POSITION_VECTOR_SIZE;
-		if ((attribs & SM_Attrib::SM_NORMAL) == SM_Attrib::SM_NORMAL)
-			offset += SM_NORMAL_VECTOR_SIZE;
-		if ((attribs & SM_Attrib::SM_TEXCOORD) == SM_Attrib::SM_TEXCOORD)
-			offset += SM_TEXCOORD_VECTOR_SIZE;
-		if ((attribs & SM_Attrib::SM_TANGENT) == SM_Attrib::SM_TANGENT)
-			offset += SM_TANGENT_VECTOR_SIZE;
-		if ((attribs & SM_Attrib::SM_BITANGENT) == SM_Attrib::SM_BITANGENT)
-			offset += SM_BITANGENT_VECTOR_SIZE;
-	}
+
 };
 #pragma endregion
 
 // initialise child class: simple model of a cube
 // ----------------------------------------------
 #pragma region _SIMPLE_MODEL::Cube
-#define SM_CUBE_NR_INDICES 36
-#define SM_CUBE_VERTEX_SIZE 8
-#define SM_CUBE_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD)
-
 class SimpleCube : public SimpleModel
 {
-	static constexpr float sm_vertices[SM_CUBE_VERTEX_SIZE * SM_CUBE_NR_INDICES] = {
+	static constexpr float sm_vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
@@ -285,40 +266,31 @@ class SimpleCube : public SimpleModel
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
 	};
-	static constexpr unsigned int sm_indices[SM_CUBE_NR_INDICES] = {
+	static constexpr unsigned int sm_indices[] = {
 		0,  1,  2,
 		3,  4,  5,
-
 		6,  7,  8,
 		9, 10, 11,
-
 		12, 13, 14,
 		15, 16, 17,
-
 		18, 19, 20,
 		21, 22, 23,
-
 		24, 25, 26,
 		27, 28, 29,
-
 		30, 31, 32,
 		33, 34, 35
 	};
 public:
-	SimpleCube() : SimpleModel(sm_vertices, SM_CUBE_NR_INDICES, sm_indices, SM_CUBE_FLAGS) {}
+	SimpleCube() : SimpleModel(sm_vertices, sizeof(sm_indices)/sizeof(int), sm_indices, SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD) {}
 };
 #pragma endregion
 
 // initialise child class: simple model of a plane
 // -----------------------------------------------
 #pragma region _SIMPLE_MODEL::Plane
-#define SM_PLANE_NR_INDICES 6
-#define SM_PLANE_VERTEX_SIZE 8
-#define SM_PLANE_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD)
-
 class SimplePlane : public SimpleModel
 {
-	static constexpr float sm_vertices[SM_PLANE_VERTEX_SIZE * SM_PLANE_NR_INDICES] = {
+	static constexpr float sm_vertices[] = {
 		// positions		   normals				 texCoords
 		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
 		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
@@ -328,24 +300,21 @@ class SimplePlane : public SimpleModel
 		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
 		-5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f
 	};
-	static constexpr unsigned int sm_indices[SM_PLANE_NR_INDICES] = {
+	static constexpr unsigned int sm_indices[] = {
 		0,  1,  2,
 		3,  4,  5
 	};
 public:
-	SimplePlane() : SimpleModel(sm_vertices, SM_PLANE_NR_INDICES, sm_indices, SM_PLANE_FLAGS) {}
+	SimplePlane() : SimpleModel(sm_vertices, sizeof(sm_indices)/sizeof(int), sm_indices, SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD) {}
 };
 #pragma endregion
 
 // initialise child class: simple model of a window
+// ------------------------------------------------
 #pragma region _SIMPLE_MODEL::Window
-#define SM_WINDOW_NR_INDICES 6
-#define SM_WINDOW_VERTEX_SIZE 5
-#define SM_WINDOW_FLAGS (SM_Attrib::SM_POSITION | SM_Attrib::SM_TEXCOORD)
-
 class SimpleWindow : public SimpleModel
 {
-	static constexpr float sm_vertices[SM_WINDOW_VERTEX_SIZE * SM_WINDOW_NR_INDICES] = {
+	static constexpr float sm_vertices[] = {
 		// positions		  texCoords       
 		0.0f,  0.5f,  0.0f,   0.0f,  0.0f,
 		0.0f, -0.5f,  0.0f,   0.0f,  1.0f,
@@ -355,12 +324,12 @@ class SimpleWindow : public SimpleModel
 		1.0f, -0.5f,  0.0f,   1.0f,  1.0f,
 		1.0f,  0.5f,  0.0f,   1.0f,  0.0f
 	};
-	static constexpr unsigned int sm_indices[SM_WINDOW_NR_INDICES] = {
+	static constexpr unsigned int sm_indices[] = {
 		0,  1,  2,
 		3,  4,  5
 	};
 public:
-	SimpleWindow() : SimpleModel(sm_vertices, SM_WINDOW_NR_INDICES, sm_indices, SM_WINDOW_FLAGS) {}
+	SimpleWindow() : SimpleModel(sm_vertices, sizeof(sm_indices)/sizeof(int), sm_indices, SM_Attrib::SM_POSITION | SM_Attrib::SM_TEXCOORD) {}
 };
 #pragma endregion
 
