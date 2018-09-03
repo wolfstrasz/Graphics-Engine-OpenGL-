@@ -510,6 +510,7 @@ int main(void)
 	//glDeleteBuffers(1, &planeVBO);
 	glfwTerminate();
 	return 0;
+
 }
 
 
