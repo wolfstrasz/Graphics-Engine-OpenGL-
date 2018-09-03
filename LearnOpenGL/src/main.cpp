@@ -173,13 +173,22 @@ unsigned int planeVAO;
 #if USE_NEW_CODE == 2
 void renderScene(const Shader &shader);
 void renderCube();
+// shadows showing
 bool shadows = true;
 bool shadowsKeyPressed = false;
+// depth map showing
 bool showDepthMap = false;
 bool showDepthMapKeyPressed = false;
+// light movement
 bool moveLight = false;
 bool moveLightKeyPressed = false;
-
+// pcf
+bool pcf = false;
+bool pcfKeyPressed = false;
+// bias scale
+float biasScale = 0.0f;
+float biasScaleConst = 0.0005;
+bool  biasScaleKeyPressed = false;
 #endif
 
 int main(void)
@@ -611,6 +620,8 @@ int main(void)
 		pointShadowShader.setInt("shadows", shadows); // enable/disable shadows by pressing 'SPACE'
 		pointShadowShader.setFloat("far_plane", far_plane);
 		pointShadowShader.setBool("showDepthMap", showDepthMap);
+		pointShadowShader.setBool("pcf", pcf);
+		pointShadowShader.setFloat("biasScale", biasScale);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, woodTexture);
 		glActiveTexture(GL_TEXTURE1);
@@ -748,6 +759,38 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
 	{
 		moveLightKeyPressed = false;
+	}
+	// PCF
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pcfKeyPressed)
+	{
+		pcf = !pcf;
+		pcfKeyPressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
+	{
+		pcfKeyPressed = false;
+	}
+	// Bias Scale increase
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && !biasScaleKeyPressed)
+	{
+		biasScale += biasScaleConst;
+		std::cout << "New bias scale: " + std::to_string(biasScale) << std::endl;
+		biasScaleKeyPressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_U) == GLFW_RELEASE)
+	{
+		biasScaleKeyPressed = false;
+	}
+	// Bias Scale decrease
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS && !biasScaleKeyPressed)
+	{
+		biasScale -= biasScaleConst;
+		std::cout << "New bias scale: " + std::to_string(biasScale) << std::endl;
+		biasScaleKeyPressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_U) == GLFW_RELEASE)
+	{
+		biasScaleKeyPressed = false;
 	}
 #endif 
 }
@@ -1107,7 +1150,7 @@ void renderScene(const Shader &shader)
 	shader.setMat4("model", model);
 	renderCube();
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
+	model = glm::translate(model, glm::vec3(2.0f, 4.25f, 1.0));
 	model = glm::scale(model, glm::vec3(0.75f));
 	shader.setMat4("model", model);
 	renderCube();
@@ -1117,7 +1160,7 @@ void renderScene(const Shader &shader)
 	shader.setMat4("model", model);
 	renderCube();
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
+	model = glm::translate(model, glm::vec3(-1.5f, -0.5f, 1.5));
 	model = glm::scale(model, glm::vec3(0.5f));
 	shader.setMat4("model", model);
 	renderCube();
