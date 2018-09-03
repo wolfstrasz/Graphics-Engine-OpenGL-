@@ -23,7 +23,10 @@
 #include "particle_effects.h"
 #include "meteor_orbit.h"
 
-#define USE_NEW_CODE 2
+#define USE_SCENE_CODE 1
+// 0 = display general scene with models
+// 1 = display directional shadowmapping scene
+// 2 = display omnidirectional shadowmapping scene
 
 
 #pragma region _UTILITY_FUNCTION_INIT
@@ -160,17 +163,15 @@ float lastFrame = 0.0f;
 #pragma endregion
 
 
-// NEW CODE = 1 SETTINGS
-#if USE_NEW_CODE == 1
+// SETTINGS
+#if USE_SCENE_CODE == 1
 void renderScene(const Shader &shader);
 void renderCube();
 void renderQuad();
 // meshes
 unsigned int planeVAO;
 #endif
-
-// NEW CODE = 2 SETTINGS
-#if USE_NEW_CODE == 2
+#if USE_SCENE_CODE == 2
 void renderScene(const Shader &shader);
 void renderCube();
 // shadows showing
@@ -221,7 +222,8 @@ int main(void)
 	glfwSetScrollCallback(curWindow->getWindow(), scroll_callback);
 
 #pragma endregion
-#if !USE_NEW_CODE
+// scene set up
+#if USE_SCENE_CODE == 0
 #pragma region _TEXTURES
 		// Load textures (we now use a utility function to keep the code more organized)
 		// -----------------------------------------------------------------------------
@@ -297,7 +299,7 @@ int main(void)
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
 #pragma endregion
 #endif
-#if USE_NEW_CODE == 1
+#if USE_SCENE_CODE == 1
 	// -------------------------------------------------------------
 	Shader simpleDepthShader("depthmapping", "depthmapping");
 	Shader debugDepthQuad("debugquad", "debugquad");
@@ -373,8 +375,7 @@ int main(void)
 	// -------------
 	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
 #endif
-
-#if USE_NEW_CODE == 2
+#if USE_SCENE_CODE == 2
 
 	// Create shaders
 	Shader pointDepthShader("point_depthmap", "point_depthmap", "point_depthmap");
@@ -424,7 +425,8 @@ int main(void)
 
 	while(!curWindow->shouldClose())
 	{
-#if !USE_NEW_CODE
+// scene rendering
+#if USE_SCENE_CODE == 0
 #pragma region _GENERAL_SETUPS
 		// Get frame difference
 		calculateDelta();
@@ -490,7 +492,7 @@ int main(void)
 		else glDisable(GL_FRAMEBUFFER_SRGB);
 		curIPP->draw();
 #endif
-#if USE_NEW_CODE == 1
+#if USE_SCENE_CODE == 1
 		// START
 		calculateDelta();
 		processInput(curWindow->getWindow());
@@ -569,7 +571,7 @@ int main(void)
 		glfwPollEvents();
 
 #endif
-#if USE_NEW_CODE == 2
+#if USE_SCENE_CODE == 2
 		// START
 		calculateDelta();
 		processInput(curWindow->getWindow());
@@ -634,7 +636,6 @@ int main(void)
 		glfwSwapBuffers(curWindow->getWindow());
 		glfwPollEvents();
 #endif
-
 	}
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
@@ -728,8 +729,7 @@ void processInput(GLFWwindow* window)
 		}
 	}
 #pragma endregion _CONST_KEYBINDS
-
-#if USE_NEW_CODE == 2
+#if USE_SCENE_CODE == 2
 	// Show shadows
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
 	{
@@ -994,7 +994,7 @@ void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3
 }
 #pragma endregion
 
-#if USE_NEW_CODE == 1
+#if USE_SCENE_CODE == 1
 // renders the 3D scene
 // --------------------
 void renderScene(const Shader &shader)
@@ -1129,7 +1129,7 @@ void renderQuad()
 	glBindVertexArray(0);
 }
 #endif
-#if USE_NEW_CODE == 2
+#if USE_SCENE_CODE == 2
 // renders the 3D scene
 // --------------------
 void renderScene(const Shader &shader)
