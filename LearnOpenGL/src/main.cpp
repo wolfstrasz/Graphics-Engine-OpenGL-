@@ -23,7 +23,7 @@
 #include "particle_effects.h"
 #include "meteor_orbit.h"
 
-#define USE_SCENE_CODE 1
+#define USE_SCENE_CODE 2
 // 0 = display general scene with models
 // 1 = display directional shadowmapping scene
 // 2 = display omnidirectional shadowmapping scene
@@ -188,7 +188,7 @@ bool pcf = false;
 bool pcfKeyPressed = false;
 // bias scale
 float biasScale = 0.0f;
-float biasScaleConst = 0.0005;
+float biasScaleConst = 0.0005f;
 bool  biasScaleKeyPressed = false;
 #endif
 
@@ -579,7 +579,7 @@ int main(void)
 
 		// move light position over time
 		if (moveLight)
-		lightPos.z = sin(glfwGetTime() * 0.5) * 3.0;
+		lightPos.z = (float)sin(glfwGetTime() * 0.5f) * 3.0f;
 	
 		// 0. create depth cubemap transformation matrices
 		// -----------------------------------------------

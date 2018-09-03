@@ -36,17 +36,18 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
     else
     {
         // Simple shadow edges
-        //shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-
+        // shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
         // Softer shadow edges wiht Percentage-closer Filtering (PCF)
-        vec2 texelSize = 0.5 / textureSize(shadowMap, 0);       // changing the size of the texel effects quality of shadows
-        for(int x = -2; x <= 2; x++)                            // changing the samples made effects the quality of shadows
-            for(int y = -2; y <= 2; y++)
+        float textelScale = 0.2;
+        vec2 texelSize = 1.0 / textureSize(shadowMap, 0) * textelScale;  // changing the size of the texel effects quality of shadows
+        for(float x = -3; x <= 3; x++)                                     // changing the samples made effects the quality of shadows
+            for(float y = -3; y <= 3; y++)
             {
                 float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
                 shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
             }    
-        shadow /= 25.0;
+        shadow /= 49.0;
+        //shadow = sin(atan(shadow));
     } 
     
 
@@ -73,8 +74,11 @@ void main()
     vec3 specular = spec * lightColor;    
     
     // calculate bias (steeper angles get higher bias)
-    float maxVal = 0.05;
-    float bias = max(maxVal * (1.0 - dot(normal, lightDir)), 0.005);
+    // float maxVal = 0.05;
+    // float bias = max(maxVal * (1.0 - dot(normal, lightDir)), 0.005);
+    float maxVal = 0.020;
+    float minVal = 0.0020;
+    float bias = max(maxVal * (1.0 - dot(normal, lightDir)), minVal);
     // calculate shadow
     float shadow = ShadowCalculation(fs_in.FragPosLightSpace, bias);                      
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;    
