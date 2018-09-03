@@ -23,7 +23,7 @@
 #include "particle_effects.h"
 #include "meteor_orbit.h"
 
-#define USE_NEW_CODE 0
+#define USE_NEW_CODE 1
 
 
 #pragma region _UTILITY_FUNCTION_INIT

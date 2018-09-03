@@ -1,4 +1,10 @@
 #version 450 core
+
+/*
+--------------------------------------
+ Shadow Mapping for directional lights
+ -------------------------------------
+ */
 out vec4 FragColor;
 
 in VS_OUT {
@@ -33,14 +39,14 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
         //shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
 
         // Softer shadow edges wiht Percentage-closer Filtering (PCF)
-        vec2 texelSize = 0.5 / textureSize(shadowMap, 0);
-        for(int x = -1; x <= 1; ++x)
-            for(int y = -1; y <= 1; ++y)
+        vec2 texelSize = 0.5 / textureSize(shadowMap, 0);       // changing the size of the texel effects quality of shadows
+        for(int x = -2; x <= 2; x++)                            // changing the samples made effects the quality of shadows
+            for(int y = -2; y <= 2; y++)
             {
                 float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
                 shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
             }    
-        shadow /= 9.0;
+        shadow /= 25.0;
     } 
     
 
@@ -67,7 +73,7 @@ void main()
     vec3 specular = spec * lightColor;    
     
     // calculate bias (steeper angles get higher bias)
-    float maxVal = 0.025;
+    float maxVal = 0.05;
     float bias = max(maxVal * (1.0 - dot(normal, lightDir)), 0.005);
     // calculate shadow
     float shadow = ShadowCalculation(fs_in.FragPosLightSpace, bias);                      
