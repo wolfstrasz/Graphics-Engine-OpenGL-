@@ -27,7 +27,7 @@
 // 0 = display general scene with models
 // 1 = display directional shadowmapping scene
 // 2 = display omnidirectional shadowmapping scene
-
+// 3 = display normal and parallax mapping scene
 
 #pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -192,9 +192,10 @@ glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 #if USE_SCENE_CODE == 3
 void renderQuad();
 // lighting info
-// -------------
 glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
 #endif
+// parallax mapping scale
+float heightScale = 0.1f;
 int main(void)
 {
 #pragma region _SET_UP
@@ -417,13 +418,17 @@ int main(void)
 	pointShadowShader.setInt("diffuseTexture", 0);
 	pointShadowShader.setInt("depthMap", 1);
 #endif
-
 #if USE_SCENE_CODE == 3
 	// LOAD TEXTURES
 	unsigned int brickwallDiffuseMap = loadTexture("res/textures/brickwall.jpg", GL_REPEAT);
 	unsigned int brickwallNormalMap = loadTexture("res/textures/brickwall_normal.jpg", GL_REPEAT);
+	unsigned int bricksDiffuseMap = loadTexture("res/textures/bricks2.jpg", GL_REPEAT);
+	unsigned int bricksNormalMap = loadTexture("res/textures/bricks2_normal.jpg", GL_REPEAT);
+	// We load the inverse of the original height map which is a depth map (Displacement map)
+	unsigned int bricksHeightMap = loadTexture("res/textures/bricks2_disp.jpg", GL_REPEAT);
 	// CREATE SHADERS
 	Shader normalShader("normal_mapping", "normal_mapping");
+	Shader heightShader("parallax_mapping", "parallax_mapping");
 	// LOAD MODELS
 	// ...
 	// shader configuration
@@ -431,6 +436,10 @@ int main(void)
 	normalShader.use();
 	normalShader.setInt("diffuseMap", 0);
 	normalShader.setInt("normalMap", 1);
+	heightShader.use();
+	heightShader.setInt("diffuseMap", 0);
+	heightShader.setInt("normalMap", 1);
+	heightShader.setInt("depthMap", 2);
 #endif
 
 	// Enable blending
@@ -655,14 +664,24 @@ int main(void)
 		processInput(curWindow->getWindow());
 		curWindow->clearScreen();
 		// configure view/projection matrices
+		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 projection = glm::perspective(glm::radians(curCamera->getZoom()),curWindow->getRatio(), 0.1f, 100.0f);
 		glm::mat4 view = curCamera->getView();
+
 		normalShader.use();
 		normalShader.setMat4("projection", projection);
 		normalShader.setMat4("view", view);
+
+		heightShader.use();
+		heightShader.setMat4("projection", projection);
+		heightShader.setMat4("view", view);
+
+		// BRICK WALL
 		// render normal-mapped quad
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
+		normalShader.use();
+		// rotate the quad to show normal mapping from multiple directions
+		model = glm::mat4(1.0f);
+		model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); 
 		normalShader.setMat4("model", model);
 		normalShader.setVec3("viewPos", curCamera->getPosition());
 		normalShader.setVec3("lightPos", lightPos);
@@ -670,14 +689,38 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, brickwallDiffuseMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, brickwallNormalMap);
+		//renderQuad();
+
+		// BRICK WALL 2
+		// render parallax-mapped quad
+		heightShader.use();
+		// translate AND rotate the quad to show parallax mapping from multiple directions
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(1.0f));
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); 
+		heightShader.setMat4("model", model);
+		heightShader.setVec3("viewPos", curCamera->getPosition());
+		heightShader.setVec3("lightPos", lightPos);
+		heightShader.setFloat("heightScale", heightScale); // adjust with Q and E keys
+		std::cout << heightScale << std::endl;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bricksDiffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, bricksNormalMap);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, bricksHeightMap);
 		renderQuad();
 
 		// render light source (simply re-renders a smaller plane at the light's position for debugging/visualization)
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.1f));
+		normalShader.use();
 		normalShader.setMat4("model", model);
 		renderQuad();
+
+
 		// END
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -818,7 +861,23 @@ void processInput(GLFWwindow* window)
 	{
 		pcfKeyPressed = false;
 	}
-#endif 
+#endif
+#if USE_SCENE_CODE == 3
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		if (heightScale > 0.0f)
+			heightScale -= 0.0005f;
+		else
+			heightScale = 0.0f;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		if (heightScale < 1.0f)
+			heightScale += 0.0005f;
+		else
+			heightScale = 1.0f;
+	}
+#endif
 }
 
 // framebuffer callback
