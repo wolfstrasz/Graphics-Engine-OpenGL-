@@ -162,7 +162,6 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 #pragma endregion
 
-
 // SETTINGS
 #if USE_SCENE_CODE == 1
 void renderScene(const Shader &shader);
@@ -193,9 +192,17 @@ glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 void renderQuad();
 // lighting info
 glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
-#endif
 // parallax mapping scale
-float heightScale = 0.1f;
+float heightScale = 0.05f;
+// steep parallax mapping on/off
+bool steep = false;
+bool steepKeyPressed = false;
+// occlusion parallax mapping on/off
+bool occlusion = false;
+bool occlusionKeyPressed = false;
+
+#endif
+
 int main(void)
 {
 #pragma region _SET_UP
@@ -424,15 +431,14 @@ int main(void)
 	unsigned int brickwallNormalMap = loadTexture("res/textures/brickwall_normal.jpg", GL_REPEAT);
 	unsigned int bricksDiffuseMap = loadTexture("res/textures/bricks2.jpg", GL_REPEAT);
 	unsigned int bricksNormalMap = loadTexture("res/textures/bricks2_normal.jpg", GL_REPEAT);
-	// We load the inverse of the original height map which is a depth map (Displacement map)
-	unsigned int bricksHeightMap = loadTexture("res/textures/bricks2_disp.jpg", GL_REPEAT);
+	unsigned int bricksHeightMap = loadTexture("res/textures/bricks2_disp.jpg", GL_REPEAT);	// We load the inverse of the original height map which is a depth map (Displacement map)
+	unsigned int toyBoxDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+	unsigned int toyBoxNormalMap = loadTexture("res/textures/toy_box_normal.png", GL_REPEAT);
+	unsigned int toyBoxHeightMap = loadTexture("res/textures/toy_box_disp.png", GL_REPEAT);	// We load the inverse of the original height map which is a depth map (Displacement map)
 	// CREATE SHADERS
 	Shader normalShader("normal_mapping", "normal_mapping");
 	Shader heightShader("parallax_mapping", "parallax_mapping");
-	// LOAD MODELS
-	// ...
 	// shader configuration
-	// --------------------
 	normalShader.use();
 	normalShader.setInt("diffuseMap", 0);
 	normalShader.setInt("normalMap", 1);
@@ -702,14 +708,37 @@ int main(void)
 		heightShader.setMat4("model", model);
 		heightShader.setVec3("viewPos", curCamera->getPosition());
 		heightShader.setVec3("lightPos", lightPos);
-		heightShader.setFloat("heightScale", heightScale); // adjust with Q and E keys
-		std::cout << heightScale << std::endl;
+		heightShader.setBool("steep", steep);				// turn on/off with T
+		heightShader.setBool("occlusion", occlusion);		// turn on/off with Y
+		heightShader.setFloat("heightScale", heightScale);  // adjust with Q and E keys
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, bricksDiffuseMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, bricksNormalMap);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, bricksHeightMap);
+		renderQuad();
+
+		// TOY BOX
+		// render parallax-mapped quad
+		heightShader.use();
+		// translate AND rotate the quad to show parallax mapping from multiple directions
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(3.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); 
+		heightShader.setMat4("model", model);
+		heightShader.setVec3("viewPos", curCamera->getPosition());
+		heightShader.setVec3("lightPos", lightPos);
+		heightShader.setBool("steep", steep);				// turn on/off with T
+		heightShader.setBool("occlusion", occlusion);		// turn on/off with Y
+		heightShader.setFloat("heightScale", heightScale);  // adjust with Q and E keys
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, toyBoxDiffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, toyBoxNormalMap);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, toyBoxHeightMap);
 		renderQuad();
 
 		// render light source (simply re-renders a smaller plane at the light's position for debugging/visualization)
@@ -863,19 +892,43 @@ void processInput(GLFWwindow* window)
 	}
 #endif
 #if USE_SCENE_CODE == 3
+	// increase scaling of height map
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		if (heightScale > 0.0f)
 			heightScale -= 0.0005f;
 		else
 			heightScale = 0.0f;
+		std::cout << heightScale << std::endl;
 	}
-	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	// decrease scaling of height map
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
 		if (heightScale < 1.0f)
 			heightScale += 0.0005f;
 		else
 			heightScale = 1.0f;
+		std::cout << heightScale << std::endl;
+	}
+	// turn on/off steep parallax mapping
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && !steepKeyPressed)
+	{
+		steep = !steep;
+		steepKeyPressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE)
+	{
+		steepKeyPressed = false;
+	}
+	// turn on/off occlusion parallax mapping
+	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS && !occlusionKeyPressed)
+	{
+		occlusion = !occlusion;
+		occlusionKeyPressed = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_RELEASE)
+	{
+		occlusionKeyPressed = false;
 	}
 #endif
 }
