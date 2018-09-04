@@ -174,22 +174,20 @@ unsigned int planeVAO;
 #if USE_SCENE_CODE == 2
 void renderScene(const Shader &shader);
 void renderCube();
-// shadows showing
+// shadows visability
 bool shadows = true;
 bool shadowsKeyPressed = false;
-// depth map showing
+// depth map visability
 bool showDepthMap = false;
 bool showDepthMapKeyPressed = false;
 // light movement
 bool moveLight = false;
 bool moveLightKeyPressed = false;
 // pcf
-bool pcf = false;
+bool usePCF = false;
 bool pcfKeyPressed = false;
-// bias scale
-float biasScale = 0.0f;
-float biasScaleConst = 0.0005f;
-bool  biasScaleKeyPressed = false;
+// lighting info
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 #endif
 
 int main(void)
@@ -301,9 +299,9 @@ int main(void)
 #endif
 #if USE_SCENE_CODE == 1
 	// -------------------------------------------------------------
-	Shader simpleDepthShader("depthmapping", "depthmapping");
-	Shader debugDepthQuad("debugquad", "debugquad");
-	Shader shadowShader("shadowmapping", "shadowmapping");
+	Shader dirDepthShader("dir_depthmap", "dir_depthmap");
+	Shader dirDepthmapQuad("debugquad", "debugquad");
+	Shader dirShadowShader("dir_shadow", "dir_shadow");
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 	float planeVertices[] = {
@@ -365,11 +363,12 @@ int main(void)
 
 	// shader configuration
 	// --------------------
-	shadowShader.use();
-	shadowShader.setInt("diffuseTexture", 0);
-	shadowShader.setInt("shadowMap", 1);
-	debugDepthQuad.use();
-	debugDepthQuad.setInt("depthMap", 0);
+	dirShadowShader.use();
+	dirShadowShader.setInt("diffuseTexture", 0);
+	dirShadowShader.setInt("shadowMap", 1);
+	dirShadowShader.setBool("showDepthMap", true);
+	dirDepthmapQuad.use();
+	dirDepthmapQuad.setInt("depthMap", 0);
 
 	// lighting info
 	// -------------
@@ -412,11 +411,6 @@ int main(void)
 	pointShadowShader.use();
 	pointShadowShader.setInt("diffuseTexture", 0);
 	pointShadowShader.setInt("depthMap", 1);
-	// lighting info
-	// -------------
-	glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
-
-
 #endif
 
 	// Enable blending
@@ -510,8 +504,8 @@ int main(void)
 		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 		lightSpaceMatrix = lightProjection * lightView;
 		// render scene from light's point of view
-		simpleDepthShader.use();
-		simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		dirDepthShader.use();
+		dirDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 		// Set the new viewport and framebuffer for the depth mapping
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -526,7 +520,7 @@ int main(void)
 		// bool lastCullFace = glIsEnabled(GL_CULL_FACE);
 		// glEnable(GL_CULL_FACE);
 		// glCullFace(GL_FRONT);
-		renderScene(simpleDepthShader);
+		renderScene(dirDepthShader);
 		// if(lastCullFace) glEnable(GL_CULL_FACE);
 		// else glDisable(GL_CULL_FACE);
 		// glCullFace(GL_BACK); // don't forget to reset original culling face
@@ -542,26 +536,26 @@ int main(void)
 		// --------------------------------------------------------------
 		glViewport(0, 0, curWindow->getWidth(), curWindow->getHeight());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shadowShader.use();
+		dirShadowShader.use();
 		glm::mat4 projection = glm::perspective(glm::radians(curCamera->getZoom()), (float)curWindow->getWidth() / (float)curWindow->getHeight(), 0.1f, 100.0f);
 		glm::mat4 view = curCamera->getView();
-		shadowShader.setMat4("projection", projection);
-		shadowShader.setMat4("view", view);
+		dirShadowShader.setMat4("projection", projection);
+		dirShadowShader.setMat4("view", view);
 		// set light uniforms
-		shadowShader.setVec3("viewPos", curCamera->getPosition());
-		shadowShader.setVec3("lightPos", lightPos);
-		shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		dirShadowShader.setVec3("viewPos", curCamera->getPosition());
+		dirShadowShader.setVec3("lightPos", lightPos);
+		dirShadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, woodTexture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, depthMap);
-		renderScene(shadowShader);
+		renderScene(dirShadowShader);
 
 		// render Depth map to quad for visual debugging
 		// ---------------------------------------------
-		debugDepthQuad.use();
-		debugDepthQuad.setFloat("near_plane", near_plane);
-		debugDepthQuad.setFloat("far_plane", far_plane);
+		dirDepthmapQuad.use();
+		dirDepthmapQuad.setFloat("near_plane", near_plane);
+		dirDepthmapQuad.setFloat("far_plane", far_plane);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 		//renderQuad();
@@ -622,8 +616,7 @@ int main(void)
 		pointShadowShader.setInt("shadows", shadows); // enable/disable shadows by pressing 'SPACE'
 		pointShadowShader.setFloat("far_plane", far_plane);
 		pointShadowShader.setBool("showDepthMap", showDepthMap);
-		pointShadowShader.setBool("pcf", pcf);
-		pointShadowShader.setFloat("biasScale", biasScale);
+		pointShadowShader.setBool("usePCF", usePCF);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, woodTexture);
 		glActiveTexture(GL_TEXTURE1);
@@ -763,34 +756,12 @@ void processInput(GLFWwindow* window)
 	// PCF
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pcfKeyPressed)
 	{
-		pcf = !pcf;
+		usePCF = !usePCF;
 		pcfKeyPressed = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
 	{
 		pcfKeyPressed = false;
-	}
-	// Bias Scale increase
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && !biasScaleKeyPressed)
-	{
-		biasScale += biasScaleConst;
-		std::cout << "New bias scale: " + std::to_string(biasScale) << std::endl;
-		biasScaleKeyPressed = true;
-	}
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_U) == GLFW_RELEASE)
-	{
-		biasScaleKeyPressed = false;
-	}
-	// Bias Scale decrease
-	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS && !biasScaleKeyPressed)
-	{
-		biasScale -= biasScaleConst;
-		std::cout << "New bias scale: " + std::to_string(biasScale) << std::endl;
-		biasScaleKeyPressed = true;
-	}
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_U) == GLFW_RELEASE)
-	{
-		biasScaleKeyPressed = false;
 	}
 #endif 
 }
@@ -1143,6 +1114,15 @@ void renderScene(const Shader &shader)
 	renderCube();
 	shader.setInt("reverse_normals", 0); // and of course disable it
 	glEnable(GL_CULL_FACE);
+
+	// lamp
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, lightPos);
+	model = glm::scale(model, glm::vec3(0.05f));
+	shader.setMat4("model", model);
+	shader.setBool("lamp", 1);
+	renderCube();
+	shader.setBool("lamp", 0);
 	// cubes
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
@@ -1160,7 +1140,7 @@ void renderScene(const Shader &shader)
 	shader.setMat4("model", model);
 	renderCube();
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.5f, -0.5f, 1.5));
+	model = glm::translate(model, glm::vec3(-1.5f, -1.0f, 1.5));
 	model = glm::scale(model, glm::vec3(0.5f));
 	shader.setMat4("model", model);
 	renderCube();

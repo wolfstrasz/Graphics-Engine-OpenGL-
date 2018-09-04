@@ -47,7 +47,6 @@ float ShadowCalculation(vec4 fragPosLightSpace, float bias)
                 shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
             }    
         shadow /= 49.0;
-        //shadow = sin(atan(shadow));
     } 
     
 
@@ -72,10 +71,7 @@ void main()
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
     vec3 specular = spec * lightColor;    
-    
-    // calculate bias (steeper angles get higher bias)
-    // float maxVal = 0.05;
-    // float bias = max(maxVal * (1.0 - dot(normal, lightDir)), 0.005);
+    // calculate bias
     float maxVal = 0.020;
     float minVal = 0.0020;
     float bias = max(maxVal * (1.0 - dot(normal, lightDir)), minVal);
