@@ -23,7 +23,7 @@
 #include "particle_effects.h"
 #include "meteor_orbit.h"
 
-#define USE_SCENE_CODE 5
+#define USE_SCENE_CODE 0
 // 0 = display general scene with models
 // 1 = display directional shadowmapping scene
 // 2 = display omnidirectional shadowmapping scene
@@ -1149,6 +1149,7 @@ void processInput(GLFWwindow* window)
 		blinnPhongOn = false;
 
 	// Gamma Correction (2.2 rooting)
+
 	if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS)
 		gammaCorrection = true;
 	if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)
@@ -1354,7 +1355,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	curCamera->ProcessMouseScroll((float) yoffset);
 }
-
 
 // calculate frame difference
 // --------------------------
@@ -2092,5 +2092,3 @@ void renderQuad()
 	glBindVertexArray(0);
 }
 #endif
-
-
