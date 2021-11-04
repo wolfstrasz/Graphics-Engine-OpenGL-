@@ -55,7 +55,7 @@ private:
 		// create a color attachment texture
 		glGenTextures(1, &mTextureColorbuffer);
 		glBindTexture(GL_TEXTURE_2D, mTextureColorbuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mBindedWindow->getWidth(), mBindedWindow->getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mBindedWindow->GetWidth(), mBindedWindow->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextureColorbuffer, 0);
@@ -63,7 +63,7 @@ private:
 		glGenRenderbuffers(1, &mRenderbufferObject);
 		glBindRenderbuffer(GL_RENDERBUFFER, mRenderbufferObject);
 		// use a single renderbuffer object for both a depth AND stencil buffer.
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, mBindedWindow->getWidth(), mBindedWindow->getHeight()); 
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, mBindedWindow->GetWidth(), mBindedWindow->GetHeight()); 
 		// now actually attach it
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRenderbufferObject); 
 		// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
@@ -85,7 +85,7 @@ public:
 		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
 								 // make sure we clear the framebuffer's content
-		mBindedWindow->clearScreen();
+		mBindedWindow->ClearScreen();
 		mEnabled = true;
 		}
 		else {
@@ -100,7 +100,7 @@ public:
 								  // clear all relevant buffers
 
 								  // clear buffer info
-		mBindedWindow->clearScreen();
+		mBindedWindow->ClearScreen();
 		mEnabled = false;
 	}
 	void draw() {

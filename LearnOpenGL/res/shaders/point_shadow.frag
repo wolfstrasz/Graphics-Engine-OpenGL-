@@ -8,7 +8,7 @@ in VS_OUT {
 } fs_in;
 
 // general uniforms
-uniform sampler2D diffuseTexture;
+uniform sampler2D texture_diffuse[1];
 uniform samplerCube depthMap;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -72,7 +72,7 @@ float ShadowCalculation(vec3 fragPos, float bias)
 void main()
 {   
     vec3 lightColor = vec3(1.0f);
-    vec3 color = texture(diffuseTexture, fs_in.TexCoords).rgb;
+    vec3 color = texture(texture_diffuse[0], fs_in.TexCoords).rgb;
     // vectors for light calculation
     vec3 normal = normalize(fs_in.Normal);
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);

@@ -83,6 +83,8 @@ private:
 	std::vector<unsigned int> mIndices;
 	std::vector<unsigned int> mDiffuseTextures;
 	std::vector<unsigned int> mSpecularTextures;
+	std::vector<unsigned int> mHeightTextures;
+	std::vector<unsigned int> mNormalTextures;
 	SM_Attrib mAttribs;
 	// private buffers
 	unsigned int VAO, VBO, EBO;
@@ -132,6 +134,10 @@ public:
 			mDiffuseTextures.push_back(texture);
 		if (type == SM_SPECULAR)
 			mSpecularTextures.push_back(texture);
+		if (type == SM_HEIGHT)
+			mHeightTextures.push_back(texture);
+		if (type == SM_NORMAL)
+			mNormalTextures.push_back(texture);
 	}
 	// call to draw the simple model
 	// -----------------------------
@@ -140,26 +146,52 @@ public:
 		unsigned textureID = 0;
 		// Set diffuse textures
 		shader.setInt("TEX_DIFF_COUNT", (int) mDiffuseTextures.size());
-		for (int i = 1; i <= mDiffuseTextures.size(); i++)
+		for (int i = 0; i < mDiffuseTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
 			shader.setInt("texture_diffuse[" + index + "]", textureID);
-			glBindTexture(GL_TEXTURE_2D, mDiffuseTextures[i-1]);
+			glBindTexture(GL_TEXTURE_2D, mDiffuseTextures[i]);
 			textureID++;
 		}
-		// Set specular textures
-		shader.setInt("TEX_SPEC_COUNT", (int) mSpecularTextures.size());
-		for (int i = 1; i <= mSpecularTextures.size(); i++)
+
+
+		shader.setInt("TEX_NORMAL_COUNT", (int)mNormalTextures.size());
+		for (int i = 0; i < mNormalTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_specular[" + index + "]", textureID);
-			glBindTexture(GL_TEXTURE_2D, mSpecularTextures[i-1]);
+			shader.setInt("texture_normal[" + index + "]", textureID);
+			glBindTexture(GL_TEXTURE_2D, mNormalTextures[i]);
 			textureID++;
 		}
+
+		// Set specular textures
+		shader.setInt("TEX_SPEC_COUNT", (int) mSpecularTextures.size());
+		for (int i = 0; i < mSpecularTextures.size(); i++)
+		{ 
+			// Activate appropriate texture unit
+			glActiveTexture(GL_TEXTURE0 + textureID);
+			std::string index = std::to_string(i);
+			shader.setInt("texture_specular[" + index + "]", textureID);
+			glBindTexture(GL_TEXTURE_2D, mSpecularTextures[i]);
+			textureID++;
+		}
+
+		shader.setInt("TEX_HEIGHT_COUNT", (int) mHeightTextures.size());
+		for (int i = 0; i < mHeightTextures.size(); i++)
+		{
+			// Activate appropriate texture unit
+			glActiveTexture(GL_TEXTURE0 + textureID);
+			std::string index = std::to_string(i);
+			shader.setInt("texture_height[" + index + "]", textureID);
+			glBindTexture(GL_TEXTURE_2D, mHeightTextures[i]);
+			textureID++;
+		}
+
+
 		// draw mesh
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, (GLsizei)mIndices.size(), GL_UNSIGNED_INT, 0);
@@ -214,123 +246,11 @@ private:
 		glBindVertexArray(0);
 	}
 
+
+
 };
+
 #pragma endregion
 
-// initialise child class: simple model of a cube
-// ----------------------------------------------
-#pragma region _SIMPLE_MODEL::Cube
-class SimpleCube : public SimpleModel
-{
-	static constexpr float sm_vertices[] = {
-		// positions          // normals           // texture coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
-	};
-	static constexpr unsigned int sm_indices[] = {
-		0,  1,  2,
-		3,  4,  5,
-		6,  7,  8,
-		9, 10, 11,
-		12, 13, 14,
-		15, 16, 17,
-		18, 19, 20,
-		21, 22, 23,
-		24, 25, 26,
-		27, 28, 29,
-		30, 31, 32,
-		33, 34, 35
-	};
-public:
-	SimpleCube() : SimpleModel(sm_vertices, sizeof(sm_indices)/sizeof(int), sm_indices, SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD) {}
-};
-#pragma endregion
-
-// initialise child class: simple model of a plane
-// -----------------------------------------------
-#pragma region _SIMPLE_MODEL::Plane
-class SimplePlane : public SimpleModel
-{
-	static constexpr float sm_vertices[] = {
-		// positions		   normals				 texCoords
-		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
-		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
-		 5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  4.0f,
-
-		 5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   4.0f,  0.0f,
-		-5.0f, -0.5f, -5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  4.0f,
-		-5.0f, -0.5f,  5.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f
-	};
-	static constexpr unsigned int sm_indices[] = {
-		0,  1,  2,
-		3,  4,  5
-	};
-public:
-	SimplePlane() : SimpleModel(sm_vertices, sizeof(sm_indices)/sizeof(int), sm_indices, SM_Attrib::SM_POSITION | SM_Attrib::SM_NORMAL | SM_Attrib::SM_TEXCOORD) {}
-};
-#pragma endregion
-
-// initialise child class: simple model of a window
-// ------------------------------------------------
-#pragma region _SIMPLE_MODEL::Window
-class SimpleWindow : public SimpleModel
-{
-	static constexpr float sm_vertices[] = {
-		// positions		  texCoords       
-		0.0f,  0.5f,  0.0f,   0.0f,  0.0f,
-		0.0f, -0.5f,  0.0f,   0.0f,  1.0f,
-		1.0f, -0.5f,  0.0f,   1.0f,  1.0f,
-
-		0.0f,  0.5f,  0.0f,   0.0f,  0.0f,
-		1.0f, -0.5f,  0.0f,   1.0f,  1.0f,
-		1.0f,  0.5f,  0.0f,   1.0f,  0.0f
-	};
-	static constexpr unsigned int sm_indices[] = {
-		0,  1,  2,
-		3,  4,  5
-	};
-public:
-	SimpleWindow() : SimpleModel(sm_vertices, sizeof(sm_indices)/sizeof(int), sm_indices, SM_Attrib::SM_POSITION | SM_Attrib::SM_TEXCOORD) {}
-};
-#pragma endregion
 
 #endif // !_SIMPLE_MODEL_H

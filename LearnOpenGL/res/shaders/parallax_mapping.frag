@@ -9,9 +9,9 @@ in VS_OUT {
     vec3 TangentFragPos;
 } fs_in;
 
-uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
-uniform sampler2D depthMap;
+uniform sampler2D texture_diffuse[1];
+uniform sampler2D texture_normal[1];
+uniform sampler2D texture_height[1];
 
 uniform float heightScale;
 uniform bool steep;
@@ -35,14 +35,14 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     
         // get initial values
         vec2  currentTexCoords     = texCoords;
-        float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+        float currentDepthMapValue = texture(texture_height[0], currentTexCoords).r;
         
         while(currentLayerDepth < currentDepthMapValue)
         {
             // shift texture coordinates along direction of P
             currentTexCoords -= deltaTexCoords;
             // get depthmap value at current texture coordinates
-            currentDepthMapValue = texture(depthMap, currentTexCoords).r;  
+            currentDepthMapValue = texture(texture_height[0], currentTexCoords).r;  
             // get depth of next layer
             currentLayerDepth += layerDepth;  
         }
@@ -53,7 +53,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 
             // get depth after and before collision for linear interpolation
             float afterDepth  = currentDepthMapValue - currentLayerDepth;
-            float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
+            float beforeDepth = texture(texture_height[0], prevTexCoords).r - currentLayerDepth + layerDepth;
         
             // interpolation of texture coordinates
             float weight = afterDepth / (afterDepth - beforeDepth);
@@ -67,7 +67,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     else
     {
         // sample the height from Depth map at the current fragment
-        float height =  texture(depthMap, texCoords).r;
+        float height =  texture(texture_height[0], texCoords).r;
         // calculate vector P (as XY component of ViewDir in tangent space)
         vec2 p = viewDir.xy;
         // to make the effect smoother, as when viewDir is largelt parallel to the surface z -> 0.0f
@@ -90,8 +90,8 @@ void main()
     if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
         discard;
     // then sample textures with new texture coords
-    vec3 color = texture(diffuseMap, texCoords).rgb;
-    vec3 normal  = texture(normalMap, texCoords).rgb;
+    vec3 color = texture(texture_diffuse[0], texCoords).rgb;
+    vec3 normal  = texture(texture_normal[0], texCoords).rgb;
     normal = normalize(normal * 2.0 - 1.0);  // transform normal vector to range [-1,1] in tangent space
 
     // light's color

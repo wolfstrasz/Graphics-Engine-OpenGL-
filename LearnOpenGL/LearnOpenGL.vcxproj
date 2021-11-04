@@ -22,32 +22,32 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{5425B7F4-AE8F-4065-93C9-BC709B939E95}</ProjectGuid>
     <RootNamespace>LearnOpenGL</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -70,9 +70,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_SourcePath)src;$(SolutionDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(VC_SourcePath)src;$(SolutionDir)include;$(IncludePath); </IncludePath>
     <LibraryPath>$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(VC_SourcePath)\src;D:\Projects\C++\LearnOpenGL\LearnOpenGL\src</SourcePath>
+    <SourcePath>$(VC_SourcePath)\src;$(SolutionDir)\src;</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -90,7 +90,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp/assimp-vc142-mtd.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -123,11 +123,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\glad.c" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\dir_light.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh.cpp" />
-    <ClCompile Include="src\model.cpp" />
+    <ClCompile Include="src\models\model.cpp" />
     <ClCompile Include="src\point_light.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\spot_light.cpp" />
@@ -135,16 +136,22 @@
     <ClCompile Include="src\window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\dir_light.h" />
-    <ClInclude Include="src\meteor_orbit.h" />
+    <ClInclude Include="src\models\all_simple_models.h" />
+    <ClInclude Include="src\models\meteor_orbit.h" />
+    <ClInclude Include="src\models\model.h" />
+    <ClInclude Include="src\models\SimpleCube.h" />
+    <ClInclude Include="src\models\SimplePlane.h" />
+    <ClInclude Include="src\models\SimpleQuad.h" />
+    <ClInclude Include="src\models\SimpleWindow.h" />
+    <ClInclude Include="src\models\simple_model.h" />
     <ClInclude Include="src\particle_effects.h" />
     <ClInclude Include="src\ipp.h" />
     <ClInclude Include="src\mesh.h" />
-    <ClInclude Include="src\model.h" />
     <ClInclude Include="src\point_light.h" />
     <ClInclude Include="src\shader.h" />
-    <ClInclude Include="src\simple_model.h" />
     <ClInclude Include="src\skybox.h" />
     <ClInclude Include="src\spot_light.h" />
     <ClInclude Include="src\stb_image.h" />

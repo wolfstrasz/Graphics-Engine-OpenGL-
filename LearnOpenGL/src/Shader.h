@@ -14,11 +14,12 @@ class Shader
 {
 public:
 	unsigned int ID;
-	Shader(std::string vertexKey, std::string fragmentKey, std::string geometryKey = "");
+	std::string name;
+	Shader(std::string vertexKey, std::string fragmentKey, std::string geometryKey = "", std::string name ="");
 
 private:
 	static std::string SHADERS_PATH;
-	void checkCompileErrors(unsigned int shader, std::string type);
+	bool checkCompileErrors(unsigned int shader, std::string type);
 
 public:
 	void use();

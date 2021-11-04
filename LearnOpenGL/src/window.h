@@ -29,14 +29,14 @@ public:
 	Window(int width = Window_Defaults::WIDTH, int height = Window_Defaults::HEIGHT,
 			const char * title = Window_Defaults::TITLE, glm::vec4 colors = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	// Public functionality
-	int init();
-	int shouldClose();
-	void update();
-	void clearScreen();
+	int Init();
+	int ShouldClose() const noexcept;
+	void OnUpdate();
+	void ClearScreen() const noexcept;
 	// Getters
-	float getRatio();
-	int getHeight();
-	int getWidth();
-	GLFWwindow* getWindow();
+	float GetRatio() const noexcept;
+	int GetHeight() const noexcept;
+	int GetWidth() const noexcept;
+	GLFWwindow* GetWindow() const noexcept;
 };
 #endif // !_WINDOW_H

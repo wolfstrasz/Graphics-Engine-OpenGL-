@@ -8,7 +8,7 @@ Window::Window(int width, int height, const char* title, glm::vec4 colors)
 	mScrColors	= colors;
 }
 
-int Window::init()
+int Window::Init()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -29,36 +29,36 @@ int Window::createWindow()
 	}
 	return 1;
 }
-int Window::shouldClose()
+int Window::ShouldClose() const noexcept
 {
 	return glfwWindowShouldClose(mWindow);
 }
-void Window::update()
+void Window::OnUpdate()
 {
 	glfwSwapBuffers(mWindow);
 	glfwPollEvents();
 }
-void Window::clearScreen()
+void Window::ClearScreen() const noexcept
 {
 	glClearColor(mScrColors.x, mScrColors.y, mScrColors.z, mScrColors.w);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT| GL_STENCIL_BUFFER_BIT);
 }
 // Getters
-GLFWwindow * Window::getWindow()
+GLFWwindow * Window::GetWindow() const noexcept
 {
 	return mWindow;
 }
-float Window::getRatio()
+float Window::GetRatio() const noexcept
 {
 	return ((float)mWidth / (float)mHeight);
 }
 
-int Window::getHeight()
+int Window::GetHeight() const noexcept
 {
 	return mHeight;
 }
 
-int Window::getWidth()
+int Window::GetWidth() const noexcept
 {
 	return mWidth;
 }
