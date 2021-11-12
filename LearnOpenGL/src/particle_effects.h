@@ -26,7 +26,7 @@ public:
 	}
 	void draw(Shader shader)
 	{
-		shader.use();
+		shader.Use();
 		glEnable(GL_PROGRAM_POINT_SIZE);
 		// Save depth function
 		GLint depthFunc;
@@ -42,8 +42,8 @@ public:
 
 		// Bind skybox and textures
 		glBindVertexArray(mVAO);
-		shader.setVec3("colour", mColour);
-		shader.setInt("pointsCount", (int)mParticleCoordinates.size());
+		shader.SetVec3("colour", mColour);
+		shader.SetInt("pointsCount", (int)mParticleCoordinates.size());
 		// Draw skybox
 		glDrawArrays(GL_POINTS, 0, 3 * (GLsizei)mParticleCoordinates.size());
 

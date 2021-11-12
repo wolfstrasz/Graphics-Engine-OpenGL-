@@ -39,6 +39,8 @@ private:
 
 public:
 	void setLight(Shader& shader, unsigned int pos);
-	void setVec3(Dir_Light_Vector_Attributes attrib, glm::vec3 value);
+	void SetVec3(Dir_Light_Vector_Attributes attrib, glm::vec3 value);
+	glm::mat4 GetOrthographicView(); // added for refactoring dir shadow mapping scene
+	glm::vec3 GetDirection(); // added for refactoring dir shadow mapping scene
 };
 #endif // !_DIR_LIGHT

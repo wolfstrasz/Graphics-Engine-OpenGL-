@@ -27,19 +27,19 @@ void SpotLight::generateAttenuationTerms(float distance)
 void SpotLight::setLight(Shader & shader, unsigned int pos)
 {
 	std::string index = std::to_string(pos);
-	shader.setVec3("spotLights[" + index + "].position", mPosition);
-	shader.setVec3("spotLights[" + index + "].direction", mDirection);
-	shader.setVec3("spotLights[" + index + "].ambient", mAmbient);
-	shader.setVec3("spotLights[" + index + "].diffuse", mDiffuse);
-	shader.setVec3("spotLights[" + index + "].specular", mSpecular);
-	shader.setFloat("spotLights[" + index + "].constant", mConstant);
-	shader.setFloat("spotLights[" + index + "].linear", mLinear);
-	shader.setFloat("spotLights[" + index + "].quadratic", mQuadratic);
-	shader.setFloat("spotLights[" + index + "].cutOff", mCutOff);
-	shader.setFloat("spotLights[" + index + "].outerCutOff", mOuterCutOff);
+	shader.SetVec3("spotLights[" + index + "].position", mPosition);
+	shader.SetVec3("spotLights[" + index + "].direction", mDirection);
+	shader.SetVec3("spotLights[" + index + "].ambient", mAmbient);
+	shader.SetVec3("spotLights[" + index + "].diffuse", mDiffuse);
+	shader.SetVec3("spotLights[" + index + "].specular", mSpecular);
+	shader.SetFloat("spotLights[" + index + "].constant", mConstant);
+	shader.SetFloat("spotLights[" + index + "].linear", mLinear);
+	shader.SetFloat("spotLights[" + index + "].quadratic", mQuadratic);
+	shader.SetFloat("spotLights[" + index + "].cutOff", mCutOff);
+	shader.SetFloat("spotLights[" + index + "].outerCutOff", mOuterCutOff);
 }
 
-void SpotLight::setVec3(Spot_Light_Vector_Attributes attrib, glm::vec3 value)
+void SpotLight::SetVec3(Spot_Light_Vector_Attributes attrib, glm::vec3 value)
 {
 	if (attrib == POSITION)
 		mPosition = value;

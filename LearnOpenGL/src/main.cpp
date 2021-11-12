@@ -16,41 +16,29 @@
 #include "point_light.h"
 #include "dir_light.h"
 #include "spot_light.h"
-#include "models/model.h"
-#include "models/all_simple_models.h"
+#include "model.h"
+#include "meteor_orbit.h"
+#include "all_simple_models.h"
 #include "ipp.h"
 #include "skybox.h"
 #include "particle_effects.h"
-#include "models/meteor_orbit.h"
+#include "Entity.h"
+
 // 0 = display general scene with models
-// 1 = display directional shadowmapping scene  // Refactored drawing
-// 2 = display omnidirectional shadowmapping scene // Refactored drawing
-// 3 = display normal and parallax mapping scene  // Refactored drawing
-// 4 = display HDR tunnel scene // Refactored drawing
+// 1 = display directional shadowmapping scene 
+// 2 = display omnidirectional shadowmapping scene
+// 3 = display normal and parallax mapping scene
+// 4 = display HDR tunnel scene 
 // 5 = display Bloom effect scene 
-#define USE_SCENE_CODE 5
+#define USE_SCENE_CODE 0
 
 
-#pragma region _UTILITY_FUNCTION_INIT
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void calculateDelta();
 void switchCameras();
-unsigned int loadTexture(char const * path, GLint wrapping_mode);
-void setLighting(Shader &shader);
-#pragma endregion
-#pragma region _DRAW_INIT
-void drawWindowPanels(SimpleModel smObject, Shader shader);
-void drawModels(SimpleModel smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
-void drawModels(Model smObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate = false);
-#pragma endregion
-#pragma region _MATRICES_POINTERS_BOOLEANS
-// SPACE MATRICES:
-glm::mat4 projection = glm::mat4(1.0f);
-glm::mat4 view = glm::mat4(1.0f);
-glm::mat4 model = glm::mat4(1.0f);
 
 // Pointers to currents
 Window* curWindow = nullptr;
@@ -62,89 +50,9 @@ bool backFaceCulling = false;
 bool faceCulling = false;
 float lastFaceCullSwitchFrame = 0.0f;
 bool blinnPhongOn = false;
-bool spotlightOn = false;
+bool spotlightOn = true;
 bool gammaCorrection = false;
-#pragma endregion
-#pragma region _OBJECTS
-// CONTAINER OBJECTS
-#define NR_CONTAINERS 10
-glm::vec3 containerPositions[NR_CONTAINERS] = {
-	glm::vec3(0.0f,   -7.0f,   0.0f),
-	glm::vec3(2.0f,   5.0f, -15.0f),
-	glm::vec3(-1.5f,  -2.2f,  -2.5f),
-	glm::vec3(-3.8f,  -2.0f, -12.3f),
-	glm::vec3(2.4f,  -0.4f,  -3.5f),
-	glm::vec3(-1.7f,   3.0f,  -7.5f),
-	glm::vec3(1.3f,  -2.0f,  -2.5f),
-	glm::vec3(1.5f,   2.0f,  -2.5f),
-	glm::vec3(1.5f,   0.2f,  -1.5f),
-	glm::vec3(-1.3f,   1.0f,  -1.5f)
-};
 
-// LAMP OBJECTS
-#define NR_LAMPS 4
-glm::vec3 lampsPositions[NR_LAMPS] = {
-	glm::vec3(0.7f,  0.2f,  2.0f),
-	glm::vec3(2.3f, -3.3f, -4.0f),
-	glm::vec3(-4.0f,  2.0f, -12.0f),
-	glm::vec3(0.0f,  0.0f, -3.0f)
-};
-
-// MARBLE CUBES
-#define NR_MARBLE_CUBES 2
-glm::vec3 marbleCubePositions[NR_MARBLE_CUBES] = {
-	glm::vec3(-1.0f, 0.0001f, -1.0f),
-	glm::vec3(2.0f, 0.0001f, 0.0f)
-};
-
-// FLOOR
-#define NR_FLOORS 1
-glm::vec3 floorPositions[NR_FLOORS] = {
-	glm::vec3(1.0f, 0.0f, 1.0f)
-};
-
-// NANOSUITS
-#define NR_NANOSUITS 1
-glm::vec3 nanosuitPositions[NR_NANOSUITS] = {
-	glm::vec3(0.0f, 0.0f, 1.0f)
-};
-
-// WINDOW PANELS
-#define NR_WINDOW_PANELS 5
-glm::vec3 windowPanelsPositions[NR_WINDOW_PANELS] = {
-	glm::vec3(-1.5f, 0.0f, -0.48f),
-	glm::vec3(1.5f, 0.0f,  0.51f),
-	glm::vec3(0.0f, 0.0f,  0.7f),
-	glm::vec3(-0.3f, 0.0f, -2.3f),
-	glm::vec3(0.5f, 0.0f, -0.6f)
-};
-
-// PLANET
-#define NR_PLANETS 1
-glm::vec3 planetPositions[NR_PLANETS] = {
-	glm::vec3(20.0f, +70.0f, 20.0f)
-};
-
-// ORBITAL RINGS
-#define NR_ORBITAL_RINGS 1
-glm::vec3 ringPositions[NR_ORBITAL_RINGS] = {
-	glm::vec3(20.0f, +70.0f, 20.0f)
-};
-#pragma endregion
-#pragma region _LIGHTS
-// POINT LIGHTS
-#define NR_POINT_LIGHTS 4
-PointLight pointLights[NR_POINT_LIGHTS];
-
-// DIRECTIONAL LIGHTS
-#define NR_DIR_LIGHTS 1
-DirLight dirLights[NR_DIR_LIGHTS];
-
-// SPOT LIGHTS
-#define NR_SPOT_LIGHTS 1
-SpotLight spotLights[NR_SPOT_LIGHTS];
-#pragma endregion
-#pragma region _WINDOW_AND_CAMERAS
 // Initialise windows
 Window window1 = Window();
 
@@ -162,8 +70,8 @@ float lastY = 600 / 2.0f;
 // Calculate frame differences
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-#pragma endregion
 
+glm::mat4 model = glm::mat4(1.0f);
 #if USE_SCENE_CODE == 2
 // shadows visability
 bool shadows = true;
@@ -172,22 +80,21 @@ bool shadowsKeyPressed = false;
 bool showDepthMap = false;
 bool showDepthMapKeyPressed = false;
 // light movement
-bool moveLight = false;
+bool moveLight = true;
 bool moveLightKeyPressed = false;
 // pcf
-bool usePCF = false;
+bool usePCF = true;
 bool pcfKeyPressed = false;
-// lighting info
-glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+
 #endif
 #if USE_SCENE_CODE == 3
 // parallax mapping scale
 float heightScale = 0.05f;
 // steep parallax mapping on/off
-bool steep = false;
+bool steep = true;
 bool steepKeyPressed = false;
 // occlusion parallax mapping on/off
-bool occlusion = false;
+bool occlusion = true;
 bool occlusionKeyPressed = false;
 #endif
 #if USE_SCENE_CODE == 4
@@ -230,73 +137,93 @@ int main(void)
 	glfwSetScrollCallback(curWindow->GetWindow(), scroll_callback);
 
 #pragma endregion
-// scene set up
+
+	// scene set up
 #if USE_SCENE_CODE == 0
-#pragma region _TEXTURES
-		// Load textures (we now use a utility function to keep the code more organized)
-		// -----------------------------------------------------------------------------
-		unsigned int woodBoxDiffuseMap = loadTexture("res/textures/wooden_container.png", GL_REPEAT);
-		unsigned int woodBoxSpecularMap = loadTexture("res/textures/wooden_container_specular.png", GL_REPEAT);
-		unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
-		unsigned int floorDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
-		unsigned int grassTexture = loadTexture("res/textures/grass.png", GL_CLAMP_TO_EDGE);
-		unsigned int windowPanelTexture = loadTexture("res/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
+	// Load textures (we now use a utility function to keep the code more organized)
+	// -----------------------------------------------------------------------------
+	unsigned int woodBoxDiffuseMap = LoadTextureFromFile("wooden_container.png", "res/textures", GL_REPEAT);
+	unsigned int woodBoxSpecularMap = LoadTextureFromFile("wooden_container_specular.png", "res/textures", GL_REPEAT);
+	unsigned int floorDiffuseMap = LoadTextureFromFile("wooden_floor.png", "res/textures", GL_REPEAT);
+	unsigned int windowPanelTexture = LoadTextureFromFile("blending_transparent_window.png", "res/textures", GL_CLAMP_TO_EDGE);
 
-#pragma endregion
-#pragma region _SHADERS
-		// compile shader programs
-		// -----------------------
-		Shader lampShader("lamp", "lamp");
-		Shader modelShader("model_loading.3", "model_loading.4");
-		Shader blendingShader2("blending.2", "blending.2");
-		Shader postProcessingShader("post_processing", "post_processing");
-		Shader skyboxShader("cubemap.1", "cubemap.1");
-		Shader particleShader("particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
-		Shader instancingShader("instancing.1", "instancing.1");
-		Shader planetShader("planet", "planet");
+	// compile shader programs
+	// -----------------------
+	Shader lampShader("lamp", "lamp", "lamp");
+	Shader modelShader("model_loading", "model_loading.3", "model_loading.4");
+	Shader blendingShader2("blending", "blending.2", "blending.2");
+	Shader postProcessingShader("pp", "post_processing", "post_processing");
+	Shader skyboxShader("cubemap", "cubemap.1", "cubemap.1");
+	Shader particleShader("particles", "particle.1", "particle.1", "particle.1");		// (vert,frag,geom)
+	Shader instancingShader("instancing", "instancing.1", "instancing.1");
+	Shader planetShader("planet", "planet", "planet");
 
-#pragma endregion
-#pragma region _LOAD_MODELS
 	// load models
-	// -----------
-	//Nanosuit
-	Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
-	//Planet
 	Model planetModel("res/models/planet/planet.obj");
-	//Rock
+	Entity planetEntity(glm::vec3(20.0f, +70.0f, 20.0f), glm::vec3(0.0f), glm::vec3(4.0f));
+
 	Model rockModel("res/models/rock/rock.obj");
-	//Meteor Orbit
-	MeteorOrbit meteorOrbit(&rockModel, ringPositions[0]);
-	//Wooden Containers
-	SimpleCube woodContainer = SimpleCube();
-	woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
-	woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
-	//Plane
+	MeteorOrbit meteorOrbit(&rockModel, glm::vec3(20.0f, +70.0f, 20.0f));
+
+	Model nanosuitModel("res/models/nanosuit/nanosuit.obj");
+	Entity nanosuitEntity = Entity(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.2f));
+
 	SimplePlane woodFloor = SimplePlane();
 	woodFloor.addTexture(SM_DIFFUSE, floorDiffuseMap);
 	woodFloor.addTexture(SM_SPECULAR, floorDiffuseMap);
-	// Marble Cubes
-	SimpleCube marbleCube = SimpleCube();
-	marbleCube.addTexture(SM_DIFFUSE, marbleDiffuseMap);
+	Entity woodFloorEntity = Entity(glm::vec3(0.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(5.0f));
+
+	SimpleCube lightCube;
+
+	SimpleCube woodContainer = SimpleCube();
+	woodContainer.addTexture(SM_DIFFUSE, woodBoxDiffuseMap);
+	woodContainer.addTexture(SM_SPECULAR, woodBoxSpecularMap);
+	std::vector<Entity> woodContainers {
+		Entity(glm::vec3( 0.0f, -7.0f,   0.0f), glm::vec3(  0.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3( 2.0f,  5.0f, -15.0f), glm::vec3( 20.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3(-1.5f, -2.2f,  -2.5f), glm::vec3( 40.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3(-3.8f, -2.0f, -12.3f), glm::vec3( 60.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3( 2.4f, -0.4f,  -3.5f), glm::vec3( 80.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3( 1.3f, -2.0f,  -2.5f), glm::vec3(100.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3(-1.7f,  3.0f,  -7.5f), glm::vec3(120.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3( 1.5f,  2.0f,  -2.5f), glm::vec3(140.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3( 1.5f,  0.2f,  -1.5f), glm::vec3(160.0f, 0.0f, 0.0f)),
+		Entity(glm::vec3(-1.3f,  1.0f,  -1.5f), glm::vec3(180.0f, 0.0f, 0.0f))
+	};
+
 	// Window panels
 	SimpleWindow windowPanel = SimpleWindow();
 	windowPanel.addTexture(SM_DIFFUSE, windowPanelTexture);
-	// Create lights
-	for (int i = 0; i < NR_POINT_LIGHTS; i++) { pointLights[i] = PointLight(lampsPositions[i]); }
-	for (int i = 0; i < NR_DIR_LIGHTS; i++) { dirLights[i] = DirLight(); }
-	for (int i = 0; i < NR_DIR_LIGHTS; i++) { spotLights[i] = SpotLight(); }
+	std::vector<Entity> windowPanelEntities {
+		Entity(glm::vec3(-1.5f, 0.5f, -0.48f)),
+		Entity(glm::vec3( 1.5f, 0.5f,  0.51f)),
+		Entity(glm::vec3( 0.0f, 0.5f,  0.7f )),
+		Entity(glm::vec3(-0.3f, 0.5f, -2.3f )),
+		Entity(glm::vec3( 0.5f, 0.5f, -0.6f ))
+	};
+
 	// Skybox 
-	//Skybox newSkybox("SeaMountainsSky");
-	Skybox newSkybox("NightSky");
+	Skybox skyboxModel("NightSky");
+	Entity skyboxEntity = Entity(glm::vec3(0.0f), glm::vec3(-90.0f, 0.0f, 0.0f));
+
 	// Particles
 	ParticleEffect particleEffect(500, 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-#pragma endregion
-#pragma region _POST_PROCESSOR
+
+	// Create lights
+	std::vector<PointLight> pointLights{
+		PointLight(glm::vec3( 0.7f,  0.2f,   2.0f)),
+		PointLight(glm::vec3( 2.3f, -3.3f,  -4.0f)),
+		PointLight(glm::vec3(-4.0f,  2.0f, -12.0f)),
+		PointLight(glm::vec3( 0.0f,  0.0f,  -3.0f))
+	};
+	std::vector<DirLight> dirLights{ DirLight() };
+	std::vector<SpotLight> spotLights{ SpotLight() };
+	
+
 	IPP postProcessor(curWindow);
 	postProcessor.bindShader(&postProcessingShader);
 	curIPP = &postProcessor;
-#pragma endregion
-#pragma region _UBO_BLOCK_MATRICES
+
 	// Create a uniform buffer object BLOCK for view and projection matrices
 	unsigned int uboMatrixViewProjection;
 	glGenBuffers(1, &uboMatrixViewProjection);
@@ -305,30 +232,30 @@ int main(void)
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	// Bind to a location
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrixViewProjection, 0, 2 * sizeof(glm::mat4));
-#pragma endregion
+
 #endif
 #if USE_SCENE_CODE == 1
 
 	// lighting info
 	// -------------
-	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+	/*glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);*/
 
 	// load textures
 	// -------------
-	unsigned int woodTexture = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+	unsigned int woodTexture = LoadTextureFromFile("wooden_floor.png","res/textures", GL_REPEAT);
 
 	// -------------------------------------------------------------
-	Shader dirDepthShader("dir_depthmap", "dir_depthmap");
-	Shader dirShadowShader("dir_shadow", "dir_shadow");
-	Shader dirDepthmapQuad("debugquad", "debugquad");
+	Shader dirDepthShader("depth", "dir_depthmap", "dir_depthmap");
+	Shader dirShadowShader("shadow", "dir_shadow", "dir_shadow");
+	Shader dirDepthmapQuad("debug", "debugquad", "debugquad");
 
 	// shader configuration
 	// --------------------
-	dirShadowShader.use();
-	dirShadowShader.setInt("shadowMap", 1);
+	dirShadowShader.Use();
+	dirShadowShader.SetInt("shadowMap", 1);
 
-	dirDepthmapQuad.use();
-	dirDepthmapQuad.setInt("depthMap", 0);
+	dirDepthmapQuad.Use();
+	dirDepthmapQuad.SetInt("depthMap", 0);
 
 	// Debug quad
 	SimpleQuad depthDebugQuad;
@@ -336,20 +263,20 @@ int main(void)
 	// Floor
 	SimplePlane woodenFloor;
 	woodenFloor.addTexture(SM_Maps::SM_DIFFUSE, woodTexture);
-	glm::mat4 woodenFloorModel = glm::mat4(1.0f);
-	woodenFloorModel = glm::translate(woodenFloorModel, glm::vec3(0.0f, -0.5f, 0.0f));
-	woodenFloorModel = glm::rotate(woodenFloorModel, glm::radians(270.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	woodenFloorModel = glm::scale(woodenFloorModel, glm::vec3(30.0f));
+	Entity woodenFloorEntity = Entity(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(270.0f, 0.0f, 0.0f), glm::vec3(30.0f));
 
 	// Cubes
 	SimpleCube woodenCube;
 	woodenCube.addTexture(SM_Maps::SM_DIFFUSE, woodTexture);
 
-	glm::mat4 cube1Model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0));
-	glm::mat4 cube2Model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 1.0));
-	glm::mat4 cube3Model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 2.0));
-	cube3Model = glm::rotate(cube3Model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-	cube3Model = glm::scale(cube3Model, glm::vec3(0.5f));
+	DirLight dirLight = DirLight(glm::vec3(-2.0f, 10.0f, -1.0f)); // must switch to direction not position
+
+	std::vector<Entity> woodenCubeEntities
+	{
+		Entity(glm::vec3(0.0f, 1.5f, 0.0f)),
+		Entity(glm::vec3(2.0f, 0.0f, 1.0f)),
+		Entity(glm::vec3(-1.0f, 0.0f, 2.0), glm::vec3(60.0f, 0.0f, 60.0f), glm::vec3(0.5f))
+	};
 
 	// configure depth map FBO
 	// -----------------------
@@ -384,26 +311,28 @@ int main(void)
 #if USE_SCENE_CODE == 2
 
 	// Create shaders
-	Shader pointDepthShader("point_depthmap", "point_depthmap", "point_depthmap");
-	Shader pointShadowShader("point_shadow", "point_shadow");
+	Shader pointDepthShader("point_depth", "point_depthmap", "point_depthmap", "point_depthmap");
+	Shader pointShadowShader("point_shadow", "point_shadow", "point_shadow");
 
 	// Load Textures
-	unsigned int woodTexture = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+	unsigned int woodTexture = LoadTextureFromFile("wooden_floor.png", "res/textures/", GL_REPEAT);
 
-	SimpleCube woodCube, lamp;
+	SimpleCube woodCube;
 	woodCube.addTexture(SM_Maps::SM_DIFFUSE, woodTexture);
+	std::vector<Entity> woodCubeEntities{
+		Entity(glm::vec3( 4.0f, -3.5f,  0.0f)),
+		Entity(glm::vec3(-3.0f, -1.0f,  0.0f)),
+		Entity(glm::vec3(-1.5f, -1.0f,  1.5f)),
+		Entity(glm::vec3( 2.0f, 4.25f,  1.0f), glm::vec3(0.0f),  glm::vec3(1.5f)),    
+		Entity(glm::vec3(-1.5f,  2.0f, -3.0f), glm::vec3(55.0f, 0.0, 55.0f), glm::vec3(1.5f))
+	};
 
-	glm::mat4 roomModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
-	glm::mat4 lampModel = glm::translate(glm::mat4(1.0f), lightPos);
-	lampModel = glm::scale(lampModel, glm::vec3(0.1f));
-	glm::mat4 cubeModel1 = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, -3.5f, 0.0));
-	glm::mat4 cubeModel2 = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 4.25f, 1.0));
-	cubeModel2 = glm::scale(cubeModel2, glm::vec3(1.5f));
-	glm::mat4 cubeModel3 = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, -1.0f, 0.0));
-	glm::mat4 cubeModel4 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -1.0f, 1.5));
-	glm::mat4 cubeModel5 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 2.0f, -3.0));
-	cubeModel5 = glm::rotate(cubeModel5, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-	cubeModel5 = glm::scale(cubeModel5, glm::vec3(1.5f));
+	Entity room = Entity();
+	room.Transform.Scale = glm::vec3(10.0f);
+
+	SimpleCube lamp;
+	Entity lampEntity = Entity();
+	lampEntity.Transform.Scale = glm::vec3(0.1f);
 
 	// configure depth map FBO
 	// -----------------------
@@ -433,79 +362,63 @@ int main(void)
 
 	// shader configuration
 	// --------------------
-	pointShadowShader.use();
-	pointShadowShader.setInt("diffuseTexture", 0);
-	pointShadowShader.setInt("depthMap", 1);
+	pointShadowShader.Use();
+	pointShadowShader.SetInt("diffuseTexture", 0);
+	pointShadowShader.SetInt("depthMap", 1);
 #endif
 #if USE_SCENE_CODE == 3
 	// LOAD TEXTURES
-	unsigned int brickwallDiffuseMap = loadTexture("res/textures/brickwall.jpg", GL_REPEAT);
-	unsigned int brickwallNormalMap = loadTexture("res/textures/brickwall_normal.jpg", GL_REPEAT);
-	unsigned int bricksDiffuseMap = loadTexture("res/textures/bricks2.jpg", GL_REPEAT);
-	unsigned int bricksNormalMap = loadTexture("res/textures/bricks2_normal.jpg", GL_REPEAT);
-	unsigned int bricksHeightMap = loadTexture("res/textures/bricks2_disp.jpg", GL_REPEAT);	// We load the inverse of the original height map which is a depth map (Displacement map)
-	unsigned int toyBoxDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
-	unsigned int toyBoxNormalMap = loadTexture("res/textures/toy_box_normal.png", GL_REPEAT);
-	unsigned int toyBoxHeightMap = loadTexture("res/textures/toy_box_disp.png", GL_REPEAT);	// We load the inverse of the original height map which is a depth map (Displacement map)
+	unsigned int brickwallDiffuseMap = LoadTextureFromFile("brickwall.jpg", "res/textures", GL_REPEAT);
+	unsigned int brickwallNormalMap = LoadTextureFromFile("brickwall_normal.jpg", "res/textures", GL_REPEAT);
+	unsigned int bricksDiffuseMap = LoadTextureFromFile("bricks2.jpg", "res/textures", GL_REPEAT);
+	unsigned int bricksNormalMap = LoadTextureFromFile("bricks2_normal.jpg", "res/textures", GL_REPEAT);
+	unsigned int bricksHeightMap = LoadTextureFromFile("bricks2_disp.jpg", "res/textures", GL_REPEAT);	// We load the inverse of the original height map which is a depth map (Displacement map)
+	unsigned int toyBoxDiffuseMap = LoadTextureFromFile("wooden_floor.png", "res/textures", GL_REPEAT);
+	unsigned int toyBoxNormalMap = LoadTextureFromFile("toy_box_normal.png", "res/textures", GL_REPEAT);
+	unsigned int toyBoxHeightMap = LoadTextureFromFile("toy_box_disp.png", "res/textures", GL_REPEAT);	// We load the inverse of the original height map which is a depth map (Displacement map)
 	
 	// CREATE SHADERS
-	Shader normalShader("normal_mapping", "normal_mapping");
-	Shader heightShader("parallax_mapping", "parallax_mapping");
+	Shader normalShader("normal_mapping", "normal_mapping", "normal_mapping");
+	Shader heightShader("parallax_mapping", "parallax_mapping", "parallax_mapping");
 
 	SimplePlane paralaxBrickPlane;
 	paralaxBrickPlane.addTexture(SM_Maps::SM_DIFFUSE, bricksDiffuseMap);
 	paralaxBrickPlane.addTexture(SM_Maps::SM_NORMAL, bricksNormalMap);
 	paralaxBrickPlane.addTexture(SM_Maps::SM_HEIGHT, bricksHeightMap);
-	glm::mat4 paralaxBricksModel = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-	paralaxBricksModel = glm::rotate(paralaxBricksModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	Entity paralaxBricksEntity = Entity(glm::vec3(0.0f, 0.0f, 5.0f));
 
 	SimplePlane paralaxToyBox;
 	paralaxToyBox.addTexture(SM_Maps::SM_DIFFUSE, toyBoxDiffuseMap);
 	paralaxToyBox.addTexture(SM_Maps::SM_NORMAL, toyBoxNormalMap);
 	paralaxToyBox.addTexture(SM_Maps::SM_HEIGHT, toyBoxHeightMap);
-	glm::mat4 toyboxModel = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 1.0f, 0.0f));
-	toyboxModel = glm::rotate(toyboxModel, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	Entity toyboxEntity = Entity(glm::vec3(3.0f, 0.0f, 5.0f));
 
 	SimplePlane normalBrickWall;
 	normalBrickWall.addTexture(SM_Maps::SM_DIFFUSE, brickwallDiffuseMap);
 	normalBrickWall.addTexture(SM_Maps::SM_NORMAL, brickwallNormalMap);
-	glm::mat4 normalBricksModel = glm::mat4(1.0f);
+	Entity normalBricksEntity = Entity(glm::vec3(-3.0f, 0.0f, 5.0f));
 
-	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+	glm::vec3 lightPos(0.0f, 0.0f, 10.0f);
 
 #endif
 #if USE_SCENE_CODE == 4
 	// Textures
-	unsigned int woodDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
+	unsigned int woodDiffuseMap = LoadTextureFromFile("wooden_floor.png", "res/textures", GL_REPEAT);
 
 	// Shaders
-	Shader ldrShader("lighting_ldr", "lighting_ldr");
-	Shader hdrShader("lighting_hdr", "lighting_hdr");
+	Shader ldrShader("lighting_ldr", "lighting_ldr", "lighting_ldr");
+	Shader hdrShader("lighting_hdr", "lighting_hdr", "lighting_hdr");
 
 	// shader configuration
 	// --------------------
-	hdrShader.use();
-	hdrShader.setInt("hdrBuffer", 0);
-
-	SimpleCube simpleCube;
-	simpleCube.addTexture(SM_Maps::SM_DIFFUSE, woodDiffuseMap);
+	hdrShader.Use();
+	hdrShader.SetInt("hdrBuffer", 0);
 
 	SimpleQuad hdrQuad;
-
-	// lighting info
-	// -------------
-	// positions
-	std::vector<glm::vec3> lightPositions;
-	lightPositions.push_back(glm::vec3(0.0f, 0.0f, 49.5f)); // back light
-	lightPositions.push_back(glm::vec3(-1.4f, -1.9f, 9.0f));
-	lightPositions.push_back(glm::vec3(0.0f, -1.8f, 4.0f));
-	lightPositions.push_back(glm::vec3(0.8f, -1.7f, 6.0f));
-	// colors
-	std::vector<glm::vec3> lightColors;
-	lightColors.push_back(glm::vec3(200.0f, 200.0f, 200.0f));
-	lightColors.push_back(glm::vec3(0.1f, 0.0f, 0.0f));
-	lightColors.push_back(glm::vec3(0.0f, 0.0f, 0.2f));
-	lightColors.push_back(glm::vec3(0.0f, 0.1f, 0.0f));
+	SimplePlane wall;
+	wall.addTexture(SM_Maps::SM_DIFFUSE, woodDiffuseMap);
+	Entity wallEntity = Entity(glm::vec3(0.0f, 0.0f, -30.0f), glm::vec3(0.0f), glm::vec3(20.0f));
+	PointLight light = PointLight(glm::vec3(0.0f, 0.0f, -29.5f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(200.0f, 200.0f, 200.0f));
 
 	// configure floating point framebuffer
 	// ------------------------------------
@@ -534,60 +447,58 @@ int main(void)
 #endif
 #if USE_SCENE_CODE == 5
 	// Shaders
-	Shader shaderDouble("bloom_NL_and_BF", "bloom_NL_and_BF", "", "Double");
-	Shader shaderDoubleLights("bloom_NL_and_BF", "bloom_NL_and_BF_Lights", "", "DoubleLights");
-	Shader shaderBlur("gaussian_blur", "gaussian_blur", "", "blur");
-	Shader shaderBloomSum("bloom_sum", "bloom_sum", "", "bloom_sum");
+	Shader shaderBloomObjects("Bloom Objects Shader", "bloom_NL_and_BF", "bloom_NL_and_BF");
+	Shader shaderBloomLights("Bloom Lights Shader","bloom_NL_and_BF", "bloom_NL_and_BF_Lights");
+	Shader shaderBlur("Gaussian Blur Shader", "gaussian_blur", "gaussian_blur");
+	Shader shaderBloomSum("Bloom Merge Shader", "bloom_sum", "bloom_sum");
 
 	//Shader debugQuad("debugquad", "debugquad");
 	// shader configuration
 	// --------------------
-	shaderBlur.use();
-	shaderBlur.setInt("image", 0);
-	shaderBloomSum.use();
-	shaderBloomSum.setInt("scene", 0);
-	shaderBloomSum.setInt("bloomBlur", 1);
+	shaderBlur.Use();
+	shaderBlur.SetInt("image", 0);
+	shaderBloomSum.Use();
+	shaderBloomSum.SetInt("scene", 0);
+	shaderBloomSum.SetInt("bloomBlur", 1);
 
 	// Textures 
-	unsigned int woodDiffuseMap = loadTexture("res/textures/wooden_floor.png", GL_REPEAT);
-	unsigned int marbleDiffuseMap = loadTexture("res/textures/marble.jpg", GL_REPEAT);
+	unsigned int woodDiffuseMap = LoadTextureFromFile("wooden_floor.png", "res/textures", GL_REPEAT);
+	unsigned int marbleDiffuseMap = LoadTextureFromFile("marble.jpg", "res/textures", GL_REPEAT);
 
 	// Objects
 	SimpleQuad ppBloomQuad;
-	SimpleCube marbleCube, woodCube, lampCube;
+
+	SimplePlane woodFloor;
+	woodFloor.addTexture(SM_Maps::SM_DIFFUSE, woodDiffuseMap);
+	Entity woodFloorEntity = Entity(glm::vec3(0.0f, -1.0f, 0.0), glm::vec3(-90.0f, 0.0f, 0.0f), glm::vec3(12.5f));
+
+	SimpleCube marbleCube;
 	marbleCube.addTexture(SM_Maps::SM_DIFFUSE, marbleDiffuseMap);
-	woodCube.addTexture(SM_Maps::SM_DIFFUSE, woodDiffuseMap);
+	std::vector<Entity> marbleEntities{
+		Entity(glm::vec3(0.0f, 1.5f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f)),
+		Entity(glm::vec3(2.0f, 0.0f, 1.0f),glm::vec3(0.0f),glm::vec3(0.5f)),
+		Entity(glm::vec3(-1.0f, -1.0f, 2.0f), glm::vec3(60.0f, 0.0f, 60.0f)),
+		Entity(glm::vec3(0.0f, 2.7f, 4.0), glm::vec3(0.0f, 62.1f, 92.0f) ,glm::vec3(1.25f)),
+		Entity(glm::vec3(-2.0f, 1.0f, -3.0), glm::vec3(124.0, 0.0, 124.0)),
+		Entity(glm::vec3(-3.0f, 0.0f, 0.0), glm::vec3(0.0f), glm::vec3(0.5f)),
+	};
 
-	glm::mat4 modelWood = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0));
-	modelWood = glm::scale(modelWood, glm::vec3(12.5f, 0.5f, 12.5f));
-	glm::mat4 modelMarble1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0));
-	modelMarble1 = glm::scale(modelMarble1, glm::vec3(0.5f));
-	glm::mat4 modelMarble2 = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 1.0));
-	modelMarble2 = glm::scale(modelMarble2, glm::vec3(0.5f));
-	glm::mat4 modelMarble3 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -1.0f, 2.0));
-	modelMarble3 = glm::rotate(modelMarble3, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-	glm::mat4 modelMarble4 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.7f, 4.0));
-	modelMarble4 = glm::rotate(modelMarble4, glm::radians(23.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-	modelMarble4 = glm::scale(modelMarble4, glm::vec3(1.25));
-	glm::mat4 modelMarble5 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 1.0f, -3.0));
-	modelMarble5 = glm::rotate(modelMarble5, glm::radians(124.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-	glm::mat4 modelMarble6 = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 0.0f, 0.0));
-	modelMarble6 = glm::scale(modelMarble6, glm::vec3(0.5f));
+	SimpleCube lampCube;
+	std::vector<PointLight> pointLights
+	{
+		PointLight(glm::vec3( 0.0f, 0.5f,  1.5f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(2.0f, 2.0f, 2.0f)),
+		PointLight(glm::vec3(-4.0f, 0.5f, -3.0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(1.5f, 0.0f, 0.0f)),
+		PointLight(glm::vec3( 3.0f, 0.5f,  1.0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.0f, 0.0f, 1.5f)),
+		PointLight(glm::vec3(-0.8f, 2.4f, -1.0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.0f, 1.5f, 0.0f))
+	};
 
-	// lighting info
-	// -------------
-	// positions
-	std::vector<glm::vec3> lightPositions;
-	lightPositions.push_back(glm::vec3(0.0f, 0.5f, 1.5f));
-	lightPositions.push_back(glm::vec3(-4.0f, 0.5f, -3.0f));
-	lightPositions.push_back(glm::vec3(3.0f, 0.5f, 1.0f));
-	lightPositions.push_back(glm::vec3(-.8f, 2.4f, -1.0f));
-	// colors
-	std::vector<glm::vec3> lightColors;
-	lightColors.push_back(glm::vec3(2.0f, 2.0f, 2.0f));
-	lightColors.push_back(glm::vec3(1.5f, 0.0f, 0.0f));
-	lightColors.push_back(glm::vec3(0.0f, 0.0f, 1.5f));
-	lightColors.push_back(glm::vec3(0.0f, 1.5f, 0.0f));
+	std::vector<Entity> pointLightEntities
+	{
+		Entity(glm::vec3( 0.0f, 0.5f,  1.5f), glm::vec3(0.0f), glm::vec3(0.25f)),
+		Entity(glm::vec3(-4.0f, 0.5f, -3.0f), glm::vec3(0.0f), glm::vec3(0.25f)),
+		Entity(glm::vec3( 3.0f, 0.5f,  1.0f), glm::vec3(0.0f), glm::vec3(0.25f)),
+		Entity(glm::vec3(-0.8f, 2.4f, -1.0f), glm::vec3(0.0f), glm::vec3(0.25f))
+	};
 
 	// configure (floating point) framebuffers
 	// ---------------------------------------
@@ -663,70 +574,134 @@ int main(void)
 
 // scene rendering
 #if USE_SCENE_CODE == 0
-#pragma region _GENERAL_SETUPS
+
 		// Set uniform buffer object block for matrices
 		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrixViewProjection);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(camProjection));				// (buffer, offset, size, data pointer)
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(camView));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-#pragma endregion
+
 		// Enable Image Post-Processor
 		curIPP->enable();
-		// Set use of spotlight
-		spotlightOn = true;
-		// Set lighting
-		setLighting(modelShader);
-		modelShader.setBool("blinn", blinnPhongOn);
 
-#pragma region _DRAW
+		// Set lighting to model shader
+		{
+			modelShader.Use();
+			modelShader.SetVec3("viewPos", curCamera->getPosition());
+
+			// directional lights
+			modelShader.SetInt("DIR_LIGHT_COUNT", dirLights.size());
+			for (int i = 0; i < dirLights.size(); ++i)
+			{
+				dirLights[i].setLight(modelShader, i);
+			}
+			// point lights
+			modelShader.SetInt("POINT_LIGHT_COUNT", pointLights.size());
+			for (int i = 0; i < pointLights.size(); ++i)
+			{
+				pointLights[i].setLight(modelShader, i);
+			}
+
+			// spot lights
+			modelShader.SetInt("SPOT_LIGHT_COUNT", spotlightOn ? spotLights.size(): 0);
+			for (int i = 0; i < spotLights.size(); ++i)
+			{
+				spotLights[i].SetVec3(SpotLight::POSITION, curCamera->getPosition());
+				spotLights[i].SetVec3(SpotLight::DIRECTION, curCamera->getFront());
+				spotLights[i].setLight(modelShader, i);
+			}
+		}
+		modelShader.SetBool("blinn", blinnPhongOn);
+
 		// Draw Scenery
 		// ------------
+		lampShader.Use();
+		for (int i = 0; i < pointLights.size(); ++i)
+		{
+			// calculate the model matrix for each object and pass it to shader before drawing
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLights[i].GetPosition());
+			float angle = 20.0f * i;
+			model = glm::scale(model, glm::vec3(0.2f));
+			lampShader.SetMat4("model", model);
+
+			// Set the transpose inverse model matrix
+			glm::mat3 transposeInverseModel = glm::mat3(1.0f);
+			transposeInverseModel = glm::mat3(transpose(inverse(model)));
+			lampShader.SetMat3("tiModel", transposeInverseModel);
+
+			lightCube.draw(lampShader);
+		}
+
 		// draw floor
-		// be sure to activate shader when setting uniforms/drawing objects
-		modelShader.use();
-		// calculate the model matrix for each object and pass it to shader before drawing
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3 ( 0.0f, -1.0f, 0.0f));
-
-		model = glm::scale(model, glm::vec3(5.0f));
-		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		modelShader.setMat4("model", model);
-
-		// Set the transpose inverse model matrix
-		glm::mat3 transposeInverseModel = glm::mat3(1.0f);
-		transposeInverseModel = glm::mat3(transpose(inverse(model)));
-		modelShader.setMat3("tiModel", transposeInverseModel);
-
+		modelShader.Use();
+		modelShader.SetMat4("model", woodFloorEntity.Transform.GetTransform());
+		modelShader.SetMat3("tiModel", woodFloorEntity.Transform.GetTransposeInverseTransform());
 		woodFloor.draw(modelShader);
+		
+		// draw wooden containers
+		modelShader.Use();
+		for (int i = 0; i < woodContainers.size(); ++i) {
+			modelShader.SetMat4("model", woodContainers[i].Transform.GetTransform());
+			modelShader.SetMat3("tiModel", woodContainers[i].Transform.GetTransposeInverseTransform());
+			woodContainer.draw(modelShader);
+		}
 
-		// draw lamps
-		drawModels(woodContainer, NR_LAMPS, 0.2f, lampsPositions, lampShader);
-		// draw containers
-		drawModels(woodContainer, NR_CONTAINERS, 1.0f, containerPositions, modelShader, true);
-		// draw marble cubes
-		drawModels(marbleCube, NR_MARBLE_CUBES, 1.0f, marbleCubePositions, modelShader);
 		// draw nanosuit model
-		drawModels(nanosuitModel, NR_NANOSUITS, 0.2f, nanosuitPositions, modelShader);
+		modelShader.SetMat4("model", nanosuitEntity.Transform.GetTransform());
+		modelShader.SetMat3("tiModel", nanosuitEntity.Transform.GetTransposeInverseTransform());
+		nanosuitModel.Draw(modelShader);
+
 		// draw particles
-		particleShader.use();
+		particleShader.Use();
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, nanosuitPositions[0] + glm::vec3(0.0f, 2.0f, 0.0f));
-		particleShader.setMat4("model", model);
+		model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0f));
+		particleShader.SetMat4("model", model);
 		particleEffect.draw(particleShader);
+
 		// draw planet
-		drawModels(planetModel, NR_PLANETS, 4.0f, planetPositions, planetShader, false);
+		planetShader.Use();
+		planetShader.SetMat4("model", planetEntity.Transform.GetTransform());
+		planetShader.SetMat3("tiModel", planetEntity.Transform.GetTransposeInverseTransform());
+		planetModel.Draw(planetShader);
+
 		// draw meteors
 		meteorOrbit.draw(instancingShader);
+
 		// Draw skybox
-		skyboxShader.use();
-		model = glm::mat4(1.0f);
-		model = glm::rotate(model, -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		skyboxShader.setMat4("model", model);
-		//glm::mat4 newView = glm::rotate(view, 90.f, glm::vec3(1.0f, 0.0f, 0.0f));
-		newSkybox.draw(skyboxShader);
+		skyboxShader.Use();
+		skyboxShader.SetMat4("model", skyboxEntity.Transform.GetTransform());
+		skyboxModel.draw(skyboxShader);
+
 		// Draw window panels (TRANSPARENTS)
-		drawWindowPanels(windowPanel, blendingShader2);
-#pragma endregion
+		// Save face-culling option
+		bool previousFaceCullingState = false | glIsEnabled(GL_CULL_FACE);
+		// Disable face-culling
+		glDisable(GL_CULL_FACE);
+
+		//drawWindowPanels(windowPanel, blendingShader2);
+
+		// Sort items that can blend them
+		std::map<float, Entity*> sortedMap;
+		glm::vec3 camPos = curCamera->getPosition();
+		for (unsigned int i = 0; i < windowPanelEntities.size(); ++i)
+		{
+			glm::vec3 panelPos = windowPanelEntities[i].Transform.Position;
+			float distance = glm::length(camPos - panelPos);
+			sortedMap[distance] = &windowPanelEntities[i];
+		}
+
+		// Render them
+		blendingShader2.Use();
+		for (std::map<float, Entity*>::reverse_iterator it = sortedMap.rbegin(); it != sortedMap.rend(); ++it)
+		{
+			blendingShader2.SetMat4("model", (it->second)->Transform.GetTransform());
+			windowPanel.draw(blendingShader2);
+		}
+
+		// Reset face culling to previous state
+		if (previousFaceCullingState) glEnable(GL_CULL_FACE);
+
 
 		// Disable Image Post-Processor
 		curIPP->disable();
@@ -738,19 +713,8 @@ int main(void)
 #if USE_SCENE_CODE == 1
 		// 1. render depth of scene to texture (from light's perspective)
 		// --------------------------------------------------------------
-		glm::mat4 lightProjection = glm::mat4(1.0f);
-		glm::mat4 lightView = glm::mat4(1.0f);
-		glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
-
-		float near_plane = 1.0f, far_plane = 7.5f;
-		// because light is directional we need to use orthographic projection for the projection matrix
-		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-		// get the light's view in order to render the depth mapping
-		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-		lightSpaceMatrix = lightProjection * lightView;
-		// render scene from light's point of view
-		dirDepthShader.use();
-		dirDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		dirDepthShader.Use();
+		dirDepthShader.SetMat4("lightSpaceMatrix", dirLight.GetOrthographicView());
 
 		// Set the new viewport and framebuffer for the depth mapping
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -762,19 +726,15 @@ int main(void)
 		 //glEnable(GL_CULL_FACE);
 		 //glCullFace(GL_FRONT);
 		
-		// floor
-		dirDepthShader.setMat4("model", woodenFloorModel);
+		// Render scene
+		dirDepthShader.SetMat4("model", woodenFloorEntity.Transform.GetTransform());
 		woodenFloor.draw(dirDepthShader);
-		
-		// cubes
-		dirDepthShader.setMat4("model", cube1Model);
-		woodenCube.draw(dirDepthShader);
 
-		dirDepthShader.setMat4("model", cube2Model);
-		woodenCube.draw(dirDepthShader);
+		for (int i = 0; i < woodenCubeEntities.size(); ++i) {
+			dirDepthShader.SetMat4("model", woodenCubeEntities[i].Transform.GetTransform());
+			woodenCube.draw(dirDepthShader);
+		}
 
-		dirDepthShader.setMat4("model", cube3Model);
-		woodenCube.draw(dirDepthShader);
 
 		 //if(lastCullFace) glEnable(GL_CULL_FACE);
 		 //else glDisable(GL_CULL_FACE);
@@ -789,33 +749,29 @@ int main(void)
 
 		// 2. render scene as normal using the generated depth/shadow map  
 		// --------------------------------------------------------------
-		dirShadowShader.use();
-		dirShadowShader.setMat4("projection", camProjection);
-		dirShadowShader.setMat4("view", camView);
-		dirShadowShader.setVec3("viewPos", curCamera->getPosition());
-		dirShadowShader.setVec3("lightPos", lightPos);
-		dirShadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		dirShadowShader.Use();
+		dirShadowShader.SetMat4("projection", camProjection);
+		dirShadowShader.SetMat4("view", camView);
+		dirShadowShader.SetVec3("viewPos", curCamera->getPosition());
+		dirShadowShader.SetVec3("lightPos", dirLight.GetDirection());
+		dirShadowShader.SetMat4("lightSpaceMatrix", dirLight.GetOrthographicView());
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, depthMap);
 	
-		// Objects rendering
-		dirShadowShader.setMat4("model", woodenFloorModel);
+		// Render scene
+		dirShadowShader.SetMat4("model", woodenFloorEntity.Transform.GetTransform());
 		woodenFloor.draw(dirShadowShader);
 
-		dirShadowShader.setMat4("model", cube1Model);
-		woodenCube.draw(dirShadowShader);
+		for (int i = 0; i < woodenCubeEntities.size(); ++i) {
+			dirShadowShader.SetMat4("model", woodenCubeEntities[i].Transform.GetTransform());
+			woodenCube.draw(dirShadowShader);
+		}
 
-		dirShadowShader.setMat4("model", cube2Model);
-		woodenCube.draw(dirShadowShader);
-
-		dirShadowShader.setMat4("model", cube3Model);
-		woodenCube.draw(dirShadowShader);
-
-		//// render Depth map to quad for visual debugging
+		// render Depth map to quad for visual debugging
 		//// ---------------------------------------------
-		//dirDepthmapQuad.use();
-		//dirDepthmapQuad.setFloat("near_plane", near_plane);
-		//dirDepthmapQuad.setFloat("far_plane", far_plane);
+		//dirDepthmapQuad.Use();
+		//dirDepthmapQuad.SetFloat("near_plane", /*near_plane = */ 0.0f);
+		//dirDepthmapQuad.SetFloat("far_plane",/* far_plane = */ 70.0f);
 		//glActiveTexture(GL_TEXTURE0);
 		//glBindTexture(GL_TEXTURE_2D, depthMap);
 		//depthDebugQuad.draw(dirDepthmapQuad);
@@ -826,15 +782,13 @@ int main(void)
 		// move light position over time
 		if (moveLight)
 		{
-			lightPos.z = (float)sin(glfwGetTime() * 0.5f) * 3.0f;
-			// update transform
-			lampModel = glm::translate(glm::mat4(1.0f), lightPos);
-			lampModel = glm::scale(lampModel, glm::vec3(0.1f));
+			lampEntity.Transform.Position.z = (float)sin(glfwGetTime() * 0.5f) * 3.0f;
 		}
 
 		// 0. create depth cubemap transformation matrices
 		// -----------------------------------------------
-		float near_plane = 1.0f;
+		glm::vec3 lightPos = lampEntity.Transform.Position;
+		float near_plane = 0.0f;
 		float far_plane = 25.0f;
 		float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
 		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane);
@@ -851,44 +805,27 @@ int main(void)
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		pointDepthShader.use();
+		pointDepthShader.Use();
 
 		// configure shader and matrices
 		for (unsigned int i = 0; i < 6; ++i)
-			pointDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
-		pointDepthShader.setFloat("far_plane", far_plane);
-		pointDepthShader.setVec3("lightPos", lightPos);
-
+			pointDepthShader.SetMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+		pointDepthShader.SetFloat("far_plane", far_plane);
+		pointDepthShader.SetVec3("lightPos", lightPos);
 
 		// room cube
-		pointDepthShader.setMat4("model", roomModel);
+		pointDepthShader.SetMat4("model", room.Transform.GetTransform());
 		glDisable(GL_CULL_FACE);
-		pointDepthShader.setInt("reverse_normals", 1); 		
+		pointDepthShader.SetInt("reverse_normals", 1); 		
 		woodCube.draw(pointDepthShader);
-		pointDepthShader.setInt("reverse_normals", 0);
+		pointDepthShader.SetInt("reverse_normals", 0);
 		glEnable(GL_CULL_FACE);
 
-		// lamp
-		pointDepthShader.setMat4("model", lampModel);
-		pointDepthShader.setBool("lamp", 1);
-		lamp.draw(pointDepthShader);
-		pointDepthShader.setBool("lamp", 0);
-
 		// cubes
-		pointDepthShader.setMat4("model", cubeModel1);
-		woodCube.draw(pointDepthShader);
-
-		pointDepthShader.setMat4("model", cubeModel2);
-		woodCube.draw(pointDepthShader);
-
-		pointDepthShader.setMat4("model", cubeModel3);
-		woodCube.draw(pointDepthShader);
-
-		pointDepthShader.setMat4("model", cubeModel4);
-		woodCube.draw(pointDepthShader);
-
-		pointDepthShader.setMat4("model", cubeModel5);
-		woodCube.draw(pointDepthShader);
+		for (int i = 0; i < woodCubeEntities.size(); ++i) {
+			pointDepthShader.SetMat4("model", woodCubeEntities[i].Transform.GetTransform());
+			woodCube.draw(pointDepthShader);
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -897,79 +834,72 @@ int main(void)
 		glViewport(0, 0, curWindow->GetWidth(), curWindow->GetHeight());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		pointShadowShader.use();
-		pointShadowShader.setMat4("projection", camProjection);
-		pointShadowShader.setMat4("view", camView);
-		pointShadowShader.setVec3("lightPos", lightPos);
-		pointShadowShader.setVec3("viewPos", curCamera->getPosition());
-		pointShadowShader.setInt("shadows", shadows); // enable/disable shadows by pressing 'SPACE'
-		pointShadowShader.setFloat("far_plane", far_plane);
-		pointShadowShader.setBool("showDepthMap", showDepthMap);
-		pointShadowShader.setBool("usePCF", usePCF);
+		pointShadowShader.Use();
+		pointShadowShader.SetMat4("projection", camProjection);
+		pointShadowShader.SetMat4("view", camView);
+		pointShadowShader.SetVec3("lightPos", lightPos);
+		pointShadowShader.SetVec3("viewPos", curCamera->getPosition());
+		pointShadowShader.SetInt("shadows", shadows); // enable/disable shadows by pressing 'SPACE'
+		pointShadowShader.SetFloat("far_plane", far_plane);
+		pointShadowShader.SetBool("showDepthMap", showDepthMap);
+		pointShadowShader.SetBool("usePCF", usePCF);
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
 		// room cube
-		pointShadowShader.setMat4("model", roomModel);
+		pointShadowShader.SetMat4("model", room.Transform.GetTransform());
 		glDisable(GL_CULL_FACE);
-		pointShadowShader.setInt("reverse_normals", 1);
+		pointShadowShader.SetInt("reverse_normals", 1);
 		woodCube.draw(pointShadowShader);
-		pointShadowShader.setInt("reverse_normals", 0);
+		pointShadowShader.SetInt("reverse_normals", 0);
 		glEnable(GL_CULL_FACE);
 
+
 		// lamp
-		pointShadowShader.setMat4("model", lampModel);
-		pointShadowShader.setBool("lamp", 1);
+		pointShadowShader.SetMat4("model", lampEntity.Transform.GetTransform());
+		pointShadowShader.SetBool("lamp", 1);
 		lamp.draw(pointShadowShader);
-		pointShadowShader.setBool("lamp", 0);
+		pointShadowShader.SetBool("lamp", 0);
 
 		// cubes
-		pointShadowShader.setMat4("model", cubeModel1);
-		woodCube.draw(pointShadowShader);
+		for (int i = 0; i < woodCubeEntities.size(); ++i) {
+			pointShadowShader.SetMat4("model", woodCubeEntities[i].Transform.GetTransform());
+			woodCube.draw(pointShadowShader);
+		}
 
-		pointShadowShader.setMat4("model", cubeModel2);
-		woodCube.draw(pointShadowShader);
-
-		pointShadowShader.setMat4("model", cubeModel3);
-		woodCube.draw(pointShadowShader);
-
-		pointShadowShader.setMat4("model", cubeModel4);
-		woodCube.draw(pointShadowShader);
-
-		pointShadowShader.setMat4("model", cubeModel5);
-		woodCube.draw(pointShadowShader);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 #endif
 #if USE_SCENE_CODE == 3
 
 		// Render stuff with normal shader
-		normalShader.use();
-		normalShader.setMat4("projection", camProjection);
-		normalShader.setMat4("view", camView);
-		normalShader.setMat4("model", normalBricksModel);
-		normalShader.setVec3("viewPos", curCamera->getPosition());
-		normalShader.setVec3("lightPos", lightPos);
+		normalShader.Use();
+		normalShader.SetMat4("projection", camProjection);
+		normalShader.SetMat4("view", camView);
+		normalShader.SetVec3("viewPos", curCamera->getPosition());
+		normalShader.SetVec3("lightPos", lightPos);
+
+		normalShader.SetMat4("model", normalBricksEntity.Transform.GetTransform());
 		normalBrickWall.draw(normalShader);
 
 		// Render parallax configure view/projection matrices
-		heightShader.use();
-		heightShader.setMat4("projection", camProjection);
-		heightShader.setMat4("view", camView);
-		heightShader.setVec3("viewPos", curCamera->getPosition());
-		heightShader.setVec3("lightPos", lightPos);
-		heightShader.setBool("steep", steep);				// turn on/off with T
-		heightShader.setBool("occlusion", occlusion);		// turn on/off with Y
-		heightShader.setFloat("heightScale", heightScale);  // adjust with Q and E keys
-		heightShader.use();
+		heightShader.Use();
+		heightShader.SetMat4("projection", camProjection);
+		heightShader.SetMat4("view", camView);
+		heightShader.SetVec3("viewPos", curCamera->getPosition());
+		heightShader.SetVec3("lightPos", lightPos);
+
+		heightShader.SetBool("steep", steep);				// turn on/off with T
+		heightShader.SetBool("occlusion", occlusion);		// turn on/off with Y
+		heightShader.SetFloat("heightScale", heightScale);  // adjust with Q and E keys
 
 		// Bricks
-		heightShader.setMat4("model", paralaxBricksModel);
+		heightShader.SetMat4("model", paralaxBricksEntity.Transform.GetTransform());
 		paralaxBrickPlane.draw(heightShader);
 
 		// TOY BOX
-		heightShader.setMat4("model", toyboxModel);
+		heightShader.SetMat4("model", toyboxEntity.Transform.GetTransform());
 		paralaxToyBox.draw(heightShader);
 				 
 #endif
@@ -979,34 +909,24 @@ int main(void)
 		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 		curWindow->ClearScreen();
 
-		ldrShader.use();
-		ldrShader.setMat4("projection", camProjection);
-		ldrShader.setMat4("view", camView);
+		ldrShader.Use();
+		ldrShader.SetMat4("projection", camProjection);
+		ldrShader.SetMat4("view", camView);
+		ldrShader.SetVec3("viewPos", curCamera->getPosition());
 
-		// set lighting uniforms
-		for (unsigned int i = 0; i < lightPositions.size(); i++)
-		{
-			ldrShader.setVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
-			ldrShader.setVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
-		}
-		ldrShader.setVec3("viewPos", curCamera->getPosition());
+		ldrShader.SetInt("POINT_LIGHT_COUNT", 1);
+		light.setLight(ldrShader, 0);
 
-		// render tunnel
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0));
-		model = glm::scale(model, glm::vec3(2.5f, 2.5f, 27.5f));
-		model = glm::scale(model, glm::vec3(2.0f));
-		ldrShader.setMat4("model", model);
-		ldrShader.setInt("inverse_normals", true);
-		simpleCube.draw(ldrShader);
+		ldrShader.SetMat4("model", wallEntity.Transform.GetTransform());
+		wall.draw(ldrShader);
 
 		// 2. now render floating point color buffer to 2D quad and tonemap HDR colors to default framebuffer's (clamped) color range
 		// --------------------------------------------------------------------------------------------------------------------------
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		curWindow->ClearScreen();
-		hdrShader.use();
-		hdrShader.setInt("hdr", hdr);
-		hdrShader.setFloat("exposure", exposure);
+		hdrShader.Use();
+		hdrShader.SetInt("hdr", hdr);
+		hdrShader.SetFloat("exposure", exposure);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, colorBuffer);
 		hdrQuad.draw(hdrShader);
@@ -1019,68 +939,50 @@ int main(void)
 
 		glm::mat4 model = glm::mat4(1.0f);
 
-		shaderDouble.use();
-		shaderDouble.setMat4("projection", camProjection);
-		shaderDouble.setMat4("view", camView);
-
-		// set lighting uniforms
-		for (unsigned int i = 0; i < lightPositions.size(); i++)
-		{
-			shaderDouble.setVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
-			shaderDouble.setVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
+		shaderBloomObjects.Use();
+		shaderBloomObjects.SetMat4("projection", camProjection);
+		shaderBloomObjects.SetMat4("view", camView);
+		
+		shaderBloomObjects.SetInt("POINT_LIGHT_COUNT", pointLights.size());
+		for (int i = 0; i < pointLights.size(); ++i) {
+			pointLights[i].setLight(shaderBloomObjects, i);
 		}
-		shaderDouble.setVec3("viewPos", curCamera->getPosition());
+
+		shaderBloomObjects.SetVec3("viewPos", curCamera->getPosition());
 
 		// create one large cube that acts as the floor
-		shaderDouble.setMat4("model", modelWood);
-		woodCube.draw(shaderDouble);
+		shaderBloomObjects.SetMat4("model", woodFloorEntity.Transform.GetTransform());
+		woodFloor.draw(shaderBloomObjects);
 
-		// then create multiple cubes as the scenery
-		shaderDouble.setMat4("model",modelMarble1);
-		marbleCube.draw(shaderDouble);
-
-	
-		shaderDouble.setMat4("model", modelMarble2);
-		marbleCube.draw(shaderDouble);
-
-
-		shaderDouble.setMat4("model", modelMarble3);
-		marbleCube.draw(shaderDouble);
-
-
-		shaderDouble.setMat4("model", modelMarble4);
-		marbleCube.draw(shaderDouble);
-
-		shaderDouble.setMat4("model", modelMarble5);
-		marbleCube.draw(shaderDouble);
-
-		shaderDouble.setMat4("model", modelMarble6);
-		marbleCube.draw(shaderDouble);
+		// marble blocks
+		for (int i = 0; i < marbleEntities.size(); ++i) {
+			shaderBloomObjects.SetMat4("model", marbleEntities[i].Transform.GetTransform());
+			marbleCube.draw(shaderBloomObjects);
+		}
 
 		// finally show all the light sources as bright cubes
-		shaderDoubleLights.use();
-		shaderDoubleLights.setMat4("projection", camProjection);
-		shaderDoubleLights.setMat4("view", camView);
+		shaderBloomLights.Use();
+		shaderBloomLights.SetMat4("projection", camProjection);
+		shaderBloomLights.SetMat4("view", camView);
 
-		for (unsigned int i = 0; i < lightPositions.size(); i++)
+		for (unsigned int i = 0; i < pointLightEntities.size(); ++i)
 		{
-			model = glm::translate(glm::mat4(1.0f), glm::vec3(lightPositions[i]));
-			model = glm::scale(model, glm::vec3(0.25f));
-			shaderDoubleLights.setMat4("model", model);
-			shaderDoubleLights.setVec3("lightColor", lightColors[i]);
-			lampCube.draw(shaderDoubleLights);
+			shaderBloomLights.SetMat4("model", pointLightEntities[i].Transform.GetTransform());
+			shaderBloomLights.SetVec3("lightColor", pointLights[i].GetColour());
+			lampCube.draw(shaderBloomLights);
 		}
+	
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// 2. blur bright fragments with two-pass Gaussian Blur 
 		// --------------------------------------------------
 		bool horizontal = true, first_iteration = true;
 		unsigned int numberOfPasses = 10;
-		shaderBlur.use();
+		shaderBlur.Use();
 		for (unsigned int i = 0; i < numberOfPasses; ++i)
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
-			shaderBlur.setInt("horizontal", horizontal);
+			shaderBlur.SetInt("horizontal", horizontal);
 			glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
 			ppBloomQuad.draw(shaderBlur);
 			horizontal = !horizontal;
@@ -1092,7 +994,7 @@ int main(void)
 		// 3. now render floating point color buffer to 2D quad and tonemap HDR colors to default framebuffer's (clamped) color range
 		// --------------------------------------------------------------------------------------------------------------------------
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shaderBloomSum.use();
+		shaderBloomSum.Use();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
 		//glBindTexture(GL_TEXTURE_2D, colorBuffers[1]);
@@ -1100,8 +1002,8 @@ int main(void)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
 		//glBindTexture(GL_TEXTURE_2D, colorBuffers[1]);
-		shaderBloomSum.setInt("bloom", bloom);
-		shaderBloomSum.setFloat("exposure", exposure);
+		shaderBloomSum.SetInt("bloom", bloom);
+		shaderBloomSum.SetFloat("exposure", exposure);
 		ppBloomQuad.draw(shaderBloomSum);
 
 	
@@ -1114,15 +1016,14 @@ int main(void)
 	}
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	//glDeleteVertexArrays(1, &planeVAO);
-	//glDeleteBuffers(1, &planeVBO);
 	glfwTerminate();
 	return 0;
 
 }
 
 
-#pragma region _UTILITY_FUNCTIONS
+
+
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
@@ -1400,150 +1301,5 @@ void switchCameras()
 	else if ((int)curCamera->getID() == 2) curCamera = &camera1;
 }
 
-// utility function for loading a 2D texture from file
-// ---------------------------------------------------
-unsigned int loadTexture(char const * path, GLint wrapping_mode)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
 
-	int width, height, nrComponents;
-	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-	if (data)
-	{
-		GLenum format;
-		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
-			format = GL_RGB;
-		else if (nrComponents == 4)
-			format = GL_RGBA;
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping_mode); 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping_mode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
-	}
-	else
-	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
-	}
-
-	return textureID;
-}
-
-// utility function to set lighting to a lighting shader
-// -----------------------------------------------------
-void setLighting(Shader & shader)
-{
-	shader.use();
-	shader.setVec3("viewPos", curCamera->getPosition());
-
-	// directional lights
-	shader.setInt("DIR_LIGHT_COUNT", NR_DIR_LIGHTS);
-	for (int i = 0; i < NR_DIR_LIGHTS; i++)
-	{
-		dirLights[i].setLight(shader, i);
-	}
-	// point lights
-	shader.setInt("POINT_LIGHT_COUNT", NR_POINT_LIGHTS);
-	for (int i = 0; i < NR_POINT_LIGHTS; i++)
-	{
-		pointLights[i].setLight(shader, i);
-	}
-	// spot lights
-	if(spotlightOn)
-		shader.setInt("SPOT_LIGHT_COUNT", NR_SPOT_LIGHTS);
-	for (int i = 0; i < NR_SPOT_LIGHTS; i++)
-	{
-		spotLights[i].setVec3(SpotLight::POSITION, curCamera->getPosition());
-		spotLights[i].setVec3(SpotLight::DIRECTION, curCamera->getFront());
-		spotLights[i].setLight(shader, i);
-	}
-}
-
-#pragma endregion
-
-
-#pragma region _DRAW_SCENES
-void drawWindowPanels(SimpleModel smObject, Shader shader)
-{
-	// Save face-culling option
-	bool previousFaceCullingState = false | glIsEnabled(GL_CULL_FACE);
-	// Disable face-culling
-	glDisable(GL_CULL_FACE);
-	
-	// Sort them
-	std::map<float, glm::vec3> sorted;
-	for (unsigned int i = 0; i < NR_WINDOW_PANELS; i++)
-	{
-		float distance = glm::length(curCamera->getPosition() - windowPanelsPositions[i]);
-		sorted[distance] = windowPanelsPositions[i];
-	}
-	// Render them
-	shader.use();
-	for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-	{
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, it->second);
-		shader.setMat4("model", model);
-		smObject.draw(shader);
-	}
-	// Reset face culling to previous state
-	if (previousFaceCullingState) glEnable(GL_CULL_FACE);
-}
-void drawModels(SimpleModel modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
-{
-	// be sure to activate shader when setting uniforms/drawing objects
-	shader.use();
-	for (int i = 0; i < objectCount; i++)
-	{
-		// calculate the model matrix for each object and pass it to shader before drawing
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, positionVectors[i]);
-		float angle = 20.0f * i;
-		if(rotate) model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		model = glm::scale(model, glm::vec3 (objectScale));
-		shader.setMat4("model", model);
-
-		// Set the transpose inverse model matrix
-		glm::mat3 transposeInverseModel = glm::mat3(1.0f);
-		transposeInverseModel = glm::mat3(transpose(inverse(model)));
-		shader.setMat3("tiModel", transposeInverseModel);
-
-		modelObject.draw(shader);
-	}
-}
-void drawModels(Model modelObject, int objectCount, float objectScale, glm::vec3 positionVectors[], Shader shader, bool rotate)
-{
-	// be sure to activate shader when setting uniforms/drawing objects
-	shader.use();
-	for (int i = 0; i < objectCount; i++)
-	{
-		// calculate the model matrix for each object and pass it to shader before drawing
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, positionVectors[i]);
-		float angle = 20.0f * i;
-		if (rotate) model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		model = glm::scale(model, glm::vec3(objectScale));
-		shader.setMat4("model", model);
-
-		// Set the transpose inverse model matrix
-		glm::mat3 transposeInverseModel = glm::mat3(1.0f);
-		transposeInverseModel = glm::mat3(transpose(inverse(model)));
-		shader.setMat3("tiModel", transposeInverseModel);
-
-		modelObject.Draw(shader);
-	}
-}
-#pragma endregion
 

@@ -4,6 +4,7 @@
 #include <glad\glad.h>
 #include "shader.h"
 #include "window.h"
+#include "SimpleQuad.h"
 
 // Image post-processing
 class IPP {
@@ -15,16 +16,17 @@ public:
 	}
 private:
 	// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-	static constexpr float mQuadVertices[] = { 
-		// positions   // texCoords
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		 1.0f,  1.0f,  1.0f, 1.0f
-	};
-	unsigned int mQuadVAO, mQuadVBO;
+	//static constexpr float mQuadVertices[] = { 
+	//	// positions   // texCoords
+	//	-1.0f,  1.0f,  0.0f, 1.0f,
+	//	-1.0f, -1.0f,  0.0f, 0.0f,
+	//	 1.0f, -1.0f,  1.0f, 0.0f,
+	//	-1.0f,  1.0f,  0.0f, 1.0f,
+	//	 1.0f, -1.0f,  1.0f, 0.0f,
+	//	 1.0f,  1.0f,  1.0f, 1.0f
+	//};
+	//unsigned int mQuadVAO, mQuadVBO;
+
 	unsigned int mFramebuffer;
 	unsigned int mTextureColorbuffer;
 	unsigned int mRenderbufferObject;
@@ -33,39 +35,59 @@ private:
 	bool mEnabled;
 	Window * mBindedWindow;
 	Shader * mBindedShader;
+
 	// Functions
 	void setupQuad() {
-		glGenVertexArrays(1, &mQuadVAO);
-		glGenBuffers(1, &mQuadVBO);
-		glBindVertexArray(mQuadVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, mQuadVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(mQuadVertices), &mQuadVertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(0 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-		// Reset to defaults
-		glBindVertexArray(0);
+		//glGenVertexArrays(1, &mQuadVAO);
+		//glGenBuffers(1, &mQuadVBO);
+		//glBindVertexArray(mQuadVAO);
+		//glBindBuffer(GL_ARRAY_BUFFER, mQuadVBO);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(mQuadVertices), &mQuadVertices, GL_STATIC_DRAW);
+		//glEnableVertexAttribArray(0);
+		//glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(0 * sizeof(float)));
+		//glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+		//// Reset to defaults
+		//glBindVertexArray(0);
 	}
 	void setup() {
 		// framebuffer configuration
 		// -------------------------
 		glGenFramebuffers(1, &mFramebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+
 		// create a color attachment texture
 		glGenTextures(1, &mTextureColorbuffer);
 		glBindTexture(GL_TEXTURE_2D, mTextureColorbuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mBindedWindow->GetWidth(), mBindedWindow->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// Attach texture as a color attachment to framebuffer
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextureColorbuffer, 0);
+
+		//// Use texture for Depth and Stencil buffer attachment
+		//// ---------------------------------------------------------
+		//glGenTextures(1, &mDepthAndStencilBuffer);
+		//glBindTexture(GL_TEXTURE_2D, mDepthAndStencilBuffer);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,  mBindedWindow->GetWidth(), mBindedWindow->GetHeight(), 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, mDepthAndStencilBuffer, 0); 
+		//
+
+		// Use Renderbuffer for Depth and Stencil buffer attachment
+		// ---------------------------------------------------------
 		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
 		glGenRenderbuffers(1, &mRenderbufferObject);
 		glBindRenderbuffer(GL_RENDERBUFFER, mRenderbufferObject);
 		// use a single renderbuffer object for both a depth AND stencil buffer.
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, mBindedWindow->GetWidth(), mBindedWindow->GetHeight()); 
+		// unbind RBO after finished modifying it
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
 		// now actually attach it
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRenderbufferObject); 
+
 		// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
 		mComplete = true;
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -73,6 +95,7 @@ private:
 			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 			mComplete = false;
 		}
+
 		// Reset to defaults
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -80,13 +103,13 @@ public:
 	void enable() {
 		if(mComplete)
 		{
-		// bind to framebuffer and draw scene as we normally would to color texture 
-		glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
-		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+			// bind to framebuffer and draw scene as we normally would to color texture 
+			glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+			glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
-								 // make sure we clear the framebuffer's content
-		mBindedWindow->ClearScreen();
-		mEnabled = true;
+			// make sure we clear the framebuffer's content
+			mBindedWindow->ClearScreen();
+			mEnabled = true;
 		}
 		else {
 			std::cout << "Framebuffer is not complete. Cannot activate it for post-processing!" << std::endl;
@@ -111,10 +134,10 @@ public:
 			// Disable face-culling
 			glDisable(GL_CULL_FACE);
 			// Draw
-			mBindedShader->use();
+			mBindedShader->Use();
 			glBindVertexArray(mQuadVAO);
 			glBindTexture(GL_TEXTURE_2D, mTextureColorbuffer);	// use the color attachment texture as the texture of the quad plane
-			mBindedShader->setInt("screenTexture", 0);
+			mBindedShader->SetInt("screenTexture", 0);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 			// Reset face culling to previous state
 			if (previousFaceCullingState) glEnable(GL_CULL_FACE);
@@ -131,7 +154,7 @@ public:
 		if (mBindedShader != nullptr)
 		{
 			mFunction = function;
-			mBindedShader->setInt("function", function);
+			mBindedShader->SetInt("function", function);
 		}
 		// error checking
 		else {

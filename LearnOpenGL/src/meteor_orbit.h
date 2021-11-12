@@ -129,8 +129,8 @@ private:
 public:
 	void draw(Shader shader)
 	{
-		shader.use();
-		shader.setInt("texture_diffuse1", 0);
+		shader.Use();
+		shader.SetInt("texture_diffuse1", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mMeteorModel->textures_loaded[0].id); // note: we also made the textures_loaded vector public (instead of private) from the model class.
 		for (unsigned int i = 0; i < mMeteorModel->meshes.size(); i++)

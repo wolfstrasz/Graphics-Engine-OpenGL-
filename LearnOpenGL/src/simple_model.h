@@ -145,48 +145,48 @@ public:
 	{
 		unsigned textureID = 0;
 		// Set diffuse textures
-		shader.setInt("TEX_DIFF_COUNT", (int) mDiffuseTextures.size());
+		shader.SetInt("TEX_DIFF_COUNT", (int) mDiffuseTextures.size());
 		for (int i = 0; i < mDiffuseTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_diffuse[" + index + "]", textureID);
+			shader.SetInt("texture_diffuse[" + index + "]", textureID);
 			glBindTexture(GL_TEXTURE_2D, mDiffuseTextures[i]);
 			textureID++;
 		}
 
 
-		shader.setInt("TEX_NORMAL_COUNT", (int)mNormalTextures.size());
+		shader.SetInt("TEX_NORMAL_COUNT", (int)mNormalTextures.size());
 		for (int i = 0; i < mNormalTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_normal[" + index + "]", textureID);
+			shader.SetInt("texture_normal[" + index + "]", textureID);
 			glBindTexture(GL_TEXTURE_2D, mNormalTextures[i]);
 			textureID++;
 		}
 
 		// Set specular textures
-		shader.setInt("TEX_SPEC_COUNT", (int) mSpecularTextures.size());
+		shader.SetInt("TEX_SPEC_COUNT", (int) mSpecularTextures.size());
 		for (int i = 0; i < mSpecularTextures.size(); i++)
 		{ 
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_specular[" + index + "]", textureID);
+			shader.SetInt("texture_specular[" + index + "]", textureID);
 			glBindTexture(GL_TEXTURE_2D, mSpecularTextures[i]);
 			textureID++;
 		}
 
-		shader.setInt("TEX_HEIGHT_COUNT", (int) mHeightTextures.size());
+		shader.SetInt("TEX_HEIGHT_COUNT", (int) mHeightTextures.size());
 		for (int i = 0; i < mHeightTextures.size(); i++)
 		{
 			// Activate appropriate texture unit
 			glActiveTexture(GL_TEXTURE0 + textureID);
 			std::string index = std::to_string(i);
-			shader.setInt("texture_height[" + index + "]", textureID);
+			shader.SetInt("texture_height[" + index + "]", textureID);
 			glBindTexture(GL_TEXTURE_2D, mHeightTextures[i]);
 			textureID++;
 		}

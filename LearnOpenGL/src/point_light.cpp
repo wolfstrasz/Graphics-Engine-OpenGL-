@@ -9,20 +9,30 @@ PointLight::PointLight(glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse,
 	mSpecular = specular;
 }
 
+glm::vec3 PointLight::GetPosition()
+{
+	return mPosition;
+}
+
+glm::vec3 PointLight::GetColour()
+{
+	return mDiffuse;
+}
+
 void PointLight::setLight(Shader & shader, unsigned int pos)
 {
 	std::string index = std::to_string(pos);
-	shader.setVec3("pointLights[" + index + "].position",	mPosition);
-	shader.setVec3("pointLights[" + index + "].ambient",	mAmbient);
-	shader.setVec3("pointLights[" + index + "].diffuse",	mDiffuse);
-	shader.setVec3("pointLights[" + index + "].specular",	mSpecular);
+	shader.SetVec3("pointLights[" + index + "].position",	mPosition);
+	shader.SetVec3("pointLights[" + index + "].ambient",	mAmbient);
+	shader.SetVec3("pointLights[" + index + "].diffuse",	mDiffuse);
+	shader.SetVec3("pointLights[" + index + "].specular",	mSpecular);
 
-	shader.setFloat("pointLights[" + index + "].constant",	mConstant);
-	shader.setFloat("pointLights[" + index + "].linear",	mLinear);
-	shader.setFloat("pointLights[" + index + "].quadratic",	mQuadratic);
+	shader.SetFloat("pointLights[" + index + "].constant",	mConstant);
+	shader.SetFloat("pointLights[" + index + "].linear",	mLinear);
+	shader.SetFloat("pointLights[" + index + "].quadratic",	mQuadratic);
 }
 
-void PointLight::setVec3(Point_Light_Vector_Attributes attrib, glm::vec3 value)
+void PointLight::SetVec3(Point_Light_Vector_Attributes attrib, glm::vec3 value)
 {
 	if (attrib == POSITION)
 		mPosition = value;

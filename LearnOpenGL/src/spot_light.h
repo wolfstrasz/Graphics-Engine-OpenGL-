@@ -66,7 +66,7 @@ private:
 	void generateAttenuationTerms(float distance);
 public:
 	void setLight(Shader& shader, unsigned int pos);
-	void setVec3(Spot_Light_Vector_Attributes attrib, glm::vec3 value);
+	void SetVec3(Spot_Light_Vector_Attributes attrib, glm::vec3 value);
 	void setFloat(Spot_Light_Float_Attributes attrib, float value);
 };
 #endif // !_SPOT_LIGHT

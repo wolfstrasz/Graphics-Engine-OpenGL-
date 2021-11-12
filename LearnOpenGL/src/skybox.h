@@ -85,7 +85,7 @@ public:
 		setup();
 	}
 	void draw(Shader shader) {
-		shader.use();
+		shader.Use();
 		// Save depth function
 		GLint depthFunc;
 		glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
@@ -102,7 +102,7 @@ public:
 		glBindVertexArray(mVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, mCubemapTexture);
-		shader.setInt("skybox", 0);
+		shader.SetInt("skybox", 0);
 
 		// Draw skybox
 		glDrawArrays(GL_TRIANGLES, 0, 36);

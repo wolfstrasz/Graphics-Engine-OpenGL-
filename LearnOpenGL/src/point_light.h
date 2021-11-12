@@ -54,8 +54,10 @@ private:
 	void generateAttenuationTerms(float distance);
 
 public:
+	glm::vec3 GetPosition();
+	glm::vec3 GetColour();
 	void setLight(Shader& shader, unsigned int pos);
-	void setVec3(Point_Light_Vector_Attributes attrib, glm::vec3 value);
+	void SetVec3(Point_Light_Vector_Attributes attrib, glm::vec3 value);
 	void setFloat(Point_Light_Float_Attributes attrib, float value);
 };
 #endif // !_POINT_LIGHT_H

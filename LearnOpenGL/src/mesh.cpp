@@ -15,8 +15,8 @@ void Mesh::Draw(Shader shader)
 	// bind appropriate textures
 	unsigned int diffuseNr = 0;
 	unsigned int specularNr = 0;
-	unsigned int normalNr = 1;
-	unsigned int heightNr = 1;
+	unsigned int normalNr = 0; // was 1 not sure why
+	unsigned int heightNr = 0; // was 1 not sure why
 
 	for (unsigned int i = 0; i < textures.size(); i++)
 	{
@@ -34,12 +34,12 @@ void Mesh::Draw(Shader shader)
 			number = std::to_string(heightNr++); // transfer unsigned int to stream
 
 												 // now set the sampler to the correct texture unit
-		glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + number + "]").c_str()), i);
+		glUniform1i(glGetUniformLocation(shader.GetID(), (name + "[" + number + "]").c_str()), i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
 	
-	shader.setInt("TEX_DIFF_COUNT", diffuseNr);
-	shader.setInt("TEX_SPEC_COUNT", specularNr);
+	shader.SetInt("TEX_DIFF_COUNT", diffuseNr);
+	shader.SetInt("TEX_SPEC_COUNT", specularNr);
 	// draw mesh
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, 0);
