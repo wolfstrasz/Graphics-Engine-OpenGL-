@@ -1,111 +1,162 @@
-#include "camera.h"
+#include "Camera.h"
 
-Camera::Camera(unsigned int id, glm::vec3 position , glm::vec3 up , float yaw , float pitch)
-		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), 
-		  mMovementSpeed(Camera_Defaults::SPEED),
-		  mMouseSensitivity(Camera_Defaults::SENSITIVITY),
-		  mZoom(Camera_Defaults::ZOOM)
+Camera::Camera(unsigned int id)
+	:  m_ID(id)
 {
-	ID = id;
-	mPosition = position;
-	mWorldUp = up;
-	mYaw = yaw;
-	mPitch = pitch;
-	updateCameraVectors();
+	UpdateCameraVectors();
 }
-Camera::Camera(unsigned int id, float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-		: mFront(glm::vec3(0.0f, 0.0f, -1.0f)), 
-		  mMouseSensitivity(Camera_Defaults::SENSITIVITY), 
-		  mMovementSpeed(Camera_Defaults::SPEED),
-		  mZoom(Camera_Defaults::ZOOM)
-{
-	ID = id;
-	mPosition = glm::vec3(posX, posY, posZ);
-	mWorldUp = glm::vec3(upX, upY, upZ);
-	mYaw = yaw;
-	mPitch = pitch;
-	updateCameraVectors();
-}
-void Camera::update()
-{
-}
-void Camera::init()
-{
-}
-void Camera::updateCameraVectors()
+
+
+void Camera::UpdateCameraVectors()
 {
 	// Calculate the new Front vector
 	glm::vec3 front;
-	front.x = cos(glm::radians(mYaw)) * cos(glm::radians(mPitch));
-	front.y = sin(glm::radians(mPitch));
-	front.z = sin(glm::radians(mYaw)) * cos(glm::radians(mPitch));
-	mFront = glm::normalize(front);
+	front.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+	front.y = sin(glm::radians(m_Pitch));
+	front.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+	m_Front = glm::normalize(front);
 	// Also re-calculate the Right and Up vector
 	// Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-	mRight = glm::normalize(glm::cross(mFront, mWorldUp));  
-	mUp = glm::normalize(glm::cross(mRight, mFront));
+	m_Right = glm::normalize(glm::cross(m_Front, glm::vec3(0.0f, 1.0f, 0.0f))); // cross product with the world's Up vector
+	m_Up = glm::normalize(glm::cross(m_Right, m_Front));
+
+	m_IsDirty = true;
 }
-void Camera::processKeyboard(Camera_Movement direction, float deltaTime)
+
+void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
-	float distance = mMovementSpeed * deltaTime;
+	float distance = m_MovementSpeed * deltaTime;
 	if (direction == FORWARD)
-		mPosition += mFront * distance;
+		m_Position += m_Front * distance;
 	if (direction == BACKWARD)
-		mPosition -= mFront * distance;
+		m_Position -= m_Front * distance;
 	if (direction == LEFT)
-		mPosition -= mRight * distance;
+		m_Position -= m_Right * distance;
 	if (direction == RIGHT)
-		mPosition += mRight * distance;
+		m_Position += m_Right * distance;
+
+	m_IsDirty = true;
 }
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
 {
-	xoffset *= mMouseSensitivity;
-	yoffset *= mMouseSensitivity;
+	xoffset *= m_MouseSensitivity;
+	yoffset *= m_MouseSensitivity;
 
-	mYaw += xoffset;
-	mPitch += yoffset;
+	m_Yaw += xoffset;
+	m_Pitch += yoffset;
 
 	// Make sure that when pitch is out of bounds, screen doesn't get flipped
 	if (constrainPitch)
 	{
-		if (mPitch > Camera_Margins::PITCH_MAX)
-			mPitch = Camera_Margins::PITCH_MAX;
-		if (mPitch < Camera_Margins::PITCH_MIN)
-			mPitch = Camera_Margins::PITCH_MIN;
+		if (m_Pitch > Camera_Margins::PITCH_MAX)
+			m_Pitch = Camera_Margins::PITCH_MAX;
+		if (m_Pitch < Camera_Margins::PITCH_MIN)
+			m_Pitch = Camera_Margins::PITCH_MIN;
 	}
 
+	m_IsDirty = true;
 	// Update Front, Right and Up Vectors using the updated Euler angles
-	updateCameraVectors();
+	UpdateCameraVectors();
 }
 void Camera::ProcessMouseScroll(float yoffset)
 {
-	if (mZoom >= Camera_Margins::ZOOM_MIN && mZoom <= Camera_Margins::ZOOM_MAX)
-		mZoom -= yoffset;
-	if (mZoom < Camera_Margins::ZOOM_MIN)
-		mZoom = Camera_Margins::ZOOM_MIN;
-	if (mZoom > Camera_Margins::ZOOM_MAX)
-		mZoom = Camera_Margins::ZOOM_MAX;
+	if (m_Zoom >= Camera_Margins::ZOOM_MIN && m_Zoom <= Camera_Margins::ZOOM_MAX)
+		m_Zoom -= yoffset;
+	if (m_Zoom < Camera_Margins::ZOOM_MIN)
+		m_Zoom = Camera_Margins::ZOOM_MIN;
+	if (m_Zoom > Camera_Margins::ZOOM_MAX)
+		m_Zoom = Camera_Margins::ZOOM_MAX;
+
+	m_IsDirty = true;
 }
+
 // Getters
-glm::mat4 Camera::getView()
+glm::mat4 Camera::GetView()
 {
-	return glm::lookAt(mPosition, mPosition + mFront, mUp);
-}
-float Camera::getZoom()
-{
-	return mZoom;
-}
-unsigned int Camera::getID()
-{
-	return ID;
+	if (m_IsDirty) {
+		RecalculateMatrices();
+	}
+	return m_ViewMatrix;
 }
 
-glm::vec3 Camera::getPosition()
+unsigned int Camera::GetID() const
 {
-	return mPosition;
+	return m_ID;
 }
 
-glm::vec3 Camera::getFront()
+void Camera::SetPosition(glm::vec3 pos)
 {
-	return mFront;
+	m_Position = pos;
+	m_IsDirty = true;
+}
+
+
+void Camera::SetNearPlane(float nearPlane) { m_NearPlane = nearPlane; m_IsDirty = true; }
+
+void Camera::SetFarPlane(float farPlane) { m_FarPlane = farPlane; m_IsDirty = true;}
+
+void Camera::SetRatio(float ratio)
+{
+	m_Ratio = ratio;
+	m_IsDirty = true;
+}
+
+void Camera::SetSpeed(float speed)
+{
+	m_MovementSpeed = speed;
+}
+
+void Camera::Reset()
+{
+	m_Position = glm::vec3(0.0f);
+
+	// Calculated at construction
+	m_Front = glm::vec3(0.0f);
+	m_Up = glm::vec3(0.0f);
+	m_Right = glm::vec3(0.0f);
+
+	// Euler Angles
+	m_Yaw = Camera_Defaults::YAW;
+	m_Pitch = Camera_Defaults::PITCH;
+
+	// Camera options
+	m_MovementSpeed = Camera_Defaults::SPEED;
+	m_MouseSensitivity = Camera_Defaults::SENSITIVITY;
+	m_Zoom = Camera_Defaults::ZOOM;
+	
+
+	// Camera planes
+	m_NearPlane = Camera_Defaults::NEAR_PLANE;
+	m_FarPlane = Camera_Defaults::FAR_PLANE;
+	UpdateCameraVectors();
+}
+
+glm::vec3 Camera::GetFront() const
+{
+	return m_Front;
+}
+
+glm::vec3 Camera::GetPosition() const
+{
+	return m_Position;
+}
+
+float Camera::GetNearPlane() const { return m_NearPlane; }
+
+float Camera::GetFarPlane() const { return m_FarPlane; }
+
+glm::mat4 Camera::GetPerspective() {
+
+	if (m_IsDirty) {
+		RecalculateMatrices();
+	}
+	return m_PerspectiveMatrix;
+}
+
+void Camera::RecalculateMatrices() {
+
+	m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
+	m_PerspectiveMatrix = glm::perspective(glm::radians(m_Zoom), m_Ratio, m_NearPlane, m_FarPlane);
+	m_IsDirty = false;
+
 }

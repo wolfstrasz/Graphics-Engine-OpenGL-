@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
@@ -13,9 +13,14 @@ out VS_OUT {
     vec3 TangentFragPos;
 } vs_out;
 
-uniform mat4 projection;
-uniform mat4 view;
+layout(std140, binding = 0) uniform Matrices 
+{ 
+    mat4 projection;
+    mat4 view;
+};
+
 uniform mat4 model;
+uniform mat3 tiModel;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -27,14 +32,17 @@ void main()
 
     // Using a mathematical trick called the Gram-Schmidt process we can re-orthogonalize
     // the TBN vectors such that each vector is again perpendicular to the other vectors.
-    mat3 normalMatrix = transpose(inverse(mat3(model)));
-    vec3 T = normalize(normalMatrix * aTangent);
-    vec3 N = normalize(normalMatrix * aNormal); 
+    vec3 N = normalize(tiModel * aNormal); 
+    vec3 T = normalize(tiModel * aTangent);
+
     // re-orthogonalize T with respect to N
     T = normalize(T - dot(T, N) * N);
+
     // then retrieve perpendicular vector B with the cross product of T and N
     vec3 B = cross(N, T);
     
+    // we need to get the inverse of TBN matrix
+    // this is the same as TBN = inverse(mat3(T,B,N)) because TBN is orthogonal (each axis is perpendicular unit vector) matrix and T(oM) = I (oM) 
     mat3 TBN = transpose(mat3(T, B, N));    
     vs_out.TangentLightPos = TBN * lightPos;
     vs_out.TangentViewPos  = TBN * viewPos;

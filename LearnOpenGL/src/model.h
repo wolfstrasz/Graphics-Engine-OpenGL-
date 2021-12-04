@@ -9,8 +9,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "mesh.h"
-#include "shader.h"
+#include "Mesh.h"
 
 #include <string>
 #include <fstream>
@@ -36,7 +35,7 @@ public:
 	Model(string const &path, bool gamma = false);
 
 	// draws the model, and thus all its meshes
-	void Draw(Shader shader);
+	void Draw(std::shared_ptr<Shader>& shader) const;
 
 private:
 	/*  Functions   */
@@ -49,7 +48,7 @@ private:
 
 	// checks all material textures of a given type and loads the textures if they're not loaded yet.
 	// the required info is returned as a Texture struct.
-	vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName);
+	vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, const std::string& typeName);
 };
 
 #endif

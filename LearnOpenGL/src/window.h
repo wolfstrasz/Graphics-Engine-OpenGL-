@@ -4,12 +4,13 @@
 #include <GLFW\glfw3.h>
 #include <glm\glm.hpp>
 #include <iostream>
-#include <camera.h>
+
+#include "Camera.h"
 
 struct Window_Defaults
 {
-	static constexpr int WIDTH = 800;
-	static constexpr int HEIGHT = 600;
+	static constexpr int WIDTH = 1600;
+	static constexpr int HEIGHT = 900;
 	static constexpr const char* TITLE = "LEARN OPEN GL";
 };
 class Window

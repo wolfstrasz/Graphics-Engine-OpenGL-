@@ -2,132 +2,96 @@
 #ifndef _IPP_H
 #define _IPP_H
 #include <glad\glad.h>
-#include "shader.h"
-#include "window.h"
+
+#include "Shader.h"
+#include "Window.h"
 #include "SimpleQuad.h"
+#include "RenderText.h"
+#include "Buffers.h"
 
 // Image post-processing
 class IPP {
 public:
-	IPP(Window* window = nullptr) : mComplete (false), mEnabled(false){
-		mBindedWindow = window;
-		setupQuad();
-		setup();
+	IPP(Window* window = nullptr) : m_IsComplete (false), m_IsEnabled(false), m_BindedWindow(window){
+		Setup();
+	}
+	~IPP() {
+		delete m_TextureColorbuffer;
 	}
 private:
-	// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-	//static constexpr float mQuadVertices[] = { 
-	//	// positions   // texCoords
-	//	-1.0f,  1.0f,  0.0f, 1.0f,
-	//	-1.0f, -1.0f,  0.0f, 0.0f,
-	//	 1.0f, -1.0f,  1.0f, 0.0f,
-	//	-1.0f,  1.0f,  0.0f, 1.0f,
-	//	 1.0f, -1.0f,  1.0f, 0.0f,
-	//	 1.0f,  1.0f,  1.0f, 1.0f
-	//};
-	//unsigned int mQuadVAO, mQuadVBO;
 
-	unsigned int mFramebuffer;
-	unsigned int mTextureColorbuffer;
-	unsigned int mRenderbufferObject;
-	unsigned int mFunction;
-	bool mComplete;
-	bool mEnabled;
-	Window * mBindedWindow;
-	Shader * mBindedShader;
+	SimpleQuad ppQuad;
+	unsigned int m_Framebuffer;
+	RenderTexture* m_TextureColorbuffer;
+	Renderbuffer* m_RenderbufferObject;
+	unsigned int m_Function;
+	bool m_IsComplete;
+	bool m_IsEnabled;
+	Window * m_BindedWindow;
+	std::shared_ptr<Shader> mBindedShader;
 
-	// Functions
-	void setupQuad() {
-		//glGenVertexArrays(1, &mQuadVAO);
-		//glGenBuffers(1, &mQuadVBO);
-		//glBindVertexArray(mQuadVAO);
-		//glBindBuffer(GL_ARRAY_BUFFER, mQuadVBO);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(mQuadVertices), &mQuadVertices, GL_STATIC_DRAW);
-		//glEnableVertexAttribArray(0);
-		//glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(0 * sizeof(float)));
-		//glEnableVertexAttribArray(1);
-		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-		//// Reset to defaults
-		//glBindVertexArray(0);
-	}
-	void setup() {
-		// framebuffer configuration
-		// -------------------------
-		glGenFramebuffers(1, &mFramebuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+	void Setup() {
 
 		// create a color attachment texture
-		glGenTextures(1, &mTextureColorbuffer);
-		glBindTexture(GL_TEXTURE_2D, mTextureColorbuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mBindedWindow->GetWidth(), mBindedWindow->GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		// Attach texture as a color attachment to framebuffer
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextureColorbuffer, 0);
-
-		//// Use texture for Depth and Stencil buffer attachment
-		//// ---------------------------------------------------------
-		//glGenTextures(1, &mDepthAndStencilBuffer);
-		//glBindTexture(GL_TEXTURE_2D, mDepthAndStencilBuffer);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,  mBindedWindow->GetWidth(), mBindedWindow->GetHeight(), 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, mDepthAndStencilBuffer, 0); 
-		//
+		m_TextureColorbuffer = new RenderTexture(m_BindedWindow->GetWidth(), m_BindedWindow->GetHeight(), GL_TEXTURE_2D, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
 
 		// Use Renderbuffer for Depth and Stencil buffer attachment
 		// ---------------------------------------------------------
-		// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-		glGenRenderbuffers(1, &mRenderbufferObject);
-		glBindRenderbuffer(GL_RENDERBUFFER, mRenderbufferObject);
-		// use a single renderbuffer object for both a depth AND stencil buffer.
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, mBindedWindow->GetWidth(), mBindedWindow->GetHeight()); 
-		// unbind RBO after finished modifying it
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		m_RenderbufferObject = new Renderbuffer(m_BindedWindow->GetWidth(), m_BindedWindow->GetHeight(), GL_DEPTH24_STENCIL8);
 
-		// now actually attach it
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRenderbufferObject); 
+		// framebuffer configuration
+		// -------------------------
+		glGenFramebuffers(1, &m_Framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_TextureColorbuffer->GetID(), 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RenderbufferObject->GetID()); 
 
 		// now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
-		mComplete = true;
+		m_IsComplete = true;
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
 			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-			mComplete = false;
+			m_IsComplete = false;
 		}
-
+		printf("%d\n", m_TextureColorbuffer->GetID());
+		printf("%d\n", m_TextureColorbuffer->GetWidth());
+		printf("%d\n", m_TextureColorbuffer->GetHeight());
 		// Reset to defaults
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+
 public:
-	void enable() {
-		if(mComplete)
+
+	void Enable() {
+		if(m_IsComplete)
 		{
 			// bind to framebuffer and draw scene as we normally would to color texture 
-			glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+			glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer);
 			glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
 			// make sure we clear the framebuffer's content
-			mBindedWindow->ClearScreen();
-			mEnabled = true;
+			m_BindedWindow->ClearScreen();
+			m_IsEnabled = true;
 		}
 		else {
 			std::cout << "Framebuffer is not complete. Cannot activate it for post-processing!" << std::endl;
-			mEnabled = false;
+			m_IsEnabled = false;
 		}
 	}
-	void disable() {
+
+	void Disable() {
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
 								  // clear all relevant buffers
 
 								  // clear buffer info
-		mBindedWindow->ClearScreen();
-		mEnabled = false;
+		m_BindedWindow->ClearScreen();
+		m_IsEnabled = false;
 	}
-	void draw() {
-		if (!mEnabled && mBindedShader != nullptr)
+
+	void Draw() {
+		if (!m_IsEnabled && mBindedShader != nullptr)
 		{
 			// Save face-culling option
 			bool previousFaceCullingState = false | glIsEnabled(GL_CULL_FACE);
@@ -135,25 +99,32 @@ public:
 			glDisable(GL_CULL_FACE);
 			// Draw
 			mBindedShader->Use();
-			glBindVertexArray(mQuadVAO);
-			glBindTexture(GL_TEXTURE_2D, mTextureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+
+			glActiveTexture(0);
+			glBindTexture(GL_TEXTURE_2D, m_TextureColorbuffer->GetID());	// use the color attachment texture as the texture of the quad plane
 			mBindedShader->SetInt("screenTexture", 0);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			ppQuad.Draw(mBindedShader);
 			// Reset face culling to previous state
 			if (previousFaceCullingState) glEnable(GL_CULL_FACE);
 		}
 		// error checking
 		else {
-			if (mEnabled)
+			if (m_IsEnabled)
+			{
 				std::cout << "Post-processing framebuffer is enabled! Disable before drawing." << std::endl;
+			}
 			if (mBindedShader == nullptr)
+			{
 				std::cout << "Shader was not bound! Cannot draw in post-processing" << std::endl;
+			}
 		}
 	}
+
 	void setShaderFunction(int function) {
 		if (mBindedShader != nullptr)
 		{
-			mFunction = function;
+			m_Function = function;
 			mBindedShader->SetInt("function", function);
 		}
 		// error checking
@@ -161,8 +132,9 @@ public:
 			std::cout << "Shader was not bound! Cannot set post-processing shader function!" << std::endl;
 		}
 	}
-	void bindShader(Shader * shader) { mBindedShader = shader; }
-	void bindWindow(Window * window) { mBindedWindow = window; }
+
+	void bindShader(std::shared_ptr<Shader> shader) { mBindedShader = shader; }
+	void bindWindow(Window * window) { m_BindedWindow = window; }
 
 };
 #endif // !_IPP_H

@@ -1,14 +1,19 @@
 #version 450 core
 
-
 out vec4 FragColor;
 
-uniform vec3 colour;
-uniform int pointsCount;
 flat in int vertID; // flat because data from vert to frag has a 2:1 mapping
+
+
 float flashLightCutOffRadius = 190.0f;
 float screenHeight = 600.0f;
 float screenWidth = 800.0f;
+
+
+uniform vec3 colour;
+uniform int pointsCount;
+
+
 void main()
 {    
     float deAlpha = float(vertID) / float(pointsCount);

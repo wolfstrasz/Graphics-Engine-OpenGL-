@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "shader.h"
+#include "Shader.h"
 #include "Texture.h"
 
 #include <string>
@@ -15,7 +15,6 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
 
 struct Vertex {
 	// position
@@ -32,25 +31,31 @@ struct Vertex {
 
 
 class Mesh {
-public:
-	/*  Mesh Data  */
-	vector<Vertex> vertices;
-	vector<unsigned int> indices;
-	vector<Texture> textures;
-	unsigned int VAO;
 
+private:
+	std::vector<Vertex> m_Vertices;
+	std::vector<unsigned int> m_Indices;
+	std::vector<Texture> m_Textures;
+
+public:
 	/*  Functions  */
 	// constructor
-	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures);
+	explicit Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures = std::vector<Texture>());
 
 	// render the mesh
-	void Draw(Shader shader);
-private:
+	void Draw(std::shared_ptr<Shader>& shader) const;
+
+	void ApplyTextures(std::shared_ptr<Shader>& shader) const;
+
+	unsigned int GetIndicesSize() const { return m_Indices.size(); }
+	unsigned int GetVAO() const { return VAO; }
+
+protected:
 	/*  Render data  */
-	unsigned int VBO, EBO;
+	unsigned int VAO, VBO, EBO;
 
 	/*  Functions    */
 	// initializes all the buffer objects/arrays
-	void setupMesh();
+	void SetupMesh();
 };
 #endif

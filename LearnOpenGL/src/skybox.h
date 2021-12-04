@@ -12,7 +12,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <shader.h>
+
+#include <Shader.h>
 
 #define SKYBOX_NR_INDICES 36
 #define SKYBOX_VERTEX_SIZE 3
@@ -82,10 +83,10 @@ public:
 		mSkyboxPath = generalSkyboxPATH + path;
 		//std::cout << mSkyboxPath << std::endl;
 		mCubemapTexture = loadCubemap(faces);
-		setup();
+		Setup();
 	}
-	void draw(Shader shader) {
-		shader.Use();
+	void Draw(std::shared_ptr<Shader>& shader) const {
+		shader->Use();
 		// Save depth function
 		GLint depthFunc;
 		glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
@@ -102,7 +103,7 @@ public:
 		glBindVertexArray(mVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, mCubemapTexture);
-		shader.SetInt("skybox", 0);
+		shader->SetInt("skybox", 0);
 
 		// Draw skybox
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -114,7 +115,7 @@ public:
 	}
 
 private:
-	void setup() {
+	void Setup() {
 		// Setup VAO and VBO
 		glGenVertexArrays(1, &mVAO);
 		glGenBuffers(1, &mVBO);

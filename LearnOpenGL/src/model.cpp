@@ -1,14 +1,16 @@
-#include "model.h"
+#include "Model.h"
 
 Model::Model(string const & path, bool gamma) : gammaCorrection(gamma)
 {
 	loadModel(path);
 }
 
-void Model::Draw(Shader shader)
+void Model::Draw(std::shared_ptr<Shader>& shader) const
 {
 	for (unsigned int i = 0; i < meshes.size(); i++)
+	{
 		meshes[i].Draw(shader);
+	}
 }
 
 void Model::loadModel(string const & path)
@@ -126,7 +128,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
 	return Mesh(vertices, indices, textures);
 }
 
-vector<Texture> Model::loadMaterialTextures(aiMaterial * mat, aiTextureType type, string typeName)
+vector<Texture> Model::loadMaterialTextures(aiMaterial * mat, aiTextureType type, const std::string& typeName)
 {
 	vector<Texture> textures;
 	for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)

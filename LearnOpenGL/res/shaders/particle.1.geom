@@ -1,9 +1,8 @@
 #version 450 core
 layout (points) in;
-//layout (line_Strip, max_vertices = 2) out;
 layout (points, max_vertices = 1) out;
 
-in VS_OUT{
+in VS_OUT {
     int vertID;
 } gs_in[];
 

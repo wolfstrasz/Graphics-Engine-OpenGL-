@@ -17,11 +17,11 @@ const std::string geomStr = ".geom";
 
 class Shader
 {
-public:
 	unsigned int m_ID;
 	std::string m_Name;
-	Shader(const std::string& name, const std::string& vertexKey,const std::string& fragmentKey,const std::string& geometryKey = "");
 
+public:
+	Shader(const std::string& name, const std::string& key);
 
 private:
 	
@@ -43,8 +43,10 @@ public:
 	void SetMat4(const std::string &name, const glm::mat4 &mat)const;
 
 
-	const int& GetID() { return m_ID; }
-	const std::string& GetName() { return m_Name; }
+	const int& GetID() const { return m_ID; }
+	const std::string& GetName() const { return m_Name; }
+
+	void SetName(const std::string& name) { m_Name = name; }
 };
 
 

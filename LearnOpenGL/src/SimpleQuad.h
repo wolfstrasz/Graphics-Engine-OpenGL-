@@ -1,5 +1,5 @@
 #pragma once
-#include "simple_model.h"
+#include "SimpleModel.h"
 
 
 class SimpleQuad : public SimpleModel
