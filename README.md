@@ -1,6 +1,8 @@
 # Graphics-OpenGL
-Simple project to learn modern OpenGL. The main file is quite big as there are 6 seperate scenes that are chosen pre-compile.
-
+A personal project to explore and learn the general graphics rendering pipelines. Written in C++ for Windows using OpenGL APIs and GLSL shaders. 
+Introduces deferred shading, lit instancing, lights, shadow-mapping with multiple lights, material/texture abstractions, bloom and other post-processing effects. 
+Current WIP: Automating the pipeline through in-order draw buckets. 
+Future: PBR, cascading shadow maps, physics project integration.
 ## Scene 0
 ### Model with diffuse, specular and normal maps.
 ![screenshot_1](https://user-images.githubusercontent.com/25257875/52543205-a6066e00-2d9f-11e9-8c16-deda00f5aa5a.png)
